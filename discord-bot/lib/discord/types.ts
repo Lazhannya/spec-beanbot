@@ -437,7 +437,7 @@ export function isGuildMessage(message: DiscordMessage): boolean {
 }
 
 export function isBotMention(message: DiscordMessage, botId: string): boolean {
-  return message.mentions.some(user => user.id === botId);
+  return message.mentions.some((user) => user.id === botId);
 }
 
 export function hasEmbeds(message: DiscordMessage): boolean {

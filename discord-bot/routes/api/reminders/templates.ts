@@ -23,7 +23,7 @@ export const handler: Handlers = {
       if (!session) {
         return new Response(
           JSON.stringify({ success: false, error: "Authentication required" }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -36,7 +36,7 @@ export const handler: Handlers = {
       // Filter by category if specified
       if (category) {
         filteredTemplates = filteredTemplates.filter(
-          template => template.category === category
+          (template) => template.category === category,
         );
       }
 
@@ -52,14 +52,14 @@ export const handler: Handlers = {
           task: 6,
           custom: 7,
         };
-        
+
         const aPriority = categoryPriority[a.category] || 999;
         const bPriority = categoryPriority[b.category] || 999;
-        
+
         if (aPriority !== bPriority) {
           return aPriority - bPriority;
         }
-        
+
         // Then alphabetically by name
         return a.name.localeCompare(b.name);
       });
@@ -69,7 +69,8 @@ export const handler: Handlers = {
         data: {
           templates: sortedTemplates,
           total: sortedTemplates.length,
-          categories: [...new Set(reminderTemplates.map(t => t.category))].sort(),
+          categories: [...new Set(reminderTemplates.map((t) => t.category))]
+            .sort(),
         },
       };
 
@@ -79,7 +80,7 @@ export const handler: Handlers = {
       });
     } catch (error) {
       console.error("Error in GET /api/reminders/templates:", error);
-      
+
       const response: ApiResponse = {
         success: false,
         error: "Internal server error",

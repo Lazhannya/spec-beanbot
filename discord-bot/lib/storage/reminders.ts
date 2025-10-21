@@ -2,23 +2,26 @@
 // This module provides CRUD operations for reminder management
 
 import type {
-  Reminder,
-  CreateReminderInput,
-  UpdateReminderInput,
-  ReminderSearchCriteria,
-  ReminderDelivery,
-  ReminderStats,
   BulkReminderOperation,
+  CreateReminderInput,
+  Reminder,
+  ReminderDelivery,
+  ReminderSearchCriteria,
+  ReminderStats,
+  UpdateReminderInput,
 } from "../types/reminders.ts";
 
 import {
+  calculateReminderStats,
   createReminderFromInput,
   generateReminderId,
   getCurrentTimestamp,
-  calculateReminderStats,
 } from "../utils/reminders.ts";
 
-import { validateCreateReminderInput, validateUpdateReminderInput } from "../validation/reminders.ts";
+import {
+  validateCreateReminderInput,
+  validateUpdateReminderInput,
+} from "../validation/reminders.ts";
 
 /**
  * Deno KV storage keys
@@ -26,23 +29,47 @@ import { validateCreateReminderInput, validateUpdateReminderInput } from "../val
 const KV_KEYS = {
   // Primary reminder storage
   reminder: (id: string) => ["reminders", id],
-  
+
   // Indexes for efficient querying
-  remindersByUser: (userId: string, id: string) => ["reminders_by_user", userId, id],
-  remindersByTarget: (targetUserId: string, id: string) => ["reminders_by_target", targetUserId, id],
-  remindersByStatus: (status: string, id: string) => ["reminders_by_status", status, id],
-  remindersByCategory: (category: string, id: string) => ["reminders_by_category", category, id],
-  remindersByTemplate: (templateId: string, id: string) => ["reminders_by_template", templateId, id],
-  remindersByNextDelivery: (timestamp: number, id: string) => ["reminders_by_next_delivery", timestamp, id],
-  
+  remindersByUser: (
+    userId: string,
+    id: string,
+  ) => ["reminders_by_user", userId, id],
+  remindersByTarget: (
+    targetUserId: string,
+    id: string,
+  ) => ["reminders_by_target", targetUserId, id],
+  remindersByStatus: (
+    status: string,
+    id: string,
+  ) => ["reminders_by_status", status, id],
+  remindersByCategory: (
+    category: string,
+    id: string,
+  ) => ["reminders_by_category", category, id],
+  remindersByTemplate: (
+    templateId: string,
+    id: string,
+  ) => ["reminders_by_template", templateId, id],
+  remindersByNextDelivery: (
+    timestamp: number,
+    id: string,
+  ) => ["reminders_by_next_delivery", timestamp, id],
+
   // Delivery tracking
   delivery: (id: string) => ["deliveries", id],
-  deliveriesByReminder: (reminderId: string, deliveryId: string) => ["deliveries_by_reminder", reminderId, deliveryId],
-  deliveriesByUser: (userId: string, deliveryId: string) => ["deliveries_by_user", userId, deliveryId],
-  
+  deliveriesByReminder: (
+    reminderId: string,
+    deliveryId: string,
+  ) => ["deliveries_by_reminder", reminderId, deliveryId],
+  deliveriesByUser: (
+    userId: string,
+    deliveryId: string,
+  ) => ["deliveries_by_user", userId, deliveryId],
+
   // Statistics
   userStats: (userId: string) => ["user_stats", userId],
-  
+
   // Sequences for auto-incrementing IDs
   reminderSequence: () => ["sequences", "reminders"],
   deliverySequence: () => ["sequences", "deliveries"],
@@ -60,7 +87,7 @@ async function getKV(): Promise<Deno.Kv> {
  */
 export async function createReminder(
   input: CreateReminderInput,
-  createdBy: string
+  createdBy: string,
 ): Promise<{ success: boolean; reminder?: Reminder; errors?: string[] }> {
   // Validate input
   const validation = validateCreateReminderInput(input);
@@ -80,24 +107,39 @@ export async function createReminder(
 
     // Create indexes
     atomic.set(KV_KEYS.remindersByUser(createdBy, reminder.id), reminder.id);
-    atomic.set(KV_KEYS.remindersByTarget(reminder.targetUser, reminder.id), reminder.id);
-    atomic.set(KV_KEYS.remindersByStatus(reminder.status, reminder.id), reminder.id);
-    atomic.set(KV_KEYS.remindersByCategory(reminder.category, reminder.id), reminder.id);
-    
+    atomic.set(
+      KV_KEYS.remindersByTarget(reminder.targetUser, reminder.id),
+      reminder.id,
+    );
+    atomic.set(
+      KV_KEYS.remindersByStatus(reminder.status, reminder.id),
+      reminder.id,
+    );
+    atomic.set(
+      KV_KEYS.remindersByCategory(reminder.category, reminder.id),
+      reminder.id,
+    );
+
     if (reminder.templateId) {
-      atomic.set(KV_KEYS.remindersByTemplate(reminder.templateId, reminder.id), reminder.id);
+      atomic.set(
+        KV_KEYS.remindersByTemplate(reminder.templateId, reminder.id),
+        reminder.id,
+      );
     }
-    
+
     if (reminder.nextDeliveryAt) {
       atomic.set(
-        KV_KEYS.remindersByNextDelivery(reminder.nextDeliveryAt.getTime(), reminder.id),
-        reminder.id
+        KV_KEYS.remindersByNextDelivery(
+          reminder.nextDeliveryAt.getTime(),
+          reminder.id,
+        ),
+        reminder.id,
       );
     }
 
     // Commit transaction
     const result = await atomic.commit();
-    
+
     if (result.ok) {
       return { success: true, reminder };
     } else {
@@ -129,7 +171,7 @@ export async function getReminderById(id: string): Promise<Reminder | null> {
 export async function updateReminder(
   id: string,
   input: UpdateReminderInput,
-  updatedBy: string
+  updatedBy: string,
 ): Promise<{ success: boolean; reminder?: Reminder; errors?: string[] }> {
   // Validate input
   const validation = validateUpdateReminderInput(input);
@@ -139,7 +181,7 @@ export async function updateReminder(
 
   try {
     const kv = await getKV();
-    
+
     // Get existing reminder
     const existing = await getReminderById(id);
     if (!existing) {
@@ -160,7 +202,9 @@ export async function updateReminder(
       createdAt: existing.createdAt, // Preserve creation date
       updatedAt: getCurrentTimestamp(),
       // Ensure required fields maintain their types
-      schedule: input.schedule ? { ...existing.schedule, ...input.schedule } : existing.schedule,
+      schedule: input.schedule
+        ? { ...existing.schedule, ...input.schedule }
+        : existing.schedule,
     };
 
     // Start atomic transaction
@@ -182,18 +226,28 @@ export async function updateReminder(
     }
 
     // Update next delivery index if changed
-    if (updated.nextDeliveryAt?.getTime() !== existing.nextDeliveryAt?.getTime()) {
+    if (
+      updated.nextDeliveryAt?.getTime() !== existing.nextDeliveryAt?.getTime()
+    ) {
       if (existing.nextDeliveryAt) {
-        atomic.delete(KV_KEYS.remindersByNextDelivery(existing.nextDeliveryAt.getTime(), id));
+        atomic.delete(
+          KV_KEYS.remindersByNextDelivery(
+            existing.nextDeliveryAt.getTime(),
+            id,
+          ),
+        );
       }
       if (updated.nextDeliveryAt) {
-        atomic.set(KV_KEYS.remindersByNextDelivery(updated.nextDeliveryAt.getTime(), id), id);
+        atomic.set(
+          KV_KEYS.remindersByNextDelivery(updated.nextDeliveryAt.getTime(), id),
+          id,
+        );
       }
     }
 
     // Commit transaction
     const result = await atomic.commit();
-    
+
     if (result.ok) {
       return { success: true, reminder: updated };
     } else {
@@ -210,11 +264,11 @@ export async function updateReminder(
  */
 export async function deleteReminder(
   id: string,
-  deletedBy: string
+  deletedBy: string,
 ): Promise<{ success: boolean; errors?: string[] }> {
   try {
     const kv = await getKV();
-    
+
     // Get existing reminder
     const existing = await getReminderById(id);
     if (!existing) {
@@ -237,13 +291,15 @@ export async function deleteReminder(
     atomic.delete(KV_KEYS.remindersByTarget(existing.targetUser, id));
     atomic.delete(KV_KEYS.remindersByStatus(existing.status, id));
     atomic.delete(KV_KEYS.remindersByCategory(existing.category, id));
-    
+
     if (existing.templateId) {
       atomic.delete(KV_KEYS.remindersByTemplate(existing.templateId, id));
     }
-    
+
     if (existing.nextDeliveryAt) {
-      atomic.delete(KV_KEYS.remindersByNextDelivery(existing.nextDeliveryAt.getTime(), id));
+      atomic.delete(
+        KV_KEYS.remindersByNextDelivery(existing.nextDeliveryAt.getTime(), id),
+      );
     }
 
     // Delete related deliveries
@@ -256,7 +312,7 @@ export async function deleteReminder(
 
     // Commit transaction
     const result = await atomic.commit();
-    
+
     if (result.ok) {
       return { success: true };
     } else {
@@ -272,7 +328,7 @@ export async function deleteReminder(
  * Search reminders with criteria
  */
 export async function searchReminders(
-  criteria: ReminderSearchCriteria
+  criteria: ReminderSearchCriteria,
 ): Promise<{ reminders: Reminder[]; total: number }> {
   try {
     const kv = await getKV();
@@ -280,22 +336,22 @@ export async function searchReminders(
 
     // Use most specific index available
     if (criteria.userId) {
-      const userReminders = kv.list<string>({ 
-        prefix: ["reminders_by_user", criteria.userId] 
+      const userReminders = kv.list<string>({
+        prefix: ["reminders_by_user", criteria.userId],
       });
       for await (const entry of userReminders) {
         reminderIds.push(entry.value);
       }
     } else if (criteria.status && criteria.status.length === 1) {
-      const statusReminders = kv.list<string>({ 
-        prefix: ["reminders_by_status", criteria.status[0]] 
+      const statusReminders = kv.list<string>({
+        prefix: ["reminders_by_status", criteria.status[0]],
       });
       for await (const entry of statusReminders) {
         reminderIds.push(entry.value);
       }
     } else if (criteria.category && criteria.category.length === 1) {
-      const categoryReminders = kv.list<string>({ 
-        prefix: ["reminders_by_category", criteria.category[0]] 
+      const categoryReminders = kv.list<string>({
+        prefix: ["reminders_by_category", criteria.category[0]],
       });
       for await (const entry of categoryReminders) {
         reminderIds.push(entry.value);
@@ -322,7 +378,7 @@ export async function searchReminders(
       reminders.sort((a, b) => {
         const aVal = getValueForSort(a, criteria.sortBy!);
         const bVal = getValueForSort(b, criteria.sortBy!);
-        
+
         if (criteria.sortOrder === "desc") {
           return bVal > aVal ? 1 : -1;
         } else {
@@ -354,24 +410,28 @@ export async function getRemindersByUser(userId: string): Promise<Reminder[]> {
 /**
  * Get active reminders that need delivery
  */
-export async function getRemindersForDelivery(beforeTime?: Date): Promise<Reminder[]> {
+export async function getRemindersForDelivery(
+  beforeTime?: Date,
+): Promise<Reminder[]> {
   const cutoff = beforeTime || new Date();
   const criteria: ReminderSearchCriteria = {
     status: ["active"],
     nextDeliveryBefore: cutoff,
   };
-  
+
   return (await searchReminders(criteria)).reminders;
 }
 
 /**
  * Create a delivery record
  */
-export async function createDelivery(delivery: Omit<ReminderDelivery, "id">): Promise<string | null> {
+export async function createDelivery(
+  delivery: Omit<ReminderDelivery, "id">,
+): Promise<string | null> {
   try {
     const kv = await getKV();
     const id = generateReminderId();
-    
+
     const fullDelivery: ReminderDelivery = {
       ...delivery,
       id,
@@ -387,7 +447,7 @@ export async function createDelivery(delivery: Omit<ReminderDelivery, "id">): Pr
 
     // Commit transaction
     const result = await atomic.commit();
-    
+
     return result.ok ? id : null;
   } catch (error) {
     console.error("Error creating delivery:", error);
@@ -398,7 +458,9 @@ export async function createDelivery(delivery: Omit<ReminderDelivery, "id">): Pr
 /**
  * Get delivery by ID
  */
-export async function getDeliveryById(id: string): Promise<ReminderDelivery | null> {
+export async function getDeliveryById(
+  id: string,
+): Promise<ReminderDelivery | null> {
   try {
     const kv = await getKV();
     const result = await kv.get<ReminderDelivery>(KV_KEYS.delivery(id));
@@ -412,22 +474,24 @@ export async function getDeliveryById(id: string): Promise<ReminderDelivery | nu
 /**
  * Get deliveries for a reminder
  */
-export async function getDeliveriesByReminder(reminderId: string): Promise<ReminderDelivery[]> {
+export async function getDeliveriesByReminder(
+  reminderId: string,
+): Promise<ReminderDelivery[]> {
   try {
     const kv = await getKV();
     const deliveries: ReminderDelivery[] = [];
-    
-    const entries = kv.list<string>({ 
-      prefix: ["deliveries_by_reminder", reminderId] 
+
+    const entries = kv.list<string>({
+      prefix: ["deliveries_by_reminder", reminderId],
     });
-    
+
     for await (const entry of entries) {
       const delivery = await getDeliveryById(entry.value);
       if (delivery) {
         deliveries.push(delivery);
       }
     }
-    
+
     return deliveries;
   } catch (error) {
     console.error("Error getting deliveries:", error);
@@ -441,12 +505,12 @@ export async function getDeliveriesByReminder(reminderId: string): Promise<Remin
 export async function updateDeliveryStatus(
   id: string,
   status: ReminderDelivery["status"],
-  errorMessage?: string
+  errorMessage?: string,
 ): Promise<boolean> {
   try {
     const kv = await getKV();
     const delivery = await getDeliveryById(id);
-    
+
     if (!delivery) {
       return false;
     }
@@ -455,7 +519,9 @@ export async function updateDeliveryStatus(
       ...delivery,
       status,
       lastAttemptAt: new Date(),
-      attemptCount: status === "retrying" ? delivery.attemptCount + 1 : delivery.attemptCount,
+      attemptCount: status === "retrying"
+        ? delivery.attemptCount + 1
+        : delivery.attemptCount,
       errorMessage: errorMessage || delivery.errorMessage,
     };
 
@@ -472,12 +538,12 @@ export async function updateDeliveryStatus(
  */
 export async function acknowledgeDelivery(
   id: string,
-  method: ReminderDelivery["acknowledgmentMethod"]
+  method: ReminderDelivery["acknowledgmentMethod"],
 ): Promise<boolean> {
   try {
     const kv = await getKV();
     const delivery = await getDeliveryById(id);
-    
+
     if (!delivery) {
       return false;
     }
@@ -502,7 +568,7 @@ export async function acknowledgeDelivery(
  */
 export async function bulkOperateReminders(
   operation: BulkReminderOperation,
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; processed: number; errors: string[] }> {
   const errors: string[] = [];
   let processed = 0;
@@ -510,36 +576,44 @@ export async function bulkOperateReminders(
   try {
     for (const reminderId of operation.reminderIds) {
       let result;
-      
+
       switch (operation.operation) {
         case "delete":
           result = await deleteReminder(reminderId, userId);
           break;
-          
+
         case "pause":
-          result = await updateReminder(reminderId, { isActive: false }, userId);
+          result = await updateReminder(
+            reminderId,
+            { isActive: false },
+            userId,
+          );
           break;
-          
+
         case "resume":
           result = await updateReminder(reminderId, { isActive: true }, userId);
           break;
-          
+
         case "complete": {
-          const updateData: UpdateReminderInput = { 
-            status: "completed"
+          const updateData: UpdateReminderInput = {
+            status: "completed",
           };
           result = await updateReminder(reminderId, updateData, userId);
           break;
         }
-          
+
         case "update":
           if (!operation.updateData) {
             errors.push(`No update data provided for reminder ${reminderId}`);
             continue;
           }
-          result = await updateReminder(reminderId, operation.updateData, userId);
+          result = await updateReminder(
+            reminderId,
+            operation.updateData,
+            userId,
+          );
           break;
-          
+
         default:
           errors.push(`Unknown operation: ${operation.operation}`);
           continue;
@@ -548,7 +622,11 @@ export async function bulkOperateReminders(
       if (result.success) {
         processed++;
       } else {
-        errors.push(`Failed to ${operation.operation} reminder ${reminderId}: ${result.errors?.join(", ")}`);
+        errors.push(
+          `Failed to ${operation.operation} reminder ${reminderId}: ${
+            result.errors?.join(", ")
+          }`,
+        );
       }
     }
 
@@ -574,7 +652,7 @@ export async function getUserStats(userId: string): Promise<ReminderStats> {
   try {
     const kv = await getKV();
     const result = await kv.get<ReminderStats>(KV_KEYS.userStats(userId));
-    
+
     if (result.value) {
       return result.value;
     }
@@ -583,10 +661,15 @@ export async function getUserStats(userId: string): Promise<ReminderStats> {
     const now = new Date();
     const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    
+
     const reminders = await getRemindersByUser(userId);
-    const stats = calculateReminderStats(reminders, userId, periodStart, periodEnd);
-    
+    const stats = calculateReminderStats(
+      reminders,
+      userId,
+      periodStart,
+      periodEnd,
+    );
+
     await kv.set(KV_KEYS.userStats(userId), stats);
     return stats;
   } catch (error) {
@@ -625,7 +708,10 @@ export async function getUserStats(userId: string): Promise<ReminderStats> {
 /**
  * Helper function to check if reminder matches search criteria
  */
-function matchesCriteria(reminder: Reminder, criteria: ReminderSearchCriteria): boolean {
+function matchesCriteria(
+  reminder: Reminder,
+  criteria: ReminderSearchCriteria,
+): boolean {
   // Status filter
   if (criteria.status && !criteria.status.includes(reminder.status)) {
     return false;
@@ -643,7 +729,7 @@ function matchesCriteria(reminder: Reminder, criteria: ReminderSearchCriteria): 
 
   // Tags filter
   if (criteria.tags && criteria.tags.length > 0) {
-    const hasMatchingTag = criteria.tags.some(tag => 
+    const hasMatchingTag = criteria.tags.some((tag) =>
       reminder.tags?.includes(tag)
     );
     if (!hasMatchingTag) {
@@ -660,18 +746,24 @@ function matchesCriteria(reminder: Reminder, criteria: ReminderSearchCriteria): 
   if (criteria.createdAfter && reminder.createdAt < criteria.createdAfter) {
     return false;
   }
-  
+
   if (criteria.createdBefore && reminder.createdAt > criteria.createdBefore) {
     return false;
   }
-  
-  if (criteria.nextDeliveryAfter && 
-      (!reminder.nextDeliveryAt || reminder.nextDeliveryAt < criteria.nextDeliveryAfter)) {
+
+  if (
+    criteria.nextDeliveryAfter &&
+    (!reminder.nextDeliveryAt ||
+      reminder.nextDeliveryAt < criteria.nextDeliveryAfter)
+  ) {
     return false;
   }
-  
-  if (criteria.nextDeliveryBefore && 
-      (!reminder.nextDeliveryAt || reminder.nextDeliveryAt > criteria.nextDeliveryBefore)) {
+
+  if (
+    criteria.nextDeliveryBefore &&
+    (!reminder.nextDeliveryAt ||
+      reminder.nextDeliveryAt > criteria.nextDeliveryBefore)
+  ) {
     return false;
   }
 
@@ -682,9 +774,9 @@ function matchesCriteria(reminder: Reminder, criteria: ReminderSearchCriteria): 
       reminder.title,
       reminder.message,
       reminder.notes || "",
-      ...(reminder.tags || [])
+      ...(reminder.tags || []),
     ].join(" ").toLowerCase();
-    
+
     if (!searchableText.includes(searchLower)) {
       return false;
     }

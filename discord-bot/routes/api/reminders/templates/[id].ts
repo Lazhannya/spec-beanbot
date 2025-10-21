@@ -23,18 +23,18 @@ export const handler: Handlers = {
       if (!session) {
         return new Response(
           JSON.stringify({ success: false, error: "Authentication required" }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
 
       const templateId = ctx.params.id;
-      
+
       // Get template
       const template = getTemplateById(templateId);
       if (!template) {
         return new Response(
           JSON.stringify({ success: false, error: "Template not found" }),
-          { status: 404, headers: { "Content-Type": "application/json" } }
+          { status: 404, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -49,7 +49,7 @@ export const handler: Handlers = {
       });
     } catch (error) {
       console.error("Error in GET /api/reminders/templates/[id]:", error);
-      
+
       const response: ApiResponse = {
         success: false,
         error: "Internal server error",

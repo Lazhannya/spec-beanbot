@@ -3,7 +3,10 @@
 
 import { type Handlers } from "$fresh/server.ts";
 import { getPatternMatcher } from "../../lib/patterns/index.ts";
-import type { MessageAnalysis, ResponseAction } from "../../lib/patterns/index.ts";
+import type {
+  MessageAnalysis,
+  ResponseAction,
+} from "../../lib/patterns/index.ts";
 
 /**
  * Discord message event structure
@@ -45,7 +48,7 @@ export const handler: Handlers = {
       }
 
       const payload: DiscordWebhookPayload = await req.json();
-      
+
       // Only process message events
       if (payload.type !== 0) {
         return new Response("Event type not supported", { status: 200 });
@@ -81,9 +84,8 @@ export const handler: Handlers = {
         }),
         {
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
-
     } catch (error) {
       console.error("Error processing Discord message:", error);
       return new Response("Internal server error", { status: 500 });
@@ -96,7 +98,7 @@ export const handler: Handlers = {
  */
 function analyzeMessage(message: DiscordMessageEvent): MessageAnalysis {
   const patternMatcher = getPatternMatcher();
-  
+
   if (!patternMatcher) {
     console.error("Pattern matcher not initialized");
     return {
@@ -112,13 +114,15 @@ function analyzeMessage(message: DiscordMessageEvent): MessageAnalysis {
     };
   }
 
-  console.log(`Analyzing message from ${message.author.username}: "${message.content}"`);
-  
+  console.log(
+    `Analyzing message from ${message.author.username}: "${message.content}"`,
+  );
+
   return patternMatcher.analyzeMessage(
     message.id,
     message.author.id,
     message.channel_id,
-    message.content
+    message.content,
   );
 }
 
@@ -127,10 +131,11 @@ function analyzeMessage(message: DiscordMessageEvent): MessageAnalysis {
  */
 async function handlePatternResponse(
   message: DiscordMessageEvent,
-  analysis: MessageAnalysis
+  analysis: MessageAnalysis,
 ): Promise<void> {
-  
-  console.log(`Responding to message ${message.id} with ${analysis.suggestedActions.length} actions`);
+  console.log(
+    `Responding to message ${message.id} with ${analysis.suggestedActions.length} actions`,
+  );
 
   for (const action of analysis.suggestedActions) {
     try {
@@ -146,9 +151,8 @@ async function handlePatternResponse(
  */
 async function executeResponseAction(
   message: DiscordMessageEvent,
-  action: ResponseAction
+  action: ResponseAction,
 ): Promise<void> {
-  
   switch (action.type) {
     case "message":
       if (action.content) {
@@ -185,7 +189,7 @@ async function executeResponseAction(
 function sendDiscordMessage(channelId: string, content: string): Promise<void> {
   // TODO: Implement Discord API call to send message
   console.log(`Would send message to channel ${channelId}: ${content}`);
-  
+
   // This would integrate with the Discord messenger service
   // await discordMessenger.sendMessage(channelId, { content });
   return Promise.resolve();
@@ -197,11 +201,13 @@ function sendDiscordMessage(channelId: string, content: string): Promise<void> {
 function addDiscordReaction(
   channelId: string,
   messageId: string,
-  emoji: string
+  emoji: string,
 ): Promise<void> {
   // TODO: Implement Discord API call to add reaction
-  console.log(`Would add reaction ${emoji} to message ${messageId} in channel ${channelId}`);
-  
+  console.log(
+    `Would add reaction ${emoji} to message ${messageId} in channel ${channelId}`,
+  );
+
   // This would call Discord API: PUT /channels/{channel.id}/messages/{message.id}/reactions/{emoji}/@me
   return Promise.resolve();
 }
@@ -211,7 +217,7 @@ function addDiscordReaction(
  */
 function sendWebhookNotification(
   message: DiscordMessageEvent,
-  webhookData: Record<string, unknown>
+  webhookData: Record<string, unknown>,
 ): Promise<void> {
   // TODO: Implement webhook sending (e.g., to n8n)
   console.log("Would send webhook notification:", {
@@ -223,7 +229,7 @@ function sendWebhookNotification(
     },
     ...webhookData,
   });
-  
+
   // This would integrate with the webhook system
   // await webhookService.send(webhookData);
   return Promise.resolve();
@@ -234,7 +240,7 @@ function sendWebhookNotification(
  */
 function createAutoReminder(
   message: DiscordMessageEvent,
-  reminderData: { title: string; message: string; delayMinutes: number }
+  reminderData: { title: string; message: string; delayMinutes: number },
 ): Promise<void> {
   // TODO: Implement automatic reminder creation
   console.log("Would create auto-reminder:", {
@@ -244,7 +250,7 @@ function createAutoReminder(
     targetUser: message.author.id,
     triggerMessage: message.content,
   });
-  
+
   // This would integrate with the reminder creation system
   // await createReminder({
   //   title: reminderData.title,

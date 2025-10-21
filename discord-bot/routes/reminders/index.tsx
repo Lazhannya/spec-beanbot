@@ -3,7 +3,10 @@ import { h } from "preact";
 import type { Handlers, PageProps } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../lib/storage/sessions.ts";
 import type { UserSession } from "../../lib/storage/sessions.ts";
-import { reminderTemplates, getCategories } from "../../data/reminder-templates.ts";
+import {
+  getCategories,
+  reminderTemplates,
+} from "../../data/reminder-templates.ts";
 
 interface RemindersPageData {
   session: UserSession | null;
@@ -16,13 +19,13 @@ export const handler: Handlers<RemindersPageData> = {
     try {
       // Check if user is authenticated
       const session = await getSessionFromRequest(req);
-      
+
       if (!session) {
         return new Response(null, {
           status: 302,
           headers: {
-            "Location": "/auth/discord"
-          }
+            "Location": "/auth/discord",
+          },
         });
       }
 
@@ -31,19 +34,18 @@ export const handler: Handlers<RemindersPageData> = {
 
       return ctx.render({
         session,
-        reminders
+        reminders,
       });
-
     } catch (error) {
       console.error("Reminders page error:", error);
-      
+
       return ctx.render({
         session: null,
         reminders: [],
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }
+  },
 };
 
 export default function RemindersPage({ data }: PageProps<RemindersPageData>) {
@@ -54,7 +56,7 @@ export default function RemindersPage({ data }: PageProps<RemindersPageData>) {
       <div class="text-center">
         <h1 class="text-2xl font-bold mb-4">Authentication Required</h1>
         <p class="mb-4">Please log in to manage your reminders.</p>
-        <a 
+        <a
           href="/auth/discord"
           class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
         >
@@ -80,7 +82,8 @@ export default function RemindersPage({ data }: PageProps<RemindersPageData>) {
         <div>
           <h1 class="text-3xl font-bold text-gray-800">Reminders</h1>
           <p class="text-gray-600 mt-1">
-            Welcome back, {session.userInfo.username}! Manage your reminders here.
+            Welcome back,{" "}
+            {session.userInfo.username}! Manage your reminders here.
           </p>
         </div>
         <div class="flex space-x-4">
@@ -104,7 +107,7 @@ export default function RemindersPage({ data }: PageProps<RemindersPageData>) {
         <h2 class="text-xl font-semibold mb-4">🚀 Quick Start Templates</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {reminderTemplates.slice(0, 6).map((template) => (
-            <div 
+            <div
               key={template.id}
               class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
             >
@@ -125,7 +128,7 @@ export default function RemindersPage({ data }: PageProps<RemindersPageData>) {
           ))}
         </div>
         <div class="text-center mt-4">
-          <a 
+          <a
             href="/reminders/templates"
             class="text-blue-600 hover:text-blue-800 font-medium"
           >
@@ -142,7 +145,7 @@ export default function RemindersPage({ data }: PageProps<RemindersPageData>) {
             <div class="flex space-x-2">
               <select class="border border-gray-300 rounded px-3 py-1 text-sm">
                 <option value="all">All Categories</option>
-                {getCategories().map(category => (
+                {getCategories().map((category) => (
                   <option key={category} value={category}>
                     {category.charAt(0).toUpperCase() + category.slice(1)}
                   </option>
@@ -158,56 +161,66 @@ export default function RemindersPage({ data }: PageProps<RemindersPageData>) {
         </div>
 
         <div class="p-6">
-          {reminders.length === 0 ? (
-            <div class="text-center py-12">
-              <div class="text-6xl mb-4">📅</div>
-              <h3 class="text-xl font-semibold text-gray-700 mb-2">
-                No Reminders Yet
-              </h3>
-              <p class="text-gray-500 mb-6">
-                Get started by creating your first reminder using one of the templates above.
-              </p>
-              <div class="flex justify-center space-x-4">
-                <a
-                  href="/reminders/new"
-                  class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Create Custom Reminder
-                </a>
-                <button class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors">
-                  Browse Templates
-                </button>
+          {reminders.length === 0
+            ? (
+              <div class="text-center py-12">
+                <div class="text-6xl mb-4">📅</div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">
+                  No Reminders Yet
+                </h3>
+                <p class="text-gray-500 mb-6">
+                  Get started by creating your first reminder using one of the
+                  templates above.
+                </p>
+                <div class="flex justify-center space-x-4">
+                  <a
+                    href="/reminders/new"
+                    class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Create Custom Reminder
+                  </a>
+                  <button class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors">
+                    Browse Templates
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div class="space-y-4">
-              {/* Reminder list will go here when we implement reminder storage */}
-              {reminders.map((reminder, index) => (
-                <div key={index} class="border border-gray-200 rounded-lg p-4">
-                  {/* Reminder item template */}
-                  <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                      <h4 class="font-semibold text-gray-800">Reminder Title</h4>
-                      <p class="text-gray-600 text-sm mt-1">Reminder description</p>
-                      <div class="flex items-center mt-2 space-x-4 text-xs text-gray-500">
-                        <span>📅 Next: Today at 2:00 PM</span>
-                        <span>🔄 Daily</span>
-                        <span>✅ 5/7 acknowledged</span>
+            )
+            : (
+              <div class="space-y-4">
+                {/* Reminder list will go here when we implement reminder storage */}
+                {reminders.map((reminder, index) => (
+                  <div
+                    key={index}
+                    class="border border-gray-200 rounded-lg p-4"
+                  >
+                    {/* Reminder item template */}
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <h4 class="font-semibold text-gray-800">
+                          Reminder Title
+                        </h4>
+                        <p class="text-gray-600 text-sm mt-1">
+                          Reminder description
+                        </p>
+                        <div class="flex items-center mt-2 space-x-4 text-xs text-gray-500">
+                          <span>📅 Next: Today at 2:00 PM</span>
+                          <span>🔄 Daily</span>
+                          <span>✅ 5/7 acknowledged</span>
+                        </div>
+                      </div>
+                      <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-800 text-sm">
+                          Edit
+                        </button>
+                        <button class="text-red-600 hover:text-red-800 text-sm">
+                          Delete
+                        </button>
                       </div>
                     </div>
-                    <div class="flex space-x-2">
-                      <button class="text-blue-600 hover:text-blue-800 text-sm">
-                        Edit
-                      </button>
-                      <button class="text-red-600 hover:text-red-800 text-sm">
-                        Delete
-                      </button>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
         </div>
       </div>
 

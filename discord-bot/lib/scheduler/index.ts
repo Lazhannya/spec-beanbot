@@ -1,8 +1,15 @@
 // Main scheduler initialization and integration
 // This module sets up the reminder scheduler for the application
 
-import { initializeScheduler, startScheduler, getSchedulerStats } from "./reminder-scheduler.ts";
-import type { DeliveryCallback, SchedulerConfig } from "./reminder-scheduler.ts";
+import {
+  getSchedulerStats,
+  initializeScheduler,
+  startScheduler,
+} from "./reminder-scheduler.ts";
+import type {
+  DeliveryCallback,
+  SchedulerConfig,
+} from "./reminder-scheduler.ts";
 import { createDelivery, updateDeliveryStatus } from "../storage/reminders.ts";
 import { sendReminderViaDiscord } from "../discord/messenger.ts";
 import type { Reminder, ReminderDelivery } from "../types/reminders.ts";
@@ -56,13 +63,13 @@ const deliveryCallback: DeliveryCallback = async (reminder: Reminder) => {
 
     if (deliveryResult.success) {
       await updateDeliveryStatus(deliveryId, "delivered");
-      
+
       // Update delivery record with Discord message details
       if (deliveryResult.messageId && deliveryResult.channelId) {
         // TODO: Update delivery record with message ID and channel ID
         // This will be enhanced when we add more delivery tracking
       }
-      
+
       return { success: true };
     } else {
       await updateDeliveryStatus(deliveryId, "failed", deliveryResult.error);
@@ -72,7 +79,6 @@ const deliveryCallback: DeliveryCallback = async (reminder: Reminder) => {
         shouldRetry: deliveryResult.shouldRetry,
       };
     }
-
   } catch (error) {
     console.error("Error in delivery callback:", error);
     return {
@@ -88,7 +94,7 @@ const deliveryCallback: DeliveryCallback = async (reminder: Reminder) => {
  */
 function formatReminderMessage(reminder: Reminder): string {
   let message = `🔔 **${reminder.title}**\n\n${reminder.message}`;
-  
+
   // Add category emoji
   const categoryEmojis: Record<string, string> = {
     health: "🏥",
@@ -99,10 +105,10 @@ function formatReminderMessage(reminder: Reminder): string {
     task: "✅",
     custom: "📝",
   };
-  
+
   const emoji = categoryEmojis[reminder.category] || "🔔";
   message = `${emoji} **${reminder.title}**\n\n${reminder.message}`;
-  
+
   // Add custom fields if available
   if (reminder.customFields && Object.keys(reminder.customFields).length > 0) {
     message += "\n\n**Details:**";
@@ -110,10 +116,10 @@ function formatReminderMessage(reminder: Reminder): string {
       message += `\n• ${key}: ${value}`;
     }
   }
-  
+
   // Add acknowledgment instructions
   message += "\n\n*React with ✅ to acknowledge this reminder*";
-  
+
   return message;
 }
 
@@ -123,18 +129,20 @@ function formatReminderMessage(reminder: Reminder): string {
 export async function initializeAppScheduler(): Promise<void> {
   try {
     console.log("Initializing reminder scheduler...");
-    
+
     // Initialize scheduler with delivery callback
-    const _scheduler = initializeScheduler(deliveryCallback, APP_SCHEDULER_CONFIG);
-    
+    const _scheduler = initializeScheduler(
+      deliveryCallback,
+      APP_SCHEDULER_CONFIG,
+    );
+
     // Start the scheduler
     await startScheduler();
-    
+
     console.log("✅ Reminder scheduler initialized and started");
-    
+
     // Set up graceful shutdown
     setupGracefulShutdown();
-    
   } catch (error) {
     console.error("❌ Failed to initialize scheduler:", error);
     throw error;
@@ -159,7 +167,7 @@ export function getSchedulerHealth(): {
   message: string;
 } {
   const stats = getSchedulerStats();
-  
+
   if (!stats) {
     return {
       status: "unhealthy",
@@ -167,7 +175,7 @@ export function getSchedulerHealth(): {
       message: "Scheduler not initialized",
     };
   }
-  
+
   if (!stats.isRunning) {
     return {
       status: "unhealthy",
@@ -175,19 +183,21 @@ export function getSchedulerHealth(): {
       message: "Scheduler is not running",
     };
   }
-  
+
   // Check if last run was recent
   const timeSinceLastRun = Date.now() - stats.lastRunAt.getTime();
   const maxInterval = 5 * 60 * 1000; // 5 minutes
-  
+
   if (timeSinceLastRun > maxInterval) {
     return {
       status: "degraded",
       stats,
-      message: `Last run was ${Math.round(timeSinceLastRun / 60000)} minutes ago`,
+      message: `Last run was ${
+        Math.round(timeSinceLastRun / 60000)
+      } minutes ago`,
     };
   }
-  
+
   // Check failure rate
   const totalDeliveries = stats.successfulDeliveries + stats.failedDeliveries;
   if (totalDeliveries > 10) {
@@ -200,7 +210,7 @@ export function getSchedulerHealth(): {
       };
     }
   }
-  
+
   return {
     status: "healthy",
     stats,
@@ -217,13 +227,17 @@ export async function forceProcessReminders(): Promise<{
   message: string;
 }> {
   try {
-    const scheduler = initializeScheduler(deliveryCallback, APP_SCHEDULER_CONFIG);
+    const scheduler = initializeScheduler(
+      deliveryCallback,
+      APP_SCHEDULER_CONFIG,
+    );
     const result = await scheduler.forceProcessDueReminders();
-    
+
     return {
       success: true,
       processed: result.processed,
-      message: `Processed ${result.processed} reminders (${result.successful} successful, ${result.failed} failed)`,
+      message:
+        `Processed ${result.processed} reminders (${result.successful} successful, ${result.failed} failed)`,
     };
   } catch (error) {
     return {
@@ -237,9 +251,14 @@ export async function forceProcessReminders(): Promise<{
 /**
  * Update scheduler configuration
  */
-export function updateSchedulerConfig(config: Partial<SchedulerConfig>): boolean {
+export function updateSchedulerConfig(
+  config: Partial<SchedulerConfig>,
+): boolean {
   try {
-    const scheduler = initializeScheduler(deliveryCallback, APP_SCHEDULER_CONFIG);
+    const scheduler = initializeScheduler(
+      deliveryCallback,
+      APP_SCHEDULER_CONFIG,
+    );
     scheduler.updateConfig(config);
     return true;
   } catch (error) {
@@ -252,4 +271,4 @@ export function updateSchedulerConfig(config: Partial<SchedulerConfig>): boolean
  * Export scheduler utilities
  */
 export { getSchedulerStats, stopScheduler } from "./reminder-scheduler.ts";
-export type { SchedulerStats, SchedulerConfig } from "./reminder-scheduler.ts";
+export type { SchedulerConfig, SchedulerStats } from "./reminder-scheduler.ts";

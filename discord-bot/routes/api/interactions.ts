@@ -2,7 +2,10 @@
 // This route processes Discord button interactions and other acknowledgment methods
 
 import { type Handlers } from "$fresh/server.ts";
-import { AcknowledgmentTracker, acknowledgmentUtils } from "../../lib/acknowledgment/index.ts";
+import {
+  AcknowledgmentTracker,
+  acknowledgmentUtils,
+} from "../../lib/acknowledgment/index.ts";
 import type { AcknowledgmentAction } from "../../lib/acknowledgment/index.ts";
 
 /**
@@ -54,7 +57,7 @@ export const handler: Handlers = {
       // Verify Discord signature
       const signature = req.headers.get("x-signature-ed25519");
       const timestamp = req.headers.get("x-signature-timestamp");
-      
+
       if (!signature || !timestamp) {
         return new Response("Missing signature headers", { status: 401 });
       }
@@ -62,7 +65,7 @@ export const handler: Handlers = {
       // TODO: Implement Ed25519 signature verification
       // For now, we'll skip verification in development
       const isValidSignature = true; // await verifyDiscordSignature(req, signature, timestamp);
-      
+
       if (!isValidSignature) {
         return new Response("Invalid signature", { status: 401 });
       }
@@ -75,7 +78,7 @@ export const handler: Handlers = {
           JSON.stringify({ type: INTERACTION_RESPONSE_TYPES.PONG }),
           {
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
@@ -95,9 +98,8 @@ export const handler: Handlers = {
         }),
         {
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
-
     } catch (error) {
       console.error("Error handling Discord interaction:", error);
       return new Response("Internal server error", { status: 500 });
@@ -129,7 +131,7 @@ async function handleButtonInteraction(interaction: DiscordInteraction) {
     // Check if user can acknowledge this delivery
     const canAck = await AcknowledgmentTracker.canAcknowledge(
       buttonData.deliveryId,
-      userId
+      userId,
     );
 
     if (!canAck.authorized) {
@@ -147,15 +149,16 @@ async function handleButtonInteraction(interaction: DiscordInteraction) {
         channelId: interaction.channel_id,
         customId: customId,
         snoozeMinutes: getSnoozeMinutes(buttonData.action),
-      }
+      },
     );
 
     if (result.success) {
       return createSuccessResponse(result.message, buttonData.action);
     } else {
-      return createErrorResponse(result.error || "Failed to process acknowledgment");
+      return createErrorResponse(
+        result.error || "Failed to process acknowledgment",
+      );
     }
-
   } catch (error) {
     console.error("Error handling button interaction:", error);
     return createErrorResponse("Internal error processing acknowledgment");
@@ -167,7 +170,7 @@ async function handleButtonInteraction(interaction: DiscordInteraction) {
  */
 function createSuccessResponse(message: string, action: AcknowledgmentAction) {
   const emoji = acknowledgmentUtils.getActionEmoji(action);
-  
+
   return new Response(
     JSON.stringify({
       type: INTERACTION_RESPONSE_TYPES.UPDATE_MESSAGE,
@@ -179,7 +182,7 @@ function createSuccessResponse(message: string, action: AcknowledgmentAction) {
     }),
     {
       headers: { "Content-Type": "application/json" },
-    }
+    },
   );
 }
 
@@ -197,7 +200,7 @@ function createErrorResponse(errorMessage: string) {
     }),
     {
       headers: { "Content-Type": "application/json" },
-    }
+    },
   );
 }
 
@@ -214,7 +217,7 @@ function getSnoozeMinutes(action: AcknowledgmentAction): number | undefined {
 function _verifyDiscordSignature(
   _req: Request,
   _signature: string,
-  _timestamp: string
+  _timestamp: string,
 ): boolean {
   // TODO: Implement proper Ed25519 signature verification
   // This requires the Discord public key and crypto verification

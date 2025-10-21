@@ -40,23 +40,23 @@ export const handler: Handlers = {
 
       // Verify Discord webhook signature
       const publicKey = Deno.env.get("DISCORD_PUBLIC_KEY");
-      
+
       if (publicKey && signature && timestamp) {
         const isValidSignature = await validateDiscordSignature(
           signature,
           timestamp,
           bodyText,
-          publicKey
+          publicKey,
         );
 
         if (!isValidSignature) {
           console.warn("Invalid Discord webhook signature");
           return new Response(
             JSON.stringify({ error: "Invalid signature" }),
-            { 
+            {
               status: 401,
-              headers: { "Content-Type": "application/json" }
-            }
+              headers: { "Content-Type": "application/json" },
+            },
           );
         }
       } else if (publicKey) {
@@ -64,32 +64,32 @@ export const handler: Handlers = {
         console.warn("Missing signature headers");
         return new Response(
           JSON.stringify({ error: "Missing signature headers" }),
-          { 
+          {
             status: 401,
-            headers: { "Content-Type": "application/json" }
-          }
+            headers: { "Content-Type": "application/json" },
+          },
         );
       }
       // If no public key is configured, skip signature verification (development mode)
 
       // Parse the webhook payload
       const body: DiscordWebhookBody = JSON.parse(bodyText);
-      
+
       console.log("Received webhook:", {
         type: body.type,
         hasData: !!body.data,
         hasMessage: !!body.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Validate webhook payload
       if (!body.type) {
         return new Response(
           JSON.stringify({ error: "Missing webhook type" }),
-          { 
+          {
             status: 400,
-            headers: { "Content-Type": "application/json" }
-          }
+            headers: { "Content-Type": "application/json" },
+          },
         );
       }
 
@@ -100,10 +100,10 @@ export const handler: Handlers = {
         case 1: // Ping
           return new Response(
             JSON.stringify({ type: 1 }), // Pong response
-            { 
+            {
               status: 200,
-              headers: { "Content-Type": "application/json" }
-            }
+              headers: { "Content-Type": "application/json" },
+            },
           );
 
         case 2: // Application Command (Slash command)
@@ -120,9 +120,9 @@ export const handler: Handlers = {
                 command_name: body.data?.name,
                 command_options: body.data?.options,
                 interaction_id: body.id,
-                interaction_token: body.token
-              }
-            }
+                interaction_token: body.token,
+              },
+            },
           };
           break;
 
@@ -142,23 +142,23 @@ export const handler: Handlers = {
                 custom_id: body.data?.custom_id,
                 values: body.data?.values,
                 interaction_id: body.id,
-                interaction_token: body.token
-              }
-            }
+                interaction_token: body.token,
+              },
+            },
           };
           break;
 
         case 4: // Application Command Autocomplete
           // Don't forward autocomplete to n8n, just acknowledge
           return new Response(
-            JSON.stringify({ 
+            JSON.stringify({
               type: 8, // Autocomplete result
-              data: { choices: [] }
+              data: { choices: [] },
             }),
-            { 
+            {
               status: 200,
-              headers: { "Content-Type": "application/json" }
-            }
+              headers: { "Content-Type": "application/json" },
+            },
           );
 
         case 5: // Modal Submit
@@ -175,9 +175,9 @@ export const handler: Handlers = {
                 custom_id: body.data?.custom_id,
                 components: body.data?.components,
                 interaction_id: body.id,
-                interaction_token: body.token
-              }
-            }
+                interaction_token: body.token,
+              },
+            },
           };
           break;
 
@@ -185,17 +185,17 @@ export const handler: Handlers = {
           console.warn("Unknown webhook type:", body.type);
           return new Response(
             JSON.stringify({ error: "Unknown webhook type" }),
-            { 
+            {
               status: 400,
-              headers: { "Content-Type": "application/json" }
-            }
+              headers: { "Content-Type": "application/json" },
+            },
           );
       }
 
       // Forward to n8n if we have a payload
       if (n8nPayload) {
         const forwardResult = await forwardToN8n(n8nPayload);
-        
+
         if (!forwardResult.success) {
           console.error("Failed to forward to n8n:", forwardResult.error);
           // Don't fail the webhook - acknowledge Discord but log the error
@@ -204,31 +204,30 @@ export const handler: Handlers = {
 
       // Acknowledge the webhook (important for Discord)
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           type: 4, // Channel message response
           data: {
             content: "✅ Event received and processed",
-            flags: 64 // Ephemeral response (only visible to the user)
-          }
+            flags: 64, // Ephemeral response (only visible to the user)
+          },
         }),
-        { 
+        {
           status: 200,
-          headers: { "Content-Type": "application/json" }
-        }
+          headers: { "Content-Type": "application/json" },
+        },
       );
-
     } catch (error) {
       console.error("Webhook processing error:", error);
-      
+
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: "Internal server error",
-          message: error.message 
+          message: error.message,
         }),
-        { 
+        {
           status: 500,
-          headers: { "Content-Type": "application/json" }
-        }
+          headers: { "Content-Type": "application/json" },
+        },
       );
     }
   },
@@ -237,12 +236,12 @@ export const handler: Handlers = {
   GET(req) {
     const url = new URL(req.url);
     const challenge = url.searchParams.get("challenge");
-    
+
     if (challenge) {
       // Echo back the challenge for webhook verification
       return new Response(challenge, {
         status: 200,
-        headers: { "Content-Type": "text/plain" }
+        headers: { "Content-Type": "text/plain" },
       });
     }
 
@@ -251,24 +250,26 @@ export const handler: Handlers = {
         status: "Discord Webhook Endpoint",
         timestamp: new Date().toISOString(),
         methods: ["POST", "GET"],
-        description: "Receives Discord interactions and forwards to n8n"
+        description: "Receives Discord interactions and forwards to n8n",
       }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" }
-      }
+        headers: { "Content-Type": "application/json" },
+      },
     );
-  }
+  },
 };
 
 // Helper function to forward webhook data to n8n
-async function forwardToN8n(payload: N8nWebhookPayload): Promise<{ success: boolean; error?: string }> {
+async function forwardToN8n(
+  payload: N8nWebhookPayload,
+): Promise<{ success: boolean; error?: string }> {
   const n8nWebhookUrl = Deno.env.get("N8N_WEBHOOK_URL");
-  
+
   if (!n8nWebhookUrl) {
     return {
       success: false,
-      error: "N8N_WEBHOOK_URL not configured"
+      error: "N8N_WEBHOOK_URL not configured",
     };
   }
 
@@ -277,31 +278,31 @@ async function forwardToN8n(payload: N8nWebhookPayload): Promise<{ success: bool
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "Discord-Bot-Webhook/1.0"
+        "User-Agent": "Discord-Bot-Webhook/1.0",
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       return {
         success: false,
-        error: `n8n webhook failed: ${response.status} ${response.statusText} - ${errorText}`
+        error:
+          `n8n webhook failed: ${response.status} ${response.statusText} - ${errorText}`,
       };
     }
 
     console.log("Successfully forwarded to n8n:", {
       status: response.status,
       eventType: payload.event_type,
-      userId: payload.data.user_id
+      userId: payload.data.user_id,
     });
 
     return { success: true };
-
   } catch (error) {
     return {
       success: false,
-      error: `Network error forwarding to n8n: ${error.message}`
+      error: `Network error forwarding to n8n: ${error.message}`,
     };
   }
 }
@@ -311,7 +312,7 @@ export async function validateDiscordSignature(
   signature: string,
   timestamp: string,
   body: string,
-  publicKey: string
+  publicKey: string,
 ): Promise<boolean> {
   try {
     // Import the public key
@@ -323,12 +324,12 @@ export async function validateDiscordSignature(
         namedCurve: "Ed25519",
       },
       false,
-      ["verify"]
+      ["verify"],
     );
 
     // Create the message to verify (timestamp + body)
     const message = new TextEncoder().encode(timestamp + body);
-    
+
     // Convert signature from hex to ArrayBuffer
     const signatureBuffer = hexToArrayBuffer(signature);
 
@@ -337,7 +338,7 @@ export async function validateDiscordSignature(
       "Ed25519",
       key,
       signatureBuffer,
-      message
+      message,
     );
 
     return isValid;
@@ -352,11 +353,11 @@ function hexToArrayBuffer(hex: string): ArrayBuffer {
   if (hex.length % 2 !== 0) {
     throw new Error("Invalid hex string length");
   }
-  
+
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
   }
-  
+
   return bytes.buffer;
 }

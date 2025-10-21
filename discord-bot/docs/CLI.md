@@ -1,6 +1,7 @@
 # Reminder CLI Usage Guide
 
-The Reminder CLI provides a command-line interface for managing reminders in the Discord bot system.
+The Reminder CLI provides a command-line interface for managing reminders in the
+Discord bot system.
 
 ## Quick Start
 
@@ -34,11 +35,13 @@ deno task reminder delete <reminder_id>
 ## Available Commands
 
 ### List Commands
+
 - `list` - List reminders with filtering and pagination
 - `templates` - List available reminder templates
 - `stats [user-id]` - Show reminder statistics
 
 ### Management Commands
+
 - `create` - Create a new reminder
 - `show <id>` - Show detailed reminder information
 - `update <id>` - Update an existing reminder
@@ -47,6 +50,7 @@ deno task reminder delete <reminder_id>
 - `deactivate <id>` - Deactivate a reminder
 
 ### Utility Commands
+
 - `test-delivery <id>` - Test reminder delivery (simulation)
 - `cleanup` - Clean up expired/completed reminders
 - `help` - Show help information
@@ -54,6 +58,7 @@ deno task reminder delete <reminder_id>
 ## Filtering and Options
 
 ### List Filtering
+
 ```bash
 # Show only active reminders
 deno task reminder list --active-only
@@ -75,6 +80,7 @@ deno task reminder list --page 2 --limit 10
 ```
 
 ### Output Formats
+
 ```bash
 # Verbose output
 deno task reminder list --verbose
@@ -89,6 +95,7 @@ deno task reminder stats --json
 ## Creating Reminders
 
 ### Basic Reminder
+
 ```bash
 deno task reminder create \
   --title "Meeting Reminder" \
@@ -100,6 +107,7 @@ deno task reminder create \
 ```
 
 ### Using Templates
+
 ```bash
 # List available templates
 deno task reminder templates
@@ -111,6 +119,7 @@ deno task reminder create \
 ```
 
 ### Advanced Options
+
 ```bash
 deno task reminder create \
   --title "Complex Reminder" \
@@ -140,6 +149,7 @@ deno task reminder update <reminder_id> --status active
 ## Maintenance
 
 ### Cleanup
+
 ```bash
 # See what would be cleaned up
 deno task reminder cleanup
@@ -149,6 +159,7 @@ deno task reminder cleanup --force
 ```
 
 ### Testing
+
 ```bash
 # Test reminder delivery (simulation only)
 deno task reminder test-delivery <reminder_id>
@@ -157,6 +168,7 @@ deno task reminder test-delivery <reminder_id>
 ## Configuration
 
 The CLI uses these default settings:
+
 - Default user ID: `cli-user`
 - Default timezone: `UTC`
 - Default time: `09:00`
@@ -165,7 +177,8 @@ The CLI uses these default settings:
 
 ## Error Handling
 
-The CLI provides detailed error messages and supports verbose output for debugging:
+The CLI provides detailed error messages and supports verbose output for
+debugging:
 
 ```bash
 # Show detailed error information
@@ -175,6 +188,7 @@ deno task reminder create --title "Test" --verbose
 ## Examples
 
 ### Daily Workflow
+
 ```bash
 # Check today's reminders
 deno task reminder list --active-only
@@ -194,6 +208,7 @@ deno task reminder update <id> --status completed
 ```
 
 ### Batch Operations
+
 ```bash
 # Find old completed reminders
 deno task reminder list --status "completed,expired" --json

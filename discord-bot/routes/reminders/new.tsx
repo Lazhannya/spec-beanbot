@@ -3,10 +3,16 @@ import { h } from "preact";
 import type { Handlers, PageProps } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../lib/storage/sessions.ts";
 import type { UserSession } from "../../lib/storage/sessions.ts";
-import { reminderTemplates, getTemplateById } from "../../data/reminder-templates.ts";
+import {
+  getTemplateById,
+  reminderTemplates,
+} from "../../data/reminder-templates.ts";
 import { createReminder } from "../../lib/storage/reminders.ts";
 import { historyLogger } from "../../lib/history/service.ts";
-import type { ReminderCategory, ScheduleType } from "../../lib/types/reminders.ts";
+import type {
+  ReminderCategory,
+  ScheduleType,
+} from "../../lib/types/reminders.ts";
 
 interface NewReminderPageData {
   session: UserSession | null;
@@ -20,13 +26,13 @@ export const handler: Handlers<NewReminderPageData> = {
     try {
       // Check if user is authenticated
       const session = await getSessionFromRequest(req);
-      
+
       if (!session) {
         return new Response(null, {
           status: 302,
           headers: {
-            "Location": "/auth/discord"
-          }
+            "Location": "/auth/discord",
+          },
         });
       }
 
@@ -35,15 +41,14 @@ export const handler: Handlers<NewReminderPageData> = {
 
       return ctx.render({
         session,
-        selectedTemplate: templateId || undefined
+        selectedTemplate: templateId || undefined,
       });
-
     } catch (error) {
       console.error("New reminder page error:", error);
-      
+
       return ctx.render({
         session: null,
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   },
@@ -52,31 +57,35 @@ export const handler: Handlers<NewReminderPageData> = {
     try {
       // Check if user is authenticated
       const session = await getSessionFromRequest(req);
-      
+
       if (!session) {
         return new Response(null, {
           status: 302,
           headers: {
-            "Location": "/auth/discord"
-          }
+            "Location": "/auth/discord",
+          },
         });
       }
 
       const formData = await req.formData();
-      
+
       // Parse form data into reminder input
       const reminderInput = {
         title: (formData.get("title") as string)?.trim(),
         message: (formData.get("message") as string)?.trim(),
         targetUser: session.userInfo.id, // Target the logged-in user for now
-        category: (formData.get("category") as string || "personal") as ReminderCategory,
+        category: (formData.get("category") as string ||
+          "personal") as ReminderCategory,
         templateId: (formData.get("templateId") as string) || undefined,
         customFields: {},
-        
+
         schedule: {
-          type: (formData.get("scheduleType") as string || "daily") as ScheduleType,
+          type:
+            (formData.get("scheduleType") as string || "daily") as ScheduleType,
           time: (formData.get("time") as string) || "09:00",
-          daysOfWeek: formData.getAll("daysOfWeek").map(d => parseInt(d as string)).filter(d => !isNaN(d)),
+          daysOfWeek: formData.getAll("daysOfWeek").map((d) =>
+            parseInt(d as string)
+          ).filter((d) => !isNaN(d)),
           dayOfMonth: undefined,
           interval: undefined,
           startDate: undefined,
@@ -86,20 +95,22 @@ export const handler: Handlers<NewReminderPageData> = {
           excludeDates: undefined,
         },
         timezone: (formData.get("timezone") as string) || "America/New_York",
-        
+
         escalation: {
           enabled: formData.get("escalationEnabled") === "on",
-          delayMinutes: parseInt((formData.get("escalationDelay") as string) || "15"),
+          delayMinutes: parseInt(
+            (formData.get("escalationDelay") as string) || "15",
+          ),
           maxEscalations: 3,
           escalationTargets: (formData.get("escalationTargets") as string || "")
             .split(",")
-            .map(t => t.trim())
+            .map((t) => t.trim())
             .filter(Boolean),
           escalationMessage: undefined,
           stopOnAcknowledgment: true,
           escalationInterval: undefined,
         },
-        
+
         tags: [],
         notes: "",
         priority: "normal" as const,
@@ -110,7 +121,7 @@ export const handler: Handlers<NewReminderPageData> = {
         return ctx.render({
           session,
           selectedTemplate: reminderInput.templateId,
-          error: "Title and message are required"
+          error: "Title and message are required",
         });
       }
 
@@ -121,36 +132,43 @@ export const handler: Handlers<NewReminderPageData> = {
         return ctx.render({
           session,
           selectedTemplate: reminderInput.templateId,
-          error: result.errors?.join(", ") || "Failed to create reminder"
+          error: result.errors?.join(", ") || "Failed to create reminder",
         });
       }
 
       // Log reminder creation in history
       if (result.reminder) {
-        await historyLogger.reminderCreated(result.reminder.id, session.userId, "web");
+        await historyLogger.reminderCreated(
+          result.reminder.id,
+          session.userId,
+          "web",
+        );
       }
 
       // Redirect to reminders page with success message
       return new Response(null, {
         status: 302,
         headers: {
-          "Location": "/reminders?success=Reminder created successfully"
-        }
+          "Location": "/reminders?success=Reminder created successfully",
+        },
       });
-
     } catch (error) {
       console.error("Create reminder error:", error);
-      
+
       const session = await getSessionFromRequest(req);
       return ctx.render({
         session,
-        error: error instanceof Error ? error.message : "Failed to create reminder"
+        error: error instanceof Error
+          ? error.message
+          : "Failed to create reminder",
       });
     }
-  }
+  },
 };
 
-export default function NewReminderPage({ data }: PageProps<NewReminderPageData>) {
+export default function NewReminderPage(
+  { data }: PageProps<NewReminderPageData>,
+) {
   const { session, selectedTemplate, error, success } = data;
 
   if (!session) {
@@ -158,7 +176,7 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
       <div class="text-center">
         <h1 class="text-2xl font-bold mb-4">Authentication Required</h1>
         <p class="mb-4">Please log in to create reminders.</p>
-        <a 
+        <a
           href="/auth/discord"
           class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
         >
@@ -194,7 +212,7 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
           <p class="text-red-700">{error}</p>
         </div>
       )}
-      
+
       {success && (
         <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
           <p class="text-green-700">{success}</p>
@@ -210,13 +228,13 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Template (Optional)
               </label>
-              <select 
-                name="templateId" 
+              <select
+                name="templateId"
                 class="w-full border border-gray-300 rounded-lg px-3 py-2"
                 value={selectedTemplate || ""}
               >
                 <option value="">Custom Reminder</option>
-                {reminderTemplates.map(template => (
+                {reminderTemplates.map((template) => (
                   <option key={template.id} value={template.id}>
                     {template.emoji} {template.name}
                   </option>
@@ -263,8 +281,8 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Category
               </label>
-              <select 
-                name="category" 
+              <select
+                name="category"
                 class="w-full border border-gray-300 rounded-lg px-3 py-2"
                 value={template?.category || "personal"}
               >
@@ -280,14 +298,14 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
             {/* Schedule Configuration */}
             <div class="mb-6 border-t pt-6">
               <h3 class="text-lg font-semibold mb-4">Schedule</h3>
-              
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Frequency
                   </label>
-                  <select 
-                    name="scheduleType" 
+                  <select
+                    name="scheduleType"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2"
                     value={template?.defaultSchedule.type || "daily"}
                   >
@@ -316,10 +334,11 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Timezone
                 </label>
-                <select 
-                  name="timezone" 
+                <select
+                  name="timezone"
                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  value={template?.defaultSchedule.timezone || "America/New_York"}
+                  value={template?.defaultSchedule.timezone ||
+                    "America/New_York"}
                 >
                   <option value="America/New_York">Eastern Time (ET)</option>
                   <option value="America/Chicago">Central Time (CT)</option>
@@ -335,8 +354,14 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
                   Days of Week (for weekly reminders)
                 </label>
                 <div class="grid grid-cols-7 gap-2">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, index) => (
-                    <label key={day} class="flex items-center justify-center p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((
+                    day,
+                    index,
+                  ) => (
+                    <label
+                      key={day}
+                      class="flex items-center justify-center p-2 border rounded cursor-pointer hover:bg-gray-50"
+                    >
                       <input
                         type="checkbox"
                         name="daysOfWeek"
@@ -353,7 +378,7 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
             {/* Escalation Settings */}
             <div class="mb-6 border-t pt-6">
               <h3 class="text-lg font-semibold mb-4">Escalation Settings</h3>
-              
+
               <div class="mb-4">
                 <label class="flex items-center">
                   <input
@@ -433,15 +458,21 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
               </div>
               <p class="text-sm text-gray-700 mb-3">{template.description}</p>
               <div class="bg-gray-50 rounded p-3">
-                <p class="text-sm font-medium text-gray-700">Default Message:</p>
-                <p class="text-sm text-gray-600 mt-1">{template.defaultMessage}</p>
+                <p class="text-sm font-medium text-gray-700">
+                  Default Message:
+                </p>
+                <p class="text-sm text-gray-600 mt-1">
+                  {template.defaultMessage}
+                </p>
               </div>
             </div>
           )}
 
           {/* Quick Tips */}
           <div class="bg-blue-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-blue-800 mb-4">💡 Quick Tips</h3>
+            <h3 class="text-lg font-semibold text-blue-800 mb-4">
+              💡 Quick Tips
+            </h3>
             <ul class="space-y-2 text-sm text-blue-700">
               <li>• Use templates for faster setup</li>
               <li>• Set escalation for important reminders</li>
@@ -455,7 +486,7 @@ export default function NewReminderPage({ data }: PageProps<NewReminderPageData>
           <div class="bg-white rounded-lg shadow-md p-6">
             <h3 class="text-lg font-semibold mb-4">Popular Templates</h3>
             <div class="space-y-2">
-              {reminderTemplates.slice(0, 3).map(template => (
+              {reminderTemplates.slice(0, 3).map((template) => (
                 <a
                   key={template.id}
                   href={`/reminders/new?template=${template.id}`}

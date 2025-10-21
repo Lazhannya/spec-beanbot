@@ -2,7 +2,10 @@
 // This module implements a cron-based scheduling system for reminder delivery
 
 import { getRemindersForDelivery } from "../storage/reminders.ts";
-import { updateReminderAfterDelivery, getCurrentTimestamp } from "../utils/reminders.ts";
+import {
+  getCurrentTimestamp,
+  updateReminderAfterDelivery,
+} from "../utils/reminders.ts";
 import type { Reminder } from "../types/reminders.ts";
 
 /**
@@ -11,20 +14,20 @@ import type { Reminder } from "../types/reminders.ts";
 export interface SchedulerConfig {
   // How often to check for due reminders (in milliseconds)
   checkInterval: number;
-  
+
   // Maximum number of reminders to process per batch
   batchSize: number;
-  
+
   // Timezone handling
   defaultTimezone: string;
-  
+
   // Retry configuration
   maxRetries: number;
   retryDelayMs: number;
-  
+
   // Performance settings
   maxConcurrentDeliveries: number;
-  
+
   // Logging
   enableDebugLogging: boolean;
 }
@@ -117,15 +120,17 @@ export class ReminderScheduler {
     }
 
     if (!this.deliveryCallback) {
-      throw new Error("Delivery callback must be set before starting scheduler");
+      throw new Error(
+        "Delivery callback must be set before starting scheduler",
+      );
     }
 
     console.log("Starting reminder scheduler...");
     this.stats.isRunning = true;
-    
+
     // Run initial check
     await this.processReminders();
-    
+
     // Set up recurring interval
     this.intervalId = setInterval(async () => {
       try {
@@ -135,7 +140,9 @@ export class ReminderScheduler {
       }
     }, this.config.checkInterval);
 
-    console.log(`Scheduler started with ${this.config.checkInterval}ms interval`);
+    console.log(
+      `Scheduler started with ${this.config.checkInterval}ms interval`,
+    );
   }
 
   /**
@@ -146,7 +153,7 @@ export class ReminderScheduler {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
-    
+
     this.stats.isRunning = false;
     console.log("Scheduler stopped");
   }
@@ -171,34 +178,33 @@ export class ReminderScheduler {
 
     this.isProcessing = true;
     this.startTime = Date.now();
-    
+
     try {
       const now = getCurrentTimestamp();
       const cutoffTime = new Date(now.getTime() + 60000); // 1 minute buffer
-      
+
       // Get reminders that need delivery
       const dueReminders = await getRemindersForDelivery(cutoffTime);
-      
+
       if (this.config.enableDebugLogging && dueReminders.length > 0) {
         console.log(`Found ${dueReminders.length} due reminders`);
       }
 
       // Update stats
       this.stats.pendingReminders = dueReminders.length;
-      this.stats.overdueReminders = dueReminders.filter(r => 
+      this.stats.overdueReminders = dueReminders.filter((r) =>
         r.nextDeliveryAt && r.nextDeliveryAt < now
       ).length;
 
       // Process in batches
       const batches = this.createBatches(dueReminders, this.config.batchSize);
-      
+
       for (const batch of batches) {
         await this.processBatch(batch);
       }
 
       // Update stats
       this.updateStats();
-      
     } catch (error) {
       console.error("Error processing reminders:", error);
     } finally {
@@ -221,14 +227,14 @@ export class ReminderScheduler {
    * Process a batch of reminders
    */
   private async processBatch(reminders: Reminder[]): Promise<void> {
-    const deliveryPromises = reminders.map(reminder => 
+    const deliveryPromises = reminders.map((reminder) =>
       this.processReminder(reminder)
     );
 
     // Limit concurrency
     const concurrentBatches = this.createBatches(
-      deliveryPromises, 
-      this.config.maxConcurrentDeliveries
+      deliveryPromises,
+      this.config.maxConcurrentDeliveries,
     );
 
     for (const batch of concurrentBatches) {
@@ -251,7 +257,9 @@ export class ReminderScheduler {
     while (retries <= this.config.maxRetries) {
       try {
         if (this.config.enableDebugLogging) {
-          console.log(`Processing reminder ${reminder.id} (attempt ${retries + 1})`);
+          console.log(
+            `Processing reminder ${reminder.id} (attempt ${retries + 1})`,
+          );
         }
 
         // Attempt delivery
@@ -260,51 +268,59 @@ export class ReminderScheduler {
         if (result.success) {
           // Update reminder after successful delivery
           const _updatedReminder = updateReminderAfterDelivery(reminder);
-          
+
           // Note: Updated reminder should be saved by the delivery callback
           this.stats.successfulDeliveries++;
           this.stats.totalRemindersProcessed++;
-          
+
           if (this.config.enableDebugLogging) {
             console.log(`Successfully delivered reminder ${reminder.id}`);
           }
-          
+
           return; // Success, exit retry loop
         }
 
         // Handle failure
         lastError = result.error;
-        
+
         if (!result.shouldRetry) {
           // Don't retry this reminder
-          console.error(`Permanent failure for reminder ${reminder.id}: ${result.error}`);
+          console.error(
+            `Permanent failure for reminder ${reminder.id}: ${result.error}`,
+          );
           this.stats.failedDeliveries++;
           this.stats.totalRemindersProcessed++;
           return;
         }
 
         retries++;
-        
+
         if (retries <= this.config.maxRetries) {
           if (this.config.enableDebugLogging) {
-            console.log(`Retrying reminder ${reminder.id} in ${this.config.retryDelayMs}ms`);
+            console.log(
+              `Retrying reminder ${reminder.id} in ${this.config.retryDelayMs}ms`,
+            );
           }
           await this.delay(this.config.retryDelayMs);
         }
-
       } catch (error) {
         lastError = error instanceof Error ? error.message : "Unknown error";
         retries++;
-        
+
         if (retries <= this.config.maxRetries) {
-          console.error(`Error processing reminder ${reminder.id} (attempt ${retries}):`, error);
+          console.error(
+            `Error processing reminder ${reminder.id} (attempt ${retries}):`,
+            error,
+          );
           await this.delay(this.config.retryDelayMs);
         }
       }
     }
 
     // All retries exhausted
-    console.error(`Failed to deliver reminder ${reminder.id} after ${this.config.maxRetries} retries. Last error: ${lastError}`);
+    console.error(
+      `Failed to deliver reminder ${reminder.id} after ${this.config.maxRetries} retries. Last error: ${lastError}`,
+    );
     this.stats.failedDeliveries++;
     this.stats.totalRemindersProcessed++;
   }
@@ -314,12 +330,14 @@ export class ReminderScheduler {
    */
   private updateStats(): void {
     const processingTime = Date.now() - this.startTime;
-    
+
     // Update average processing time
-    const totalRuns = this.stats.successfulDeliveries + this.stats.failedDeliveries;
+    const totalRuns = this.stats.successfulDeliveries +
+      this.stats.failedDeliveries;
     if (totalRuns > 0) {
-      this.stats.averageProcessingTime = 
-        (this.stats.averageProcessingTime * (totalRuns - 1) + processingTime) / totalRuns;
+      this.stats.averageProcessingTime =
+        (this.stats.averageProcessingTime * (totalRuns - 1) + processingTime) /
+        totalRuns;
     } else {
       this.stats.averageProcessingTime = processingTime;
     }
@@ -332,14 +350,17 @@ export class ReminderScheduler {
    * Utility function to delay execution
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
    * Check if a reminder is due for delivery
    */
   static isReminderDue(reminder: Reminder, bufferMinutes = 1): boolean {
-    if (!reminder.nextDeliveryAt || !reminder.isActive || reminder.status !== "active") {
+    if (
+      !reminder.nextDeliveryAt || !reminder.isActive ||
+      reminder.status !== "active"
+    ) {
       return false;
     }
 
@@ -362,9 +383,9 @@ export class ReminderScheduler {
     try {
       const now = new Date();
       const endTime = new Date(now.getTime() + hours * 60 * 60 * 1000);
-      
+
       const upcomingReminders = await getRemindersForDelivery(endTime);
-      
+
       // Initialize hourly breakdown
       const byHour = new Array(hours).fill(0);
       const byCategory: Record<string, number> = {};
@@ -375,15 +396,17 @@ export class ReminderScheduler {
 
         // Calculate hour offset
         const hoursDiff = Math.floor(
-          (reminder.nextDeliveryAt.getTime() - now.getTime()) / (60 * 60 * 1000)
+          (reminder.nextDeliveryAt.getTime() - now.getTime()) /
+            (60 * 60 * 1000),
         );
-        
+
         if (hoursDiff >= 0 && hoursDiff < hours) {
           byHour[hoursDiff]++;
         }
 
         // Category breakdown
-        byCategory[reminder.category] = (byCategory[reminder.category] || 0) + 1;
+        byCategory[reminder.category] = (byCategory[reminder.category] || 0) +
+          1;
       }
 
       return {
@@ -410,13 +433,15 @@ export class ReminderScheduler {
     failed: number;
   }> {
     console.log("Force processing due reminders...");
-    
+
     const initialStats = { ...this.stats };
     await this.processReminders();
-    
+
     return {
-      processed: this.stats.totalRemindersProcessed - initialStats.totalRemindersProcessed,
-      successful: this.stats.successfulDeliveries - initialStats.successfulDeliveries,
+      processed: this.stats.totalRemindersProcessed -
+        initialStats.totalRemindersProcessed,
+      successful: this.stats.successfulDeliveries -
+        initialStats.successfulDeliveries,
       failed: this.stats.failedDeliveries - initialStats.failedDeliveries,
     };
   }
@@ -433,13 +458,13 @@ export class ReminderScheduler {
    */
   updateConfig(newConfig: Partial<SchedulerConfig>): void {
     const wasRunning = this.stats.isRunning;
-    
+
     if (wasRunning) {
       this.stop();
     }
-    
+
     this.config = { ...this.config, ...newConfig };
-    
+
     if (wasRunning) {
       // Note: This would need to be awaited in real usage
       this.start().catch(console.error);
@@ -458,7 +483,7 @@ export class ReminderScheduler {
     const issues: string[] = [];
     const now = Date.now();
     const uptime = this.stats.isRunning ? now - this.startTime : 0;
-    
+
     // Check if scheduler is running
     if (!this.stats.isRunning) {
       issues.push("Scheduler is not running");
@@ -467,13 +492,18 @@ export class ReminderScheduler {
     // Check if last run was recent
     const timeSinceLastRun = now - this.stats.lastRunAt.getTime();
     const expectedInterval = this.config.checkInterval * 2; // Allow 2x interval
-    
+
     if (timeSinceLastRun > expectedInterval) {
-      issues.push(`Last run was ${Math.round(timeSinceLastRun / 1000)}s ago (expected within ${Math.round(expectedInterval / 1000)}s)`);
+      issues.push(
+        `Last run was ${
+          Math.round(timeSinceLastRun / 1000)
+        }s ago (expected within ${Math.round(expectedInterval / 1000)}s)`,
+      );
     }
 
     // Check failure rate
-    const totalDeliveries = this.stats.successfulDeliveries + this.stats.failedDeliveries;
+    const totalDeliveries = this.stats.successfulDeliveries +
+      this.stats.failedDeliveries;
     if (totalDeliveries > 10) {
       const failureRate = this.stats.failedDeliveries / totalDeliveries;
       if (failureRate > 0.1) { // More than 10% failure rate
@@ -483,7 +513,11 @@ export class ReminderScheduler {
 
     // Check processing time
     if (this.stats.averageProcessingTime > 30000) { // More than 30 seconds
-      issues.push(`Slow processing: ${Math.round(this.stats.averageProcessingTime / 1000)}s average`);
+      issues.push(
+        `Slow processing: ${
+          Math.round(this.stats.averageProcessingTime / 1000)
+        }s average`,
+      );
     }
 
     let status: "healthy" | "unhealthy" | "degraded" = "healthy";
@@ -508,7 +542,9 @@ let globalScheduler: ReminderScheduler | null = null;
 /**
  * Get or create the global scheduler instance
  */
-export function getScheduler(config?: Partial<SchedulerConfig>): ReminderScheduler {
+export function getScheduler(
+  config?: Partial<SchedulerConfig>,
+): ReminderScheduler {
   if (!globalScheduler) {
     globalScheduler = new ReminderScheduler(config);
   }
@@ -520,7 +556,7 @@ export function getScheduler(config?: Partial<SchedulerConfig>): ReminderSchedul
  */
 export function initializeScheduler(
   deliveryCallback: DeliveryCallback,
-  config?: Partial<SchedulerConfig>
+  config?: Partial<SchedulerConfig>,
 ): ReminderScheduler {
   const scheduler = getScheduler(config);
   scheduler.setDeliveryCallback(deliveryCallback);

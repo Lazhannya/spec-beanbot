@@ -2,20 +2,20 @@
 // This module provides validation functions for reminder data
 
 import type {
-  Reminder,
   CreateReminderInput,
-  UpdateReminderInput,
-  ReminderValidationResult,
+  Reminder,
   ReminderCategory,
   ReminderPriority,
   ReminderStatus,
+  ReminderValidationResult,
   ScheduleType,
   SupportedTimezone,
+  UpdateReminderInput,
 } from "../types/reminders.ts";
 
 import {
   isValidReminderCategory,
-  isValidReminderPriority, 
+  isValidReminderPriority,
   isValidReminderStatus,
   isValidScheduleType,
   isValidTimezone,
@@ -26,7 +26,9 @@ import { getTemplateById } from "../../data/reminder-templates.ts";
 /**
  * Validate reminder creation input
  */
-export function validateCreateReminderInput(input: CreateReminderInput): ReminderValidationResult {
+export function validateCreateReminderInput(
+  input: CreateReminderInput,
+): ReminderValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -81,7 +83,10 @@ export function validateCreateReminderInput(input: CreateReminderInput): Reminde
       errors.push("Invalid template ID");
     } else {
       // Validate custom fields against template requirements
-      const templateValidation = validateTemplateFields(template, input.customFields || {});
+      const templateValidation = validateTemplateFields(
+        template,
+        input.customFields || {},
+      );
       errors.push(...templateValidation.errors);
       warnings.push(...templateValidation.warnings);
     }
@@ -90,16 +95,20 @@ export function validateCreateReminderInput(input: CreateReminderInput): Reminde
   // Tags validation
   if (input.tags) {
     if (input.tags.length > 10) {
-      warnings.push("Consider using fewer than 10 tags for better organization");
+      warnings.push(
+        "Consider using fewer than 10 tags for better organization",
+      );
     }
-    
+
     for (const tag of input.tags) {
       if (tag.length > 50) {
         errors.push("Tags cannot exceed 50 characters");
         break;
       }
       if (!/^[a-zA-Z0-9-_]+$/.test(tag)) {
-        errors.push("Tags can only contain letters, numbers, hyphens, and underscores");
+        errors.push(
+          "Tags can only contain letters, numbers, hyphens, and underscores",
+        );
         break;
       }
     }
@@ -120,7 +129,9 @@ export function validateCreateReminderInput(input: CreateReminderInput): Reminde
 /**
  * Validate reminder update input
  */
-export function validateUpdateReminderInput(input: UpdateReminderInput): ReminderValidationResult {
+export function validateUpdateReminderInput(
+  input: UpdateReminderInput,
+): ReminderValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -179,16 +190,20 @@ export function validateUpdateReminderInput(input: UpdateReminderInput): Reminde
   // Tags validation (if provided)
   if (input.tags) {
     if (input.tags.length > 10) {
-      warnings.push("Consider using fewer than 10 tags for better organization");
+      warnings.push(
+        "Consider using fewer than 10 tags for better organization",
+      );
     }
-    
+
     for (const tag of input.tags) {
       if (tag.length > 50) {
         errors.push("Tags cannot exceed 50 characters");
         break;
       }
       if (!/^[a-zA-Z0-9-_]+$/.test(tag)) {
-        errors.push("Tags can only contain letters, numbers, hyphens, and underscores");
+        errors.push(
+          "Tags can only contain letters, numbers, hyphens, and underscores",
+        );
         break;
       }
     }
@@ -220,19 +235,26 @@ function validateSchedule(schedule: any): ReminderValidationResult {
   }
 
   // Time format validation
-  if (!schedule.time || !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(schedule.time)) {
+  if (
+    !schedule.time || !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(schedule.time)
+  ) {
     errors.push("Time must be in HH:MM format (24-hour)");
   }
 
   // Type-specific validations
   switch (schedule.type) {
     case "weekly":
-      if (!schedule.daysOfWeek || !Array.isArray(schedule.daysOfWeek) || schedule.daysOfWeek.length === 0) {
+      if (
+        !schedule.daysOfWeek || !Array.isArray(schedule.daysOfWeek) ||
+        schedule.daysOfWeek.length === 0
+      ) {
         errors.push("Weekly schedule requires at least one day of week");
       } else {
         for (const day of schedule.daysOfWeek) {
           if (!Number.isInteger(day) || day < 0 || day > 6) {
-            errors.push("Days of week must be integers from 0 (Sunday) to 6 (Saturday)");
+            errors.push(
+              "Days of week must be integers from 0 (Sunday) to 6 (Saturday)",
+            );
             break;
           }
         }
@@ -241,7 +263,10 @@ function validateSchedule(schedule: any): ReminderValidationResult {
 
     case "monthly":
       if (schedule.dayOfMonth !== undefined) {
-        if (!Number.isInteger(schedule.dayOfMonth) || schedule.dayOfMonth < 1 || schedule.dayOfMonth > 31) {
+        if (
+          !Number.isInteger(schedule.dayOfMonth) || schedule.dayOfMonth < 1 ||
+          schedule.dayOfMonth > 31
+        ) {
           errors.push("Day of month must be between 1 and 31");
         } else if (schedule.dayOfMonth > 28) {
           warnings.push("Day of month > 28 may not occur in all months");
@@ -250,7 +275,10 @@ function validateSchedule(schedule: any): ReminderValidationResult {
       break;
 
     case "interval":
-      if (!schedule.interval || !Number.isInteger(schedule.interval) || schedule.interval < 1) {
+      if (
+        !schedule.interval || !Number.isInteger(schedule.interval) ||
+        schedule.interval < 1
+      ) {
         errors.push("Interval must be a positive integer");
       } else if (schedule.interval > 365) {
         warnings.push("Very long intervals may not be practical");
@@ -277,7 +305,9 @@ function validateSchedule(schedule: any): ReminderValidationResult {
   }
 
   if (schedule.maxOccurrences !== undefined) {
-    if (!Number.isInteger(schedule.maxOccurrences) || schedule.maxOccurrences < 1) {
+    if (
+      !Number.isInteger(schedule.maxOccurrences) || schedule.maxOccurrences < 1
+    ) {
       errors.push("Max occurrences must be a positive integer");
     } else if (schedule.maxOccurrences > 10000) {
       warnings.push("Very high max occurrences may impact performance");
@@ -313,7 +343,10 @@ function validateScheduleUpdate(schedule: any): ReminderValidationResult {
     errors.push("Invalid schedule type");
   }
 
-  if (schedule.time !== undefined && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(schedule.time)) {
+  if (
+    schedule.time !== undefined &&
+    !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(schedule.time)
+  ) {
     errors.push("Time must be in HH:MM format (24-hour)");
   }
 
@@ -323,7 +356,9 @@ function validateScheduleUpdate(schedule: any): ReminderValidationResult {
     } else {
       for (const day of schedule.daysOfWeek) {
         if (!Number.isInteger(day) || day < 0 || day > 6) {
-          errors.push("Days of week must be integers from 0 (Sunday) to 6 (Saturday)");
+          errors.push(
+            "Days of week must be integers from 0 (Sunday) to 6 (Saturday)",
+          );
           break;
         }
       }
@@ -331,7 +366,10 @@ function validateScheduleUpdate(schedule: any): ReminderValidationResult {
   }
 
   if (schedule.dayOfMonth !== undefined) {
-    if (!Number.isInteger(schedule.dayOfMonth) || schedule.dayOfMonth < 1 || schedule.dayOfMonth > 31) {
+    if (
+      !Number.isInteger(schedule.dayOfMonth) || schedule.dayOfMonth < 1 ||
+      schedule.dayOfMonth > 31
+    ) {
       errors.push("Day of month must be between 1 and 31");
     }
   }
@@ -343,7 +381,9 @@ function validateScheduleUpdate(schedule: any): ReminderValidationResult {
   }
 
   if (schedule.maxOccurrences !== undefined) {
-    if (!Number.isInteger(schedule.maxOccurrences) || schedule.maxOccurrences < 1) {
+    if (
+      !Number.isInteger(schedule.maxOccurrences) || schedule.maxOccurrences < 1
+    ) {
       errors.push("Max occurrences must be a positive integer");
     }
   }
@@ -364,7 +404,9 @@ function validateEscalation(escalation: any): ReminderValidationResult {
 
   if (escalation.enabled) {
     // Delay validation
-    if (!Number.isInteger(escalation.delayMinutes) || escalation.delayMinutes < 1) {
+    if (
+      !Number.isInteger(escalation.delayMinutes) || escalation.delayMinutes < 1
+    ) {
       errors.push("Escalation delay must be at least 1 minute");
     } else if (escalation.delayMinutes > 10080) { // 7 days
       warnings.push("Very long escalation delays may not be practical");
@@ -372,7 +414,10 @@ function validateEscalation(escalation: any): ReminderValidationResult {
 
     // Max escalations validation
     if (escalation.maxEscalations !== undefined) {
-      if (!Number.isInteger(escalation.maxEscalations) || escalation.maxEscalations < 1) {
+      if (
+        !Number.isInteger(escalation.maxEscalations) ||
+        escalation.maxEscalations < 1
+      ) {
         errors.push("Max escalations must be at least 1");
       } else if (escalation.maxEscalations > 10) {
         warnings.push("Many escalations may be annoying to recipients");
@@ -380,7 +425,11 @@ function validateEscalation(escalation: any): ReminderValidationResult {
     }
 
     // Targets validation
-    if (!escalation.escalationTargets || !Array.isArray(escalation.escalationTargets) || escalation.escalationTargets.length === 0) {
+    if (
+      !escalation.escalationTargets ||
+      !Array.isArray(escalation.escalationTargets) ||
+      escalation.escalationTargets.length === 0
+    ) {
       errors.push("Escalation requires at least one target user");
     } else {
       for (const target of escalation.escalationTargets) {
@@ -393,7 +442,10 @@ function validateEscalation(escalation: any): ReminderValidationResult {
 
     // Escalation interval validation
     if (escalation.escalationInterval !== undefined) {
-      if (!Number.isInteger(escalation.escalationInterval) || escalation.escalationInterval < 1) {
+      if (
+        !Number.isInteger(escalation.escalationInterval) ||
+        escalation.escalationInterval < 1
+      ) {
         errors.push("Escalation interval must be at least 1 minute");
       }
     }
@@ -414,13 +466,18 @@ function validateEscalationUpdate(escalation: any): ReminderValidationResult {
   const warnings: string[] = [];
 
   if (escalation.delayMinutes !== undefined) {
-    if (!Number.isInteger(escalation.delayMinutes) || escalation.delayMinutes < 1) {
+    if (
+      !Number.isInteger(escalation.delayMinutes) || escalation.delayMinutes < 1
+    ) {
       errors.push("Escalation delay must be at least 1 minute");
     }
   }
 
   if (escalation.maxEscalations !== undefined) {
-    if (!Number.isInteger(escalation.maxEscalations) || escalation.maxEscalations < 1) {
+    if (
+      !Number.isInteger(escalation.maxEscalations) ||
+      escalation.maxEscalations < 1
+    ) {
       errors.push("Max escalations must be at least 1");
     }
   }
@@ -439,7 +496,10 @@ function validateEscalationUpdate(escalation: any): ReminderValidationResult {
   }
 
   if (escalation.escalationInterval !== undefined) {
-    if (!Number.isInteger(escalation.escalationInterval) || escalation.escalationInterval < 1) {
+    if (
+      !Number.isInteger(escalation.escalationInterval) ||
+      escalation.escalationInterval < 1
+    ) {
       errors.push("Escalation interval must be at least 1 minute");
     }
   }
@@ -454,7 +514,10 @@ function validateEscalationUpdate(escalation: any): ReminderValidationResult {
 /**
  * Validate template-specific custom fields
  */
-function validateTemplateFields(template: any, customFields: Record<string, unknown>): ReminderValidationResult {
+function validateTemplateFields(
+  template: any,
+  customFields: Record<string, unknown>,
+): ReminderValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -486,7 +549,11 @@ function validateTemplateFields(template: any, customFields: Record<string, unkn
             break;
           case "select":
             if (field.options && !field.options.includes(value as string)) {
-              errors.push(`Field ${field.label} must be one of: ${field.options.join(", ")}`);
+              errors.push(
+                `Field ${field.label} must be one of: ${
+                  field.options.join(", ")
+                }`,
+              );
             }
             break;
         }
@@ -507,7 +574,7 @@ function validateTemplateFields(template: any, customFields: Record<string, unkn
 function validateCronExpression(expression: string): { isValid: boolean } {
   // Simple validation - real implementation would use a cron parser
   const parts = expression.trim().split(/\s+/);
-  
+
   // Cron should have 5 or 6 parts (second is optional)
   if (parts.length < 5 || parts.length > 6) {
     return { isValid: false };
@@ -563,6 +630,8 @@ export function canEditReminder(reminder: Reminder): boolean {
  * Check if a reminder can be deleted
  */
 export function canDeleteReminder(reminder: Reminder): boolean {
-  return reminder.status !== "completed" || 
-         (reminder.completedAt ? Date.now() - reminder.completedAt.getTime() < 24 * 60 * 60 * 1000 : false);
+  return reminder.status !== "completed" ||
+    (reminder.completedAt
+      ? Date.now() - reminder.completedAt.getTime() < 24 * 60 * 60 * 1000
+      : false);
 }

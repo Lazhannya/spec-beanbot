@@ -1,12 +1,12 @@
 // User session management for Discord OAuth2 authentication
-import { 
-  kvSet, 
-  kvGet, 
-  kvDelete, 
-  kvExists,
-  kvList,
+import {
+  createUuidKey,
   KV_KEYS,
-  createUuidKey
+  kvDelete,
+  kvExists,
+  kvGet,
+  kvList,
+  kvSet,
 } from "./kv.ts";
 import type { DiscordUser } from "../discord/types.ts";
 
@@ -42,7 +42,7 @@ const CLEANUP_INTERVAL_HOURS = 24; // 24 hours
 
 // Create a new user session
 export async function createSession(
-  options: SessionCreateOptions
+  options: SessionCreateOptions,
 ): Promise<UserSession | null> {
   try {
     const sessionId = crypto.randomUUID();
@@ -61,14 +61,14 @@ export async function createSession(
       createdAt: now.toISOString(),
       lastAccessedAt: now.toISOString(),
       ipAddress: options.ipAddress,
-      userAgent: options.userAgent
+      userAgent: options.userAgent,
     };
 
     // Store session by session ID
     const sessionStored = await kvSet(
       KV_KEYS.session(sessionId),
       session,
-      { expireIn: SESSION_EXPIRY_HOURS * 60 * 60 * 1000 } // Convert to milliseconds
+      { expireIn: SESSION_EXPIRY_HOURS * 60 * 60 * 1000 }, // Convert to milliseconds
     );
 
     if (!sessionStored) {
@@ -79,22 +79,23 @@ export async function createSession(
     // Store user session mapping (for finding sessions by user ID)
     const userSessionsKey = KV_KEYS.userSessions(options.userInfo.id);
     const existingSessions = await kvGet<string[]>(userSessionsKey) || [];
-    
+
     // Add new session to user's session list
     existingSessions.push(sessionId);
-    
+
     // Keep only the last 5 sessions per user
     const recentSessions = existingSessions.slice(-5);
-    
+
     await kvSet(
       userSessionsKey,
       recentSessions,
-      { expireIn: SESSION_EXPIRY_HOURS * 60 * 60 * 1000 }
+      { expireIn: SESSION_EXPIRY_HOURS * 60 * 60 * 1000 },
     );
 
-    console.log(`✅ Created session ${sessionId} for user ${options.userInfo.username}`);
+    console.log(
+      `✅ Created session ${sessionId} for user ${options.userInfo.username}`,
+    );
     return session;
-
   } catch (error) {
     console.error("Error creating session:", error);
     return null;
@@ -102,10 +103,12 @@ export async function createSession(
 }
 
 // Get a session by session ID
-export async function getSession(sessionId: string): Promise<UserSession | null> {
+export async function getSession(
+  sessionId: string,
+): Promise<UserSession | null> {
   try {
     const session = await kvGet<UserSession>(KV_KEYS.session(sessionId));
-    
+
     if (!session) {
       return null;
     }
@@ -121,11 +124,10 @@ export async function getSession(sessionId: string): Promise<UserSession | null>
     await kvSet(
       KV_KEYS.session(sessionId),
       session,
-      { expireIn: SESSION_EXPIRY_HOURS * 60 * 60 * 1000 }
+      { expireIn: SESSION_EXPIRY_HOURS * 60 * 60 * 1000 },
     );
 
     return session;
-
   } catch (error) {
     console.error("Error getting session:", error);
     return null;
@@ -135,7 +137,8 @@ export async function getSession(sessionId: string): Promise<UserSession | null>
 // Get all sessions for a user
 export async function getUserSessions(userId: string): Promise<UserSession[]> {
   try {
-    const sessionIds = await kvGet<string[]>(KV_KEYS.userSessions(userId)) || [];
+    const sessionIds = await kvGet<string[]>(KV_KEYS.userSessions(userId)) ||
+      [];
     const sessions: UserSession[] = [];
 
     for (const sessionId of sessionIds) {
@@ -146,7 +149,6 @@ export async function getUserSessions(userId: string): Promise<UserSession[]> {
     }
 
     return sessions;
-
   } catch (error) {
     console.error("Error getting user sessions:", error);
     return [];
@@ -157,7 +159,7 @@ export async function getUserSessions(userId: string): Promise<UserSession[]> {
 export async function deleteSession(sessionId: string): Promise<boolean> {
   try {
     const session = await kvGet<UserSession>(KV_KEYS.session(sessionId));
-    
+
     if (!session) {
       return false;
     }
@@ -168,8 +170,8 @@ export async function deleteSession(sessionId: string): Promise<boolean> {
     // Remove from user's session list
     const userSessionsKey = KV_KEYS.userSessions(session.userId);
     const userSessions = await kvGet<string[]>(userSessionsKey) || [];
-    const updatedSessions = userSessions.filter(id => id !== sessionId);
-    
+    const updatedSessions = userSessions.filter((id) => id !== sessionId);
+
     if (updatedSessions.length > 0) {
       await kvSet(userSessionsKey, updatedSessions);
     } else {
@@ -178,7 +180,6 @@ export async function deleteSession(sessionId: string): Promise<boolean> {
 
     console.log(`🗑️ Deleted session ${sessionId}`);
     return sessionDeleted;
-
   } catch (error) {
     console.error("Error deleting session:", error);
     return false;
@@ -188,7 +189,8 @@ export async function deleteSession(sessionId: string): Promise<boolean> {
 // Delete all sessions for a user
 export async function deleteUserSessions(userId: string): Promise<number> {
   try {
-    const sessionIds = await kvGet<string[]>(KV_KEYS.userSessions(userId)) || [];
+    const sessionIds = await kvGet<string[]>(KV_KEYS.userSessions(userId)) ||
+      [];
     let deletedCount = 0;
 
     for (const sessionId of sessionIds) {
@@ -203,7 +205,6 @@ export async function deleteUserSessions(userId: string): Promise<number> {
 
     console.log(`🗑️ Deleted ${deletedCount} sessions for user ${userId}`);
     return deletedCount;
-
   } catch (error) {
     console.error("Error deleting user sessions:", error);
     return 0;
@@ -215,11 +216,11 @@ export async function updateSessionToken(
   sessionId: string,
   accessToken: string,
   refreshToken?: string,
-  expiresIn?: number
+  expiresIn?: number,
 ): Promise<boolean> {
   try {
     const session = await kvGet<UserSession>(KV_KEYS.session(sessionId));
-    
+
     if (!session) {
       return false;
     }
@@ -238,7 +239,7 @@ export async function updateSessionToken(
     const updated = await kvSet(
       KV_KEYS.session(sessionId),
       session,
-      { expireIn: SESSION_EXPIRY_HOURS * 60 * 60 * 1000 }
+      { expireIn: SESSION_EXPIRY_HOURS * 60 * 60 * 1000 },
     );
 
     if (updated) {
@@ -246,7 +247,6 @@ export async function updateSessionToken(
     }
 
     return updated;
-
   } catch (error) {
     console.error("Error updating session token:", error);
     return false;
@@ -265,7 +265,7 @@ export async function validateSession(sessionId: string): Promise<{
     }
 
     const session = await getSession(sessionId);
-    
+
     if (!session) {
       return { valid: false, reason: "Session not found" };
     }
@@ -276,7 +276,6 @@ export async function validateSession(sessionId: string): Promise<{
     }
 
     return { valid: true, session };
-
   } catch (error) {
     console.error("Error validating session:", error);
     return { valid: false, reason: "Validation error" };
@@ -294,7 +293,7 @@ export function isSessionExpired(session: UserSession): boolean {
 export async function cleanupExpiredSessions(): Promise<number> {
   try {
     console.log("🧹 Starting session cleanup...");
-    
+
     const allSessions = await kvList<UserSession>(["sessions"]);
     let cleanedUp = 0;
 
@@ -305,9 +304,10 @@ export async function cleanupExpiredSessions(): Promise<number> {
       }
     }
 
-    console.log(`🧹 Session cleanup completed: ${cleanedUp} expired sessions removed`);
+    console.log(
+      `🧹 Session cleanup completed: ${cleanedUp} expired sessions removed`,
+    );
     return cleanedUp;
-
   } catch (error) {
     console.error("Error during session cleanup:", error);
     return 0;
@@ -324,13 +324,13 @@ export async function getSessionStats(): Promise<{
   try {
     const allSessions = await kvList<UserSession>(["sessions"]);
     const userSessions = new Set<string>();
-    
+
     let activeSessions = 0;
     let expiredSessions = 0;
 
     for (const entry of allSessions) {
       userSessions.add(entry.value.userId);
-      
+
       if (isSessionExpired(entry.value)) {
         expiredSessions++;
       } else {
@@ -342,22 +342,23 @@ export async function getSessionStats(): Promise<{
       totalSessions: allSessions.length,
       activeSessions,
       expiredSessions,
-      usersWithSessions: userSessions.size
+      usersWithSessions: userSessions.size,
     };
-
   } catch (error) {
     console.error("Error getting session stats:", error);
     return {
       totalSessions: 0,
       activeSessions: 0,
       expiredSessions: 0,
-      usersWithSessions: 0
+      usersWithSessions: 0,
     };
   }
 }
 
 // Session middleware helper for Fresh routes
-export async function getSessionFromRequest(req: Request): Promise<UserSession | null> {
+export async function getSessionFromRequest(
+  req: Request,
+): Promise<UserSession | null> {
   try {
     // Try to get session ID from cookie
     const cookies = req.headers.get("cookie");
@@ -366,16 +367,15 @@ export async function getSessionFromRequest(req: Request): Promise<UserSession |
     }
 
     const sessionCookie = cookies
-      .split(';')
-      .find(cookie => cookie.trim().startsWith('session='));
-    
+      .split(";")
+      .find((cookie) => cookie.trim().startsWith("session="));
+
     if (!sessionCookie) {
       return null;
     }
 
-    const sessionId = sessionCookie.split('=')[1];
+    const sessionId = sessionCookie.split("=")[1];
     return await getSession(sessionId);
-
   } catch (error) {
     console.error("Error getting session from request:", error);
     return null;
@@ -392,7 +392,7 @@ export function createSessionCookie(
     maxAge?: number;
     domain?: string;
     path?: string;
-  } = {}
+  } = {},
 ): string {
   const cookieOptions = {
     httpOnly: true,
@@ -400,11 +400,11 @@ export function createSessionCookie(
     sameSite: "lax" as const,
     maxAge: SESSION_EXPIRY_HOURS * 60 * 60, // Convert to seconds
     path: "/",
-    ...options
+    ...options,
   };
 
   const parts = [`session=${sessionId}`];
-  
+
   if (cookieOptions.httpOnly) parts.push("HttpOnly");
   if (cookieOptions.secure) parts.push("Secure");
   if (cookieOptions.sameSite) parts.push(`SameSite=${cookieOptions.sameSite}`);
@@ -422,5 +422,7 @@ export function startSessionCleanup(): void {
     await cleanupExpiredSessions();
   }, CLEANUP_INTERVAL_HOURS * 60 * 60 * 1000);
 
-  console.log(`🔄 Session cleanup task started (every ${CLEANUP_INTERVAL_HOURS} hours)`);
+  console.log(
+    `🔄 Session cleanup task started (every ${CLEANUP_INTERVAL_HOURS} hours)`,
+  );
 }

@@ -2,14 +2,14 @@
 // This module provides centralized access to pattern matching functionality
 
 export {
-  TextPatternMatcher,
-  initializePatternMatcher,
   getPatternMatcher,
+  initializePatternMatcher,
+  TextPatternMatcher,
 } from "./matcher.ts";
 
 export type {
-  PatternMatch,
-  ResponseAction,
   MessageAnalysis,
+  PatternMatch,
   PatternMatchingConfig,
+  ResponseAction,
 } from "./matcher.ts";

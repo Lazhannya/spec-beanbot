@@ -3,9 +3,9 @@
 
 import type { Handlers } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../../lib/storage/sessions.ts";
-import { 
-  initializePatternMatcher,
+import {
   getPatternMatcher,
+  initializePatternMatcher,
 } from "../../../lib/patterns/matcher.ts";
 
 interface TestPatternInput {
@@ -42,7 +42,7 @@ export const handler: Handlers = {
       if (!session) {
         return new Response(
           JSON.stringify({ success: false, error: "Authentication required" }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -52,16 +52,22 @@ export const handler: Handlers = {
         input = await req.json();
       } catch {
         return new Response(
-          JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          JSON.stringify({
+            success: false,
+            error: "Invalid JSON in request body",
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
         );
       }
 
       // Validate input
       if (!input.text?.trim()) {
         return new Response(
-          JSON.stringify({ success: false, error: "Text is required for pattern testing" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          JSON.stringify({
+            success: false,
+            error: "Text is required for pattern testing",
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -84,7 +90,7 @@ export const handler: Handlers = {
         messageId,
         userId,
         channelId,
-        input.text.trim()
+        input.text.trim(),
       );
 
       // Enhance the response with additional debug info
@@ -97,7 +103,7 @@ export const handler: Handlers = {
           messageId,
           configUsed: input.config || "default",
         },
-        matchDetails: analysis.matches.map(match => ({
+        matchDetails: analysis.matches.map((match) => ({
           ...match,
           patternName: match.pattern.name,
           patternCategory: match.pattern.category,
@@ -108,7 +114,7 @@ export const handler: Handlers = {
           wholeWordsOnly: match.pattern.wholeWordsOnly,
           cooldownMinutes: match.pattern.cooldownMinutes,
         })),
-        actionDetails: analysis.suggestedActions.map(action => ({
+        actionDetails: analysis.suggestedActions.map((action) => ({
           ...action,
           actionType: action.type,
           hasContent: !!action.content,
@@ -129,7 +135,7 @@ export const handler: Handlers = {
       });
     } catch (error) {
       console.error("Error in POST /api/patterns/test:", error);
-      
+
       const response: ApiResponse = {
         success: false,
         error: "Internal server error",

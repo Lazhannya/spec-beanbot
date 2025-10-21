@@ -4,7 +4,8 @@ This document describes the REST API endpoints for the reminder system.
 
 ## Authentication
 
-All API endpoints require authentication via session cookies. Users must be logged in via Discord OAuth2.
+All API endpoints require authentication via session cookies. Users must be
+logged in via Discord OAuth2.
 
 ## Base URL
 
@@ -21,10 +22,13 @@ http://localhost:8001/api/reminders
 Get a paginated list of reminders for the authenticated user.
 
 **Query Parameters:**
+
 - `page` - Page number (default: 1)
 - `limit` - Items per page (default: 20, max: 100)
-- `status` - Filter by status (comma-separated): `draft,active,paused,completed,expired,failed,cancelled`
-- `category` - Filter by category (comma-separated): `health,medication,work,personal,appointment,task,custom`
+- `status` - Filter by status (comma-separated):
+  `draft,active,paused,completed,expired,failed,cancelled`
+- `category` - Filter by category (comma-separated):
+  `health,medication,work,personal,appointment,task,custom`
 - `priority` - Filter by priority (comma-separated): `low,normal,high,urgent`
 - `tags` - Filter by tags (comma-separated)
 - `search` - Text search in title, message, notes
@@ -37,6 +41,7 @@ Get a paginated list of reminders for the authenticated user.
 - `nextDeliveryBefore` - Filter by next delivery date (ISO string)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -57,6 +62,7 @@ Get a paginated list of reminders for the authenticated user.
 Create a new reminder.
 
 **Request Body:**
+
 ```json
 {
   "title": "Take medication",
@@ -82,6 +88,7 @@ Create a new reminder.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -98,6 +105,7 @@ Create a new reminder.
 Get details of a specific reminder, including delivery history.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -115,6 +123,7 @@ Get details of a specific reminder, including delivery history.
 Update an existing reminder.
 
 **Request Body:**
+
 ```json
 {
   "title": "Updated title",
@@ -126,6 +135,7 @@ Update an existing reminder.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -142,6 +152,7 @@ Update an existing reminder.
 Delete a specific reminder.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -159,6 +170,7 @@ Delete a specific reminder.
 Perform bulk operations on multiple reminders.
 
 **Request Body:**
+
 ```json
 {
   "operation": "delete|pause|resume|complete|update",
@@ -168,6 +180,7 @@ Perform bulk operations on multiple reminders.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -187,6 +200,7 @@ Perform bulk operations on multiple reminders.
 Get reminder statistics and analytics for the authenticated user.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -224,9 +238,11 @@ Get reminder statistics and analytics for the authenticated user.
 Get all available reminder templates.
 
 **Query Parameters:**
+
 - `category` - Filter by category
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -245,6 +261,7 @@ Get all available reminder templates.
 Get details of a specific reminder template.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -267,6 +284,7 @@ All endpoints return standardized error responses:
 ```
 
 **HTTP Status Codes:**
+
 - `200` - Success
 - `201` - Created
 - `207` - Partial Success (bulk operations)
@@ -278,11 +296,13 @@ All endpoints return standardized error responses:
 
 ## Rate Limiting
 
-API endpoints are subject to rate limiting based on session. Excessive requests may be throttled.
+API endpoints are subject to rate limiting based on session. Excessive requests
+may be throttled.
 
 ## Data Types
 
 ### Reminder Object
+
 ```typescript
 interface Reminder {
   id: string;
@@ -310,6 +330,7 @@ interface Reminder {
 ```
 
 ### Schedule Types
+
 - `once` - Single execution
 - `daily` - Every day
 - `weekly` - Specific days of week
@@ -319,6 +340,7 @@ interface Reminder {
 - `custom` - Cron expression
 
 ### Status Types
+
 - `draft` - Created but not activated
 - `active` - Scheduled and running
 - `paused` - Temporarily disabled
@@ -328,12 +350,14 @@ interface Reminder {
 - `cancelled` - Manually cancelled
 
 ### Priority Types
+
 - `low`
 - `normal`
 - `high`
 - `urgent`
 
 ### Category Types
+
 - `health`
 - `medication`
 - `work`

@@ -26,7 +26,7 @@ export const handler: Handlers = {
       if (!session) {
         return new Response(
           JSON.stringify({ success: false, error: "Authentication required" }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -63,7 +63,7 @@ export const handler: Handlers = {
             completedReminders: stats.completedReminders,
             acknowledgmentRate: Math.round(stats.acknowledgmentRate * 100),
             topCategory: Object.entries(stats.categoryBreakdown)
-              .sort(([,a], [,b]) => b - a)[0]?.[0] || "none",
+              .sort(([, a], [, b]) => b - a)[0]?.[0] || "none",
           },
         },
       };
@@ -74,7 +74,7 @@ export const handler: Handlers = {
       });
     } catch (error) {
       console.error("Error in GET /api/reminders/stats:", error);
-      
+
       const response: ApiResponse = {
         success: false,
         error: "Internal server error",

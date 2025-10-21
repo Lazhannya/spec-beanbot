@@ -1,9 +1,13 @@
 // Escalation system for unacknowledged reminders
 // This module handles automatic escalation of reminders that haven't been acknowledged
 
-import { getReminderById, createDelivery } from "../storage/reminders.ts";
+import { createDelivery, getReminderById } from "../storage/reminders.ts";
 import { sendReminderViaDiscord } from "../discord/messenger.ts";
-import type { Reminder, ReminderDelivery, EscalationTarget } from "../types/reminders.ts";
+import type {
+  EscalationTarget,
+  Reminder,
+  ReminderDelivery,
+} from "../types/reminders.ts";
 
 /**
  * Escalation configuration
@@ -111,12 +115,14 @@ export class EscalationService {
       return;
     }
 
-    console.log(`Starting escalation service (check interval: ${this.config.checkInterval} minutes)`);
-    
+    console.log(
+      `Starting escalation service (check interval: ${this.config.checkInterval} minutes)`,
+    );
+
     this.running = true;
     this.intervalId = setInterval(
       () => this.checkForEscalations(),
-      this.config.checkInterval * 60 * 1000
+      this.config.checkInterval * 60 * 1000,
     );
 
     // Run initial check
@@ -133,7 +139,7 @@ export class EscalationService {
 
     console.log("Stopping escalation service");
     this.running = false;
-    
+
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = undefined;
@@ -170,16 +176,16 @@ export class EscalationService {
             }
           }
         } catch (error) {
-          const errorMsg = `Failed to process escalation for delivery ${delivery.id}: ${error}`;
+          const errorMsg =
+            `Failed to process escalation for delivery ${delivery.id}: ${error}`;
           console.error(errorMsg);
           result.errors.push(errorMsg);
         }
       }
 
       console.log(
-        `Escalation check complete: ${result.totalChecked} checked, ${result.escalationsTriggered} escalated`
+        `Escalation check complete: ${result.totalChecked} checked, ${result.escalationsTriggered} escalated`,
       );
-
     } catch (error) {
       const errorMsg = `Error during escalation check: ${error}`;
       console.error(errorMsg);
@@ -207,7 +213,9 @@ export class EscalationService {
   /**
    * Process escalation for a specific delivery
    */
-  private async processEscalation(delivery: ReminderDelivery): Promise<EscalationResult | null> {
+  private async processEscalation(
+    delivery: ReminderDelivery,
+  ): Promise<EscalationResult | null> {
     try {
       // Get the associated reminder
       const reminder = await getReminderById(delivery.reminderId);
@@ -232,22 +240,30 @@ export class EscalationService {
       }
 
       // Get escalation level configuration
-      const levelConfig = this.config.escalationLevels.find(l => l.level === nextLevel);
+      const levelConfig = this.config.escalationLevels.find((l) =>
+        l.level === nextLevel
+      );
       if (!levelConfig) {
-        throw new Error(`Escalation level ${nextLevel} configuration not found`);
+        throw new Error(
+          `Escalation level ${nextLevel} configuration not found`,
+        );
       }
 
       // Check if confirmation is required and not yet approved
       if (levelConfig.requiresConfirmation) {
-        console.log(`Escalation level ${nextLevel} requires confirmation - skipping automatic escalation`);
+        console.log(
+          `Escalation level ${nextLevel} requires confirmation - skipping automatic escalation`,
+        );
         return null;
       }
 
       // Process escalation
       return await this.executeEscalation(reminder, delivery, levelConfig);
-
     } catch (error) {
-      console.error(`Error processing escalation for delivery ${delivery.id}:`, error);
+      console.error(
+        `Error processing escalation for delivery ${delivery.id}:`,
+        error,
+      );
       return {
         reminderId: delivery.reminderId,
         originalDeliveryId: delivery.id,
@@ -262,14 +278,19 @@ export class EscalationService {
   /**
    * Calculate the next escalation level needed
    */
-  private calculateNextEscalationLevel(reminder: Reminder, delivery: ReminderDelivery): number | null {
+  private calculateNextEscalationLevel(
+    reminder: Reminder,
+    delivery: ReminderDelivery,
+  ): number | null {
     const now = new Date();
     const deliveryTime = delivery.deliveredAt;
-    const minutesSinceDelivery = Math.floor((now.getTime() - deliveryTime.getTime()) / (1000 * 60));
+    const minutesSinceDelivery = Math.floor(
+      (now.getTime() - deliveryTime.getTime()) / (1000 * 60),
+    );
 
     // Check current escalation level
     const currentLevel = reminder.escalation.escalationCount || 0;
-    
+
     // Check if max level reached
     if (currentLevel >= this.config.maxEscalationLevel) {
       return null;
@@ -277,7 +298,10 @@ export class EscalationService {
 
     // Find the appropriate escalation level based on time elapsed
     for (const levelConfig of this.config.escalationLevels) {
-      if (levelConfig.level > currentLevel && minutesSinceDelivery >= levelConfig.delayMinutes) {
+      if (
+        levelConfig.level > currentLevel &&
+        minutesSinceDelivery >= levelConfig.delayMinutes
+      ) {
         return levelConfig.level;
       }
     }
@@ -291,7 +315,7 @@ export class EscalationService {
   private async executeEscalation(
     reminder: Reminder,
     originalDelivery: ReminderDelivery,
-    levelConfig: EscalationLevel
+    levelConfig: EscalationLevel,
   ): Promise<EscalationResult> {
     const result: EscalationResult = {
       reminderId: reminder.id,
@@ -304,15 +328,20 @@ export class EscalationService {
 
     try {
       console.log(
-        `Executing escalation level ${levelConfig.level} for reminder ${reminder.id}`
+        `Executing escalation level ${levelConfig.level} for reminder ${reminder.id}`,
       );
 
       // Send escalation messages to all targets
       for (const target of levelConfig.targets) {
         try {
-          const targetUserId = await this.resolveEscalationTarget(target, reminder.targetUser);
+          const targetUserId = await this.resolveEscalationTarget(
+            target,
+            reminder.targetUser,
+          );
           if (!targetUserId) {
-            result.errors?.push(`Could not resolve escalation target: ${target.type}`);
+            result.errors?.push(
+              `Could not resolve escalation target: ${target.type}`,
+            );
             continue;
           }
 
@@ -321,10 +350,10 @@ export class EscalationService {
             {
               ...reminder,
               title: `⚠️ ESCALATION: ${reminder.title}`,
-              message: levelConfig.message || 
+              message: levelConfig.message ||
                 `This reminder requires attention. Original recipient <@${reminder.targetUser}> has not responded.\n\n**Original message:** ${reminder.message}`,
             },
-            "dm"
+            "dm",
           );
 
           if (escalationResult.success) {
@@ -347,24 +376,25 @@ export class EscalationService {
               escalationLevel: levelConfig.level,
               originalDeliveryId: originalDelivery.id,
             });
-
           } else {
             result.errors?.push(
-              `Failed to send escalation to ${targetUserId}: ${escalationResult.error}`
+              `Failed to send escalation to ${targetUserId}: ${escalationResult.error}`,
             );
           }
-
         } catch (error) {
-          result.errors?.push(`Error escalating to target ${target.type}: ${error}`);
+          result.errors?.push(
+            `Error escalating to target ${target.type}: ${error}`,
+          );
         }
       }
 
       // Update reminder escalation tracking
       // TODO: Update reminder with new escalation count and timestamp
-      console.log(`Would update reminder ${reminder.id} escalation count to ${levelConfig.level}`);
+      console.log(
+        `Would update reminder ${reminder.id} escalation count to ${levelConfig.level}`,
+      );
 
       result.success = result.targetsNotified.length > 0;
-
     } catch (error) {
       result.errors?.push(`Escalation execution failed: ${error}`);
     }
@@ -375,7 +405,10 @@ export class EscalationService {
   /**
    * Resolve escalation target to actual user ID
    */
-  private resolveEscalationTarget(target: EscalationTarget, _originalUserId: string): Promise<string | null> {
+  private resolveEscalationTarget(
+    target: EscalationTarget,
+    _originalUserId: string,
+  ): Promise<string | null> {
     // If target has explicit user ID, use it
     if (target.userId) {
       return Promise.resolve(target.userId);
@@ -412,9 +445,14 @@ export class EscalationService {
   /**
    * Manually trigger escalation for a specific reminder
    */
-  manualEscalation(reminderId: string, level: number): Promise<EscalationResult> {
+  manualEscalation(
+    reminderId: string,
+    level: number,
+  ): Promise<EscalationResult> {
     // TODO: Implement manual escalation trigger
-    console.log(`Manual escalation requested for reminder ${reminderId} at level ${level}`);
+    console.log(
+      `Manual escalation requested for reminder ${reminderId} at level ${level}`,
+    );
     return Promise.resolve({
       reminderId,
       originalDeliveryId: "",
@@ -434,7 +472,9 @@ let globalEscalationService: EscalationService | null = null;
 /**
  * Initialize the global escalation service
  */
-export function initializeEscalationService(config?: Partial<EscalationConfig>): EscalationService {
+export function initializeEscalationService(
+  config?: Partial<EscalationConfig>,
+): EscalationService {
   if (!globalEscalationService) {
     globalEscalationService = new EscalationService(config);
   }

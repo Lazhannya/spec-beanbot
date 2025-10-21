@@ -40,14 +40,14 @@ export async function closeKV(): Promise<void> {
 
 // Set a value with optional expiration
 export async function kvSet<T>(
-  key: Deno.KvKey, 
-  value: T, 
-  options?: { expireIn?: number }
+  key: Deno.KvKey,
+  value: T,
+  options?: { expireIn?: number },
 ): Promise<boolean> {
   try {
     const kv = getKV();
     const setOptions: Deno.KvSetOptions = {};
-    
+
     if (options?.expireIn) {
       setOptions.expireIn = options.expireIn;
     }
@@ -99,12 +99,12 @@ export async function kvExists(key: Deno.KvKey): Promise<boolean> {
 // List keys with a prefix
 export async function kvList<T>(
   prefix: Deno.KvKey,
-  options?: { limit?: number; reverse?: boolean }
+  options?: { limit?: number; reverse?: boolean },
 ): Promise<Array<{ key: Deno.KvKey; value: T }>> {
   try {
     const kv = getKV();
     const entries: Array<{ key: Deno.KvKey; value: T }> = [];
-    
+
     const listOptions: Deno.KvListOptions = {};
     if (options?.limit) listOptions.limit = options.limit;
     if (options?.reverse) listOptions.reverse = options.reverse;
@@ -134,7 +134,9 @@ export interface KVBatchOperation<T> {
   options?: Deno.KvSetOptions;
 }
 
-export async function kvBatch<T>(operations: KVBatchOperation<T>[]): Promise<boolean> {
+export async function kvBatch<T>(
+  operations: KVBatchOperation<T>[],
+): Promise<boolean> {
   try {
     const kv = getKV();
     let atomic = kv.atomic();
@@ -157,14 +159,14 @@ export async function kvBatch<T>(operations: KVBatchOperation<T>[]): Promise<boo
 
 // Increment/decrement numeric values
 export async function kvIncrement(
-  key: Deno.KvKey, 
-  amount: number = 1
+  key: Deno.KvKey,
+  amount: number = 1,
 ): Promise<number | null> {
   try {
     const kv = getKV();
     const current = await kv.get<number>(key);
     const newValue = (current.value || 0) + amount;
-    
+
     const result = await kv.set(key, newValue);
     if (result.ok) {
       return newValue;
@@ -180,13 +182,13 @@ export async function kvIncrement(
 export async function kvSetJSON<T>(
   key: Deno.KvKey,
   value: T,
-  options?: { expireIn?: number }
+  options?: { expireIn?: number },
 ): Promise<boolean> {
   try {
     const serialized = {
       data: value,
       timestamp: new Date().toISOString(),
-      type: typeof value
+      type: typeof value,
     };
     return await kvSet(key, serialized, options);
   } catch (error) {
@@ -197,7 +199,9 @@ export async function kvSetJSON<T>(
 
 export async function kvGetJSON<T>(key: Deno.KvKey): Promise<T | null> {
   try {
-    const result = await kvGet<{ data: T; timestamp: string; type: string }>(key);
+    const result = await kvGet<{ data: T; timestamp: string; type: string }>(
+      key,
+    );
     return result?.data || null;
   } catch (error) {
     console.error("KV getJSON error:", error);
@@ -210,25 +214,25 @@ export const KV_KEYS = {
   // User sessions
   session: (sessionId: string) => ["sessions", sessionId],
   userSessions: (userId: string) => ["user_sessions", userId],
-  
+
   // Reminders
   reminder: (reminderId: string) => ["reminders", reminderId],
   userReminders: (userId: string) => ["user_reminders", userId],
   scheduledReminders: () => ["scheduled_reminders"],
-  
+
   // Pattern matches
   patternMatch: (matchId: string) => ["pattern_matches", matchId],
   patternStats: (patternId: string) => ["pattern_stats", patternId],
-  
+
   // Bot metrics
   botStats: () => ["bot_stats"],
   errorLogs: (timestamp: string) => ["error_logs", timestamp],
-  
+
   // Cache
   cache: (cacheKey: string) => ["cache", cacheKey],
-  
+
   // Configuration
-  config: (key: string) => ["config", key]
+  config: (key: string) => ["config", key],
 } as const;
 
 // Helper for creating time-based keys
@@ -290,7 +294,7 @@ export async function kvHealthCheck(): Promise<{
       return {
         healthy: false,
         operations: { read: false, write: false, delete: false },
-        error: "Write operation failed"
+        error: "Write operation failed",
       };
     }
 
@@ -300,7 +304,7 @@ export async function kvHealthCheck(): Promise<{
       return {
         healthy: false,
         operations: { read: false, write: true, delete: false },
-        error: "Read operation failed"
+        error: "Read operation failed",
       };
     }
 
@@ -311,19 +315,19 @@ export async function kvHealthCheck(): Promise<{
       return {
         healthy: false,
         operations: { read: true, write: true, delete: false },
-        error: "Delete operation failed"
+        error: "Delete operation failed",
       };
     }
 
     return {
       healthy: true,
-      operations: { read: true, write: true, delete: true }
+      operations: { read: true, write: true, delete: true },
     };
   } catch (error) {
     return {
       healthy: false,
       operations: { read: false, write: false, delete: false },
-      error: `Health check failed: ${error.message}`
+      error: `Health check failed: ${error.message}`,
     };
   }
 }

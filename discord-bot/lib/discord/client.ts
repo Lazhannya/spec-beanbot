@@ -1,21 +1,21 @@
 // Discord bot client initialization and management
-import { 
-  createBot, 
-  startBot, 
+import {
   Bot,
-  Message,
-  Interaction,
-  User,
   Channel,
-  Guild
+  createBot,
+  Guild,
+  Interaction,
+  Message,
+  startBot,
+  User,
 } from "discord-deno";
-import type { 
-  BotConfig, 
-  DiscordMessage, 
-  DiscordUser, 
+import type {
+  BotConfig,
+  BotResponse,
+  DiscordMessage,
+  DiscordUser,
   MessageCreateEvent,
   MessageReactionAddEvent,
-  BotResponse
 } from "./types.ts";
 
 let botInstance: Bot | null = null;
@@ -33,21 +33,24 @@ export class DiscordClient {
   private bot: Bot;
   private config: BotConfig;
   private isConnected: boolean = false;
-  private messageHandlers: Array<(event: MessageCreateEvent) => Promise<void>> = [];
-  private reactionHandlers: Array<(event: MessageReactionAddEvent) => Promise<void>> = [];
+  private messageHandlers: Array<(event: MessageCreateEvent) => Promise<void>> =
+    [];
+  private reactionHandlers: Array<
+    (event: MessageReactionAddEvent) => Promise<void>
+  > = [];
 
   constructor(config: BotConfig, options: DiscordClientOptions) {
     this.config = config;
-    
+
     this.bot = createBot({
       token: config.token,
       intents: options.intents || [
-        1 << 9,  // GUILD_MESSAGES
-        1 << 10, // GUILD_MESSAGE_REACTIONS  
+        1 << 9, // GUILD_MESSAGES
+        1 << 10, // GUILD_MESSAGE_REACTIONS
         1 << 12, // DIRECT_MESSAGES
         1 << 13, // DIRECT_MESSAGE_REACTIONS
-        1 << 15  // MESSAGE_CONTENT
-      ]
+        1 << 15, // MESSAGE_CONTENT
+      ],
     });
 
     this.setupEventHandlers(options);
@@ -56,9 +59,11 @@ export class DiscordClient {
   private setupEventHandlers(options: DiscordClientOptions): void {
     // Ready event
     this.bot.events.ready = async (_bot: Bot, payload) => {
-      console.log(`🤖 Bot connected as ${payload.user.username}#${payload.user.discriminator}`);
+      console.log(
+        `🤖 Bot connected as ${payload.user.username}#${payload.user.discriminator}`,
+      );
       this.isConnected = true;
-      
+
       if (options.onReady) {
         await options.onReady();
       }
@@ -73,7 +78,7 @@ export class DiscordClient {
         message: this.convertMessage(message),
         guildId: message.guildId?.toString(),
         channelId: message.channelId.toString(),
-        userId: message.author.id.toString()
+        userId: message.author.id.toString(),
       };
 
       // Call registered handlers
@@ -114,8 +119,8 @@ export class DiscordClient {
         emoji: {
           id: payload.emoji.id?.toString(),
           name: payload.emoji.name,
-          animated: payload.emoji.animated
-        }
+          animated: payload.emoji.animated,
+        },
       };
 
       // Call registered handlers
@@ -152,16 +157,18 @@ export class DiscordClient {
       author: this.convertUser(message.author),
       content: message.content,
       timestamp: new Date(message.timestamp).toISOString(),
-      edited_timestamp: message.editedTimestamp ? new Date(message.editedTimestamp).toISOString() : undefined,
+      edited_timestamp: message.editedTimestamp
+        ? new Date(message.editedTimestamp).toISOString()
+        : undefined,
       tts: message.tts || false,
       mention_everyone: message.mentionEveryone || false,
-      mentions: message.mentions?.map(user => this.convertUser(user)) || [],
-      mention_roles: message.mentionRoles?.map(role => role.toString()) || [],
+      mentions: message.mentions?.map((user) => this.convertUser(user)) || [],
+      mention_roles: message.mentionRoles?.map((role) => role.toString()) || [],
       attachments: message.attachments || [],
       embeds: message.embeds || [],
       reactions: message.reactions || [],
       pinned: message.pinned || false,
-      type: message.type || 0
+      type: message.type || 0,
     };
   }
 
@@ -172,7 +179,7 @@ export class DiscordClient {
       discriminator: user.discriminator,
       avatar: user.avatar,
       bot: user.bot,
-      system: user.system
+      system: user.system,
     };
   }
 
@@ -209,7 +216,10 @@ export class DiscordClient {
   }
 
   // Message sending methods
-  async sendMessage(channelId: string, content: string | BotResponse): Promise<void> {
+  async sendMessage(
+    channelId: string,
+    content: string | BotResponse,
+  ): Promise<void> {
     if (!this.isConnected) {
       throw new Error("Bot is not connected");
     }
@@ -219,7 +229,7 @@ export class DiscordClient {
         await this.bot.helpers.sendMessage(BigInt(channelId), { content });
       } else {
         const payload: any = {};
-        
+
         if (content.content) payload.content = content.content;
         if (content.embeds) payload.embeds = content.embeds;
         if (content.components) payload.components = content.components;
@@ -246,7 +256,10 @@ export class DiscordClient {
     }
   }
 
-  async sendDirectMessage(userId: string, content: string | BotResponse): Promise<void> {
+  async sendDirectMessage(
+    userId: string,
+    content: string | BotResponse,
+  ): Promise<void> {
     if (!this.isConnected) {
       throw new Error("Bot is not connected");
     }
@@ -261,16 +274,20 @@ export class DiscordClient {
     }
   }
 
-  async addReaction(channelId: string, messageId: string, emoji: string): Promise<void> {
+  async addReaction(
+    channelId: string,
+    messageId: string,
+    emoji: string,
+  ): Promise<void> {
     if (!this.isConnected) {
       throw new Error("Bot is not connected");
     }
 
     try {
       await this.bot.helpers.addReaction(
-        BigInt(channelId), 
-        BigInt(messageId), 
-        emoji
+        BigInt(channelId),
+        BigInt(messageId),
+        emoji,
       );
     } catch (error) {
       console.error("Failed to add reaction:", error);
@@ -278,7 +295,12 @@ export class DiscordClient {
     }
   }
 
-  async removeReaction(channelId: string, messageId: string, emoji: string, userId?: string): Promise<void> {
+  async removeReaction(
+    channelId: string,
+    messageId: string,
+    emoji: string,
+    userId?: string,
+  ): Promise<void> {
     if (!this.isConnected) {
       throw new Error("Bot is not connected");
     }
@@ -286,16 +308,16 @@ export class DiscordClient {
     try {
       if (userId) {
         await this.bot.helpers.removeReaction(
-          BigInt(channelId), 
-          BigInt(messageId), 
+          BigInt(channelId),
+          BigInt(messageId),
           emoji,
-          BigInt(userId)
+          BigInt(userId),
         );
       } else {
         await this.bot.helpers.removeReaction(
-          BigInt(channelId), 
-          BigInt(messageId), 
-          emoji
+          BigInt(channelId),
+          BigInt(messageId),
+          emoji,
         );
       }
     } catch (error) {
@@ -324,7 +346,7 @@ export class DiscordClient {
       id: this.bot.id.toString(),
       username: "DiscordBot", // This should come from the actual bot user
       discriminator: "0000",
-      bot: true
+      bot: true,
     };
   }
 
@@ -369,7 +391,10 @@ export class DiscordClient {
 }
 
 // Factory function for creating and initializing the Discord client
-export async function createDiscordClient(config: BotConfig, options: DiscordClientOptions): Promise<DiscordClient> {
+export async function createDiscordClient(
+  config: BotConfig,
+  options: DiscordClientOptions,
+): Promise<DiscordClient> {
   const client = new DiscordClient(config, options);
   return client;
 }
@@ -387,7 +412,9 @@ export function getBotConfigFromEnv(): BotConfig {
   const applicationId = Deno.env.get("DISCORD_APPLICATION_ID") || clientId;
 
   if (!token || !clientId || !clientSecret) {
-    throw new Error("Missing required Discord environment variables: DISCORD_BOT_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET");
+    throw new Error(
+      "Missing required Discord environment variables: DISCORD_BOT_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET",
+    );
   }
 
   return {
@@ -395,6 +422,6 @@ export function getBotConfigFromEnv(): BotConfig {
     clientId,
     clientSecret,
     applicationId: applicationId!,
-    guildId: Deno.env.get("DISCORD_GUILD_ID") // Optional
+    guildId: Deno.env.get("DISCORD_GUILD_ID"), // Optional
   };
 }

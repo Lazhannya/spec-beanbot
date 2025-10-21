@@ -1,11 +1,19 @@
 /** @jsx h */
 import { h } from "preact";
 import type { Handlers, PageProps } from "$fresh/server.ts";
-import { getRemindersByUser, deleteReminder, updateReminder } from "../../lib/storage/reminders.ts";
+import {
+  deleteReminder,
+  getRemindersByUser,
+  updateReminder,
+} from "../../lib/storage/reminders.ts";
 import { getSession } from "../../lib/storage/sessions.ts";
 import { historyLogger } from "../../lib/history/service.ts";
 import { isUserAdmin } from "../../lib/admin/service.ts";
-import type { Reminder, UpdateReminderInput, ReminderPriority } from "../../lib/types/reminders.ts";
+import type {
+  Reminder,
+  ReminderPriority,
+  UpdateReminderInput,
+} from "../../lib/types/reminders.ts";
 
 interface ManageRemindersData {
   reminders: Reminder[];
@@ -26,7 +34,8 @@ interface ManageRemindersData {
 export const handler: Handlers<ManageRemindersData> = {
   async GET(req, ctx) {
     // Check authentication via session
-    const sessionId = req.headers.get("cookie")?.match(/session_id=([^;]+)/)?.[1];
+    const sessionId = req.headers.get("cookie")?.match(/session_id=([^;]+)/)
+      ?.[1];
     if (!sessionId) {
       return new Response("", {
         status: 302,
@@ -45,13 +54,15 @@ export const handler: Handlers<ManageRemindersData> = {
     try {
       // Get user's reminders
       const reminders = await getRemindersByUser(session.userId);
-      
+
       // Calculate statistics
       const stats = {
         total: reminders.length,
-        active: reminders.filter(r => r.status === "active" && r.isActive).length,
-        completed: reminders.filter(r => r.status === "completed").length,
-        cancelled: reminders.filter(r => r.status === "cancelled").length,
+        active: reminders.filter((r) =>
+          r.status === "active" && r.isActive
+        ).length,
+        completed: reminders.filter((r) => r.status === "completed").length,
+        cancelled: reminders.filter((r) => r.status === "cancelled").length,
       };
 
       // Check if user is admin
@@ -77,7 +88,8 @@ export const handler: Handlers<ManageRemindersData> = {
 
   async POST(req, _ctx) {
     // Check authentication via session
-    const sessionId = req.headers.get("cookie")?.match(/session_id=([^;]+)/)?.[1];
+    const sessionId = req.headers.get("cookie")?.match(/session_id=([^;]+)/)
+      ?.[1];
     if (!sessionId) {
       return new Response("", {
         status: 302,
@@ -106,12 +118,12 @@ export const handler: Handlers<ManageRemindersData> = {
         case "delete": {
           await deleteReminder(reminderId, session.userId);
           await historyLogger.reminderStatusChanged(
-            reminderId, 
-            session.userId, 
-            "cancelled", 
-            "active", 
-            "cancelled", 
-            "web"
+            reminderId,
+            session.userId,
+            "cancelled",
+            "active",
+            "cancelled",
+            "web",
           );
           break;
         }
@@ -119,12 +131,12 @@ export const handler: Handlers<ManageRemindersData> = {
         case "pause": {
           await updateReminder(reminderId, { isActive: false }, session.userId);
           await historyLogger.reminderStatusChanged(
-            reminderId, 
-            session.userId, 
-            "paused", 
-            "active", 
-            "paused", 
-            "web"
+            reminderId,
+            session.userId,
+            "paused",
+            "active",
+            "paused",
+            "web",
           );
           break;
         }
@@ -132,25 +144,29 @@ export const handler: Handlers<ManageRemindersData> = {
         case "resume": {
           await updateReminder(reminderId, { isActive: true }, session.userId);
           await historyLogger.reminderStatusChanged(
-            reminderId, 
-            session.userId, 
-            "resumed", 
-            "paused", 
-            "active", 
-            "web"
+            reminderId,
+            session.userId,
+            "resumed",
+            "paused",
+            "active",
+            "web",
           );
           break;
         }
 
         case "complete": {
-          await updateReminder(reminderId, { status: "completed" }, session.userId);
+          await updateReminder(
+            reminderId,
+            { status: "completed" },
+            session.userId,
+          );
           await historyLogger.reminderStatusChanged(
-            reminderId, 
-            session.userId, 
-            "completed", 
-            "active", 
-            "completed", 
-            "web"
+            reminderId,
+            session.userId,
+            "completed",
+            "active",
+            "completed",
+            "web",
           );
           break;
         }
@@ -158,15 +174,15 @@ export const handler: Handlers<ManageRemindersData> = {
         case "update": {
           // Handle form updates
           const updateData: UpdateReminderInput = {};
-          
+
           const title = formData.get("title") as string;
           const message = formData.get("message") as string;
           const priority = formData.get("priority") as string;
-          
+
           if (title) updateData.title = title;
           if (message) updateData.message = message;
           if (priority) updateData.priority = priority as ReminderPriority;
-          
+
           await updateReminder(reminderId, updateData, session.userId);
           break;
         }
@@ -180,7 +196,6 @@ export const handler: Handlers<ManageRemindersData> = {
         status: 302,
         headers: { Location: "/reminders/manage" },
       });
-
     } catch (error) {
       console.error("Error managing reminder:", error);
       return new Response("Internal server error", { status: 500 });
@@ -188,7 +203,9 @@ export const handler: Handlers<ManageRemindersData> = {
   },
 };
 
-export default function ManageReminders({ data }: PageProps<ManageRemindersData>) {
+export default function ManageReminders(
+  { data }: PageProps<ManageRemindersData>,
+) {
   const { reminders, user, stats, isAdmin } = data;
 
   return (
@@ -203,17 +220,29 @@ export default function ManageReminders({ data }: PageProps<ManageRemindersData>
             </div>
             <div class="flex gap-3">
               {isAdmin && (
-                <a href="/admin" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+                <a
+                  href="/admin"
+                  class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                >
                   🔧 Admin
                 </a>
               )}
-              <a href="/reminders/history" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+              <a
+                href="/reminders/history"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
                 📊 History
               </a>
-              <a href="/reminders" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+              <a
+                href="/reminders"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
                 📋 View All
               </a>
-              <a href="/reminders/new" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+              <a
+                href="/reminders/new"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
                 ➕ Create New
               </a>
             </div>
@@ -251,22 +280,31 @@ export default function ManageReminders({ data }: PageProps<ManageRemindersData>
         </div>
 
         {/* Reminders List */}
-        {reminders.length === 0 ? (
-          <div class="text-center py-12 bg-white rounded-lg shadow-sm">
-            <div class="text-gray-400 text-6xl mb-4">📝</div>
-            <h3 class="text-xl font-medium text-gray-900 mb-2">No reminders yet</h3>
-            <p class="text-gray-600 mb-6">Create your first reminder to get started</p>
-            <a href="/reminders/new" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-              Create Your First Reminder
-            </a>
-          </div>
-        ) : (
-          <div class="space-y-6">
-            {reminders.map((reminder) => (
-              <ReminderCard key={reminder.id} reminder={reminder} />
-            ))}
-          </div>
-        )}
+        {reminders.length === 0
+          ? (
+            <div class="text-center py-12 bg-white rounded-lg shadow-sm">
+              <div class="text-gray-400 text-6xl mb-4">📝</div>
+              <h3 class="text-xl font-medium text-gray-900 mb-2">
+                No reminders yet
+              </h3>
+              <p class="text-gray-600 mb-6">
+                Create your first reminder to get started
+              </p>
+              <a
+                href="/reminders/new"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Create Your First Reminder
+              </a>
+            </div>
+          )
+          : (
+            <div class="space-y-6">
+              {reminders.map((reminder) => (
+                <ReminderCard key={reminder.id} reminder={reminder} />
+              ))}
+            </div>
+          )}
       </div>
     </div>
   );
@@ -331,34 +369,42 @@ function ReminderCard({ reminder }: ReminderCardProps) {
   const statusLabel = getStatusLabel(reminder);
 
   return (
-    <div class={`bg-white border-l-4 ${priorityColors[reminder.priority]} rounded-lg shadow-sm p-6`}>
+    <div
+      class={`bg-white border-l-4 ${
+        priorityColors[reminder.priority]
+      } rounded-lg shadow-sm p-6`}
+    >
       <div class="flex items-start justify-between">
         <div class="flex-1">
           <div class="flex items-center gap-3 mb-3">
             <h3 class="text-lg font-medium text-gray-900">{reminder.title}</h3>
-            <span class={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[statusLabel as keyof typeof statusColors]}`}>
+            <span
+              class={`px-2 py-1 text-xs font-medium rounded-full ${
+                statusColors[statusLabel as keyof typeof statusColors]
+              }`}
+            >
               {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
             </span>
             <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {reminder.priority}
             </span>
           </div>
-          
+
           <p class="text-gray-600 mb-4">{reminder.message}</p>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500">
             <div>
               <span class="font-medium">Category:</span> {reminder.category}
             </div>
             <div>
-              <span class="font-medium">Schedule:</span> {reminder.schedule.type}
+              <span class="font-medium">Schedule:</span>{" "}
+              {reminder.schedule.type}
             </div>
             <div>
               <span class="font-medium">Next Delivery:</span>{" "}
-              {reminder.nextDeliveryAt 
+              {reminder.nextDeliveryAt
                 ? new Date(reminder.nextDeliveryAt).toLocaleDateString()
-                : "N/A"
-              }
+                : "N/A"}
             </div>
           </div>
         </div>
@@ -377,35 +423,40 @@ interface ReminderActionsProps {
 
 function ReminderActions({ reminder }: ReminderActionsProps) {
   const isActive = reminder.isActive && reminder.status === "active";
-  const _canEdit = reminder.status !== "completed" && reminder.status !== "cancelled";
+  const _canEdit = reminder.status !== "completed" &&
+    reminder.status !== "cancelled";
 
   return (
     <div class="flex flex-col gap-2">
       {/* Quick Actions */}
       <div class="flex gap-2">
-        {isActive ? (
-          <form method="post" class="inline">
-            <input type="hidden" name="action" value="pause" />
-            <input type="hidden" name="reminderId" value={reminder.id} />
-            <button
-              type="submit"
-              class="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 border border-yellow-300 rounded hover:bg-yellow-200 transition-colors"
-            >
-              ⏸️ Pause
-            </button>
-          </form>
-        ) : reminder.status === "active" ? (
-          <form method="post" class="inline">
-            <input type="hidden" name="action" value="resume" />
-            <input type="hidden" name="reminderId" value={reminder.id} />
-            <button
-              type="submit"
-              class="px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded hover:bg-green-200 transition-colors"
-            >
-              ▶️ Resume
-            </button>
-          </form>
-        ) : null}
+        {isActive
+          ? (
+            <form method="post" class="inline">
+              <input type="hidden" name="action" value="pause" />
+              <input type="hidden" name="reminderId" value={reminder.id} />
+              <button
+                type="submit"
+                class="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 border border-yellow-300 rounded hover:bg-yellow-200 transition-colors"
+              >
+                ⏸️ Pause
+              </button>
+            </form>
+          )
+          : reminder.status === "active"
+          ? (
+            <form method="post" class="inline">
+              <input type="hidden" name="action" value="resume" />
+              <input type="hidden" name="reminderId" value={reminder.id} />
+              <button
+                type="submit"
+                class="px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded hover:bg-green-200 transition-colors"
+              >
+                ▶️ Resume
+              </button>
+            </form>
+          )
+          : null}
 
         {reminder.status === "active" && (
           <form method="post" class="inline">

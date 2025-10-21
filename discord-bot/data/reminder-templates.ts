@@ -22,7 +22,13 @@ export interface ReminderTemplate {
   id: string;
   name: string;
   description: string;
-  category: "health" | "work" | "personal" | "medication" | "appointment" | "task";
+  category:
+    | "health"
+    | "work"
+    | "personal"
+    | "medication"
+    | "appointment"
+    | "task";
   defaultMessage: string;
   defaultSchedule: ScheduleConfig;
   escalation: EscalationConfig;
@@ -44,35 +50,37 @@ export const reminderTemplates: ReminderTemplate[] = [
     name: "Daily Medication",
     description: "Reminder to take daily medication",
     category: "medication",
-    defaultMessage: "💊 Time to take your {medicationName}! Don't forget to take it with {instructions}.",
+    defaultMessage:
+      "💊 Time to take your {medicationName}! Don't forget to take it with {instructions}.",
     defaultSchedule: {
       type: "daily",
       time: "08:00",
-      timezone: "America/New_York"
+      timezone: "America/New_York",
     },
     escalation: {
       enabled: true,
       delayMinutes: 15,
       maxAttempts: 3,
       escalationTargets: [],
-      escalationMessage: "⚠️ {userName} hasn't acknowledged their medication reminder. Please check in!"
+      escalationMessage:
+        "⚠️ {userName} hasn't acknowledged their medication reminder. Please check in!",
     },
     customFields: [
       {
         name: "medicationName",
         type: "text",
         required: true,
-        placeholder: "e.g., Vitamin D, Blood pressure medication"
+        placeholder: "e.g., Vitamin D, Blood pressure medication",
       },
       {
         name: "instructions",
         type: "select",
         required: true,
-        options: ["food", "water", "on empty stomach", "before bed"]
-      }
+        options: ["food", "water", "on empty stomach", "before bed"],
+      },
     ],
     emoji: "💊",
-    color: "#3B82F6"
+    color: "#3B82F6",
   },
   {
     id: "water-reminder",
@@ -83,129 +91,138 @@ export const reminderTemplates: ReminderTemplate[] = [
     defaultSchedule: {
       type: "daily",
       time: "10:00",
-      timezone: "America/New_York"
+      timezone: "America/New_York",
     },
     escalation: {
       enabled: false,
       delayMinutes: 0,
       maxAttempts: 1,
-      escalationTargets: []
+      escalationTargets: [],
     },
     customFields: [
       {
         name: "amount",
         type: "select",
         required: false,
-        options: ["8oz glass", "16oz bottle", "32oz bottle", "full water bottle"]
-      }
+        options: [
+          "8oz glass",
+          "16oz bottle",
+          "32oz bottle",
+          "full water bottle",
+        ],
+      },
     ],
     emoji: "💧",
-    color: "#06B6D4"
+    color: "#06B6D4",
   },
   {
     id: "appointment-reminder",
     name: "Appointment Reminder",
     description: "Don't miss important appointments",
     category: "appointment",
-    defaultMessage: "📅 Reminder: You have a {appointmentType} appointment at {time} with {provider}. Location: {location}",
+    defaultMessage:
+      "📅 Reminder: You have a {appointmentType} appointment at {time} with {provider}. Location: {location}",
     defaultSchedule: {
       type: "once",
       time: "09:00",
-      timezone: "America/New_York"
+      timezone: "America/New_York",
     },
     escalation: {
       enabled: true,
       delayMinutes: 30,
       maxAttempts: 2,
       escalationTargets: [],
-      escalationMessage: "🚨 {userName} has an appointment coming up and hasn't acknowledged the reminder!"
+      escalationMessage:
+        "🚨 {userName} has an appointment coming up and hasn't acknowledged the reminder!",
     },
     customFields: [
       {
         name: "appointmentType",
         type: "text",
         required: true,
-        placeholder: "e.g., Doctor, Dentist, Therapy"
+        placeholder: "e.g., Doctor, Dentist, Therapy",
       },
       {
         name: "provider",
         type: "text",
         required: true,
-        placeholder: "Dr. Smith, ABC Dental Clinic"
+        placeholder: "Dr. Smith, ABC Dental Clinic",
       },
       {
         name: "location",
         type: "text",
         required: true,
-        placeholder: "123 Main St, Office Suite 456"
+        placeholder: "123 Main St, Office Suite 456",
       },
       {
         name: "time",
         type: "time",
         required: true,
-        placeholder: "2:30 PM"
-      }
+        placeholder: "2:30 PM",
+      },
     ],
     emoji: "📅",
-    color: "#F59E0B"
+    color: "#F59E0B",
   },
   {
     id: "task-deadline",
     name: "Task Deadline",
     description: "Stay on top of important deadlines",
     category: "work",
-    defaultMessage: "⏰ Deadline approaching! Don't forget: {taskName} is due {when}. Priority: {priority}",
+    defaultMessage:
+      "⏰ Deadline approaching! Don't forget: {taskName} is due {when}. Priority: {priority}",
     defaultSchedule: {
       type: "once",
       time: "09:00",
-      timezone: "America/New_York"
+      timezone: "America/New_York",
     },
     escalation: {
       enabled: true,
       delayMinutes: 60,
       maxAttempts: 2,
       escalationTargets: [],
-      escalationMessage: "📋 {userName} has a deadline coming up: {taskName}"
+      escalationMessage: "📋 {userName} has a deadline coming up: {taskName}",
     },
     customFields: [
       {
         name: "taskName",
         type: "text",
         required: true,
-        placeholder: "Complete project report, Submit tax documents"
+        placeholder: "Complete project report, Submit tax documents",
       },
       {
         name: "when",
         type: "text",
         required: true,
-        placeholder: "tomorrow, Friday by 5 PM, end of week"
+        placeholder: "tomorrow, Friday by 5 PM, end of week",
       },
       {
         name: "priority",
         type: "select",
         required: true,
-        options: ["Low", "Medium", "High", "Critical"]
-      }
+        options: ["Low", "Medium", "High", "Critical"],
+      },
     ],
     emoji: "⏰",
-    color: "#EF4444"
+    color: "#EF4444",
   },
   {
     id: "self-care-check",
     name: "Self-Care Check-in",
     description: "Regular self-care and mental health check-ins",
     category: "personal",
-    defaultMessage: "🌸 Time for a self-care moment! How are you feeling today? Remember to {activity} 💖",
+    defaultMessage:
+      "🌸 Time for a self-care moment! How are you feeling today? Remember to {activity} 💖",
     defaultSchedule: {
       type: "daily",
       time: "18:00",
-      timezone: "America/New_York"
+      timezone: "America/New_York",
     },
     escalation: {
       enabled: false,
       delayMinutes: 0,
       maxAttempts: 1,
-      escalationTargets: []
+      escalationTargets: [],
     },
     customFields: [
       {
@@ -214,27 +231,29 @@ export const reminderTemplates: ReminderTemplate[] = [
         required: false,
         options: [
           "take deep breaths",
-          "stretch for 5 minutes", 
+          "stretch for 5 minutes",
           "write in your journal",
           "call a friend",
           "go for a short walk",
-          "practice gratitude"
-        ]
-      }
+          "practice gratitude",
+        ],
+      },
     ],
     emoji: "🌸",
-    color: "#EC4899"
-  }
+    color: "#EC4899",
+  },
 ];
 
 // Helper function to get template by ID
 export function getTemplateById(id: string): ReminderTemplate | undefined {
-  return reminderTemplates.find(template => template.id === id);
+  return reminderTemplates.find((template) => template.id === id);
 }
 
 // Helper function to get templates by category
-export function getTemplatesByCategory(category: ReminderTemplate["category"]): ReminderTemplate[] {
-  return reminderTemplates.filter(template => template.category === category);
+export function getTemplatesByCategory(
+  category: ReminderTemplate["category"],
+): ReminderTemplate[] {
+  return reminderTemplates.filter((template) => template.category === category);
 }
 
 // Helper function to get all available categories

@@ -90,7 +90,7 @@ export class DiscordMessenger {
   async sendReminderMessage(
     reminder: Reminder,
     deliveryMethod: "dm" | "channel" = "dm",
-    channelId?: string
+    channelId?: string,
   ): Promise<DeliveryResult> {
     try {
       // Create DM channel if sending via DM
@@ -119,7 +119,7 @@ export class DiscordMessenger {
 
       // Send message to Discord
       const response = await this.sendMessage(channelId, messagePayload);
-      
+
       if (response.success && response.messageId) {
         return {
           success: true,
@@ -133,7 +133,6 @@ export class DiscordMessenger {
           shouldRetry: response.shouldRetry,
         };
       }
-
     } catch (error) {
       console.error("Error sending reminder message:", error);
       return {
@@ -167,11 +166,15 @@ export class DiscordMessenger {
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error("Failed to create DM channel:", response.status, errorData);
-        
+        console.error(
+          "Failed to create DM channel:",
+          response.status,
+          errorData,
+        );
+
         // Check if it's a rate limit (429) or server error (5xx)
         const shouldRetry = response.status === 429 || response.status >= 500;
-        
+
         return {
           success: false,
           error: `Failed to create DM channel: ${response.status}`,
@@ -184,7 +187,6 @@ export class DiscordMessenger {
         success: true,
         channelId: channelData.id,
       };
-
     } catch (error) {
       console.error("Error creating DM channel:", error);
       return {
@@ -200,7 +202,7 @@ export class DiscordMessenger {
    */
   private async sendMessage(
     channelId: string,
-    payload: DiscordMessagePayload
+    payload: DiscordMessagePayload,
   ): Promise<{
     success: boolean;
     messageId?: string;
@@ -208,22 +210,25 @@ export class DiscordMessenger {
     shouldRetry?: boolean;
   }> {
     try {
-      const response = await fetch(`${DISCORD_API_BASE}/channels/${channelId}/messages`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bot ${this.botToken}`,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${DISCORD_API_BASE}/channels/${channelId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bot ${this.botToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.text();
         console.error("Failed to send message:", response.status, errorData);
-        
+
         // Check if it's a rate limit (429) or server error (5xx)
         const shouldRetry = response.status === 429 || response.status >= 500;
-        
+
         return {
           success: false,
           error: `Failed to send message: ${response.status}`,
@@ -236,7 +241,6 @@ export class DiscordMessenger {
         success: true,
         messageId: messageData.id,
       };
-
     } catch (error) {
       console.error("Error sending message:", error);
       return {
@@ -276,7 +280,9 @@ export class DiscordMessenger {
 
     embed.fields!.push({
       name: "Category",
-      value: `${categoryEmojis[reminder.category] || "📝"} ${reminder.category.charAt(0).toUpperCase() + reminder.category.slice(1)}`,
+      value: `${categoryEmojis[reminder.category] || "📝"} ${
+        reminder.category.charAt(0).toUpperCase() + reminder.category.slice(1)
+      }`,
       inline: true,
     });
 
@@ -290,7 +296,9 @@ export class DiscordMessenger {
 
     embed.fields!.push({
       name: "Priority",
-      value: `${priorityEmojis[reminder.priority]} ${reminder.priority.charAt(0).toUpperCase() + reminder.priority.slice(1)}`,
+      value: `${priorityEmojis[reminder.priority]} ${
+        reminder.priority.charAt(0).toUpperCase() + reminder.priority.slice(1)
+      }`,
       inline: true,
     });
 
@@ -304,7 +312,9 @@ export class DiscordMessenger {
     }
 
     // Add custom fields if available
-    if (reminder.customFields && Object.keys(reminder.customFields).length > 0) {
+    if (
+      reminder.customFields && Object.keys(reminder.customFields).length > 0
+    ) {
       for (const [key, value] of Object.entries(reminder.customFields)) {
         embed.fields!.push({
           name: key.charAt(0).toUpperCase() + key.slice(1),
@@ -361,13 +371,13 @@ export class DiscordMessenger {
    */
   private getCategoryColor(category: string): number {
     const colors: Record<string, number> = {
-      health: 0x00FF7F,     // Spring Green
+      health: 0x00FF7F, // Spring Green
       medication: 0xFF6B9D, // Pink
-      work: 0x4169E1,       // Royal Blue
-      personal: 0x9370DB,   // Medium Purple
+      work: 0x4169E1, // Royal Blue
+      personal: 0x9370DB, // Medium Purple
       appointment: 0xFF4500, // Orange Red
-      task: 0x32CD32,       // Lime Green
-      custom: 0x708090,     // Slate Gray
+      task: 0x32CD32, // Lime Green
+      custom: 0x708090, // Slate Gray
     };
 
     return colors[category] || 0x708090; // Default to Slate Gray
@@ -382,7 +392,8 @@ export class DiscordMessenger {
       createdBy: "system",
       targetUser: userId,
       title: "Test Reminder",
-      message: "This is a test message to verify the Discord bot is working correctly.",
+      message:
+        "This is a test message to verify the Discord bot is working correctly.",
       category: "custom",
       status: "active",
       isActive: true,
@@ -414,7 +425,7 @@ export class DiscordMessenger {
   async sendEscalationMessage(
     originalReminder: Reminder,
     escalationTargets: string[],
-    escalationLevel: number
+    escalationLevel: number,
   ): Promise<DeliveryResult[]> {
     const results: DeliveryResult[] = [];
 
@@ -423,7 +434,8 @@ export class DiscordMessenger {
         // Create escalation embed
         const embed: DiscordEmbed = {
           title: `⚠️ Escalation: ${originalReminder.title}`,
-          description: `**Original recipient:** <@${originalReminder.targetUser}>\n**Original message:** ${originalReminder.message}`,
+          description:
+            `**Original recipient:** <@${originalReminder.targetUser}>\n**Original message:** ${originalReminder.message}`,
           color: 0xFF4500, // Orange Red for escalation
           fields: [
             {
@@ -433,8 +445,10 @@ export class DiscordMessenger {
             },
             {
               name: "Original Reminder Time",
-              value: originalReminder.lastDeliveredAt 
-                ? `<t:${Math.floor(originalReminder.lastDeliveredAt.getTime() / 1000)}:R>`
+              value: originalReminder.lastDeliveredAt
+                ? `<t:${
+                  Math.floor(originalReminder.lastDeliveredAt.getTime() / 1000)
+                }:R>`
                 : "Unknown",
               inline: true,
             },
@@ -467,7 +481,6 @@ export class DiscordMessenger {
             shouldRetry: dmChannel.shouldRetry,
           });
         }
-
       } catch (error) {
         console.error(`Error sending escalation to ${targetUserId}:`, error);
         results.push({
@@ -487,14 +500,16 @@ export class DiscordMessenger {
   handleAcknowledgment(
     reminderId: string,
     userId: string,
-    action: "complete" | "snooze" | "cancel"
+    action: "complete" | "snooze" | "cancel",
   ): {
     success: boolean;
     message: string;
   } {
     // This will be implemented when we add acknowledgment tracking
-    console.log(`Handling ${action} for reminder ${reminderId} by user ${userId}`);
-    
+    console.log(
+      `Handling ${action} for reminder ${reminderId} by user ${userId}`,
+    );
+
     return {
       success: true,
       message: `Reminder ${action}d successfully`,
@@ -539,10 +554,10 @@ export function getDiscordMessenger(): DiscordMessenger | null {
 export async function sendReminderViaDiscord(
   reminder: Reminder,
   deliveryMethod: "dm" | "channel" = "dm",
-  channelId?: string
+  channelId?: string,
 ): Promise<DeliveryResult> {
   const messenger = getDiscordMessenger();
-  
+
   if (!messenger) {
     return {
       success: false,
@@ -551,7 +566,11 @@ export async function sendReminderViaDiscord(
     };
   }
 
-  return await messenger.sendReminderMessage(reminder, deliveryMethod, channelId);
+  return await messenger.sendReminderMessage(
+    reminder,
+    deliveryMethod,
+    channelId,
+  );
 }
 
 /**
@@ -560,10 +579,10 @@ export async function sendReminderViaDiscord(
 export async function sendEscalationViaDiscord(
   reminder: Reminder,
   escalationTargets: string[],
-  escalationLevel: number
+  escalationLevel: number,
 ): Promise<DeliveryResult[]> {
   const messenger = getDiscordMessenger();
-  
+
   if (!messenger) {
     return escalationTargets.map(() => ({
       success: false,
@@ -572,5 +591,9 @@ export async function sendEscalationViaDiscord(
     }));
   }
 
-  return await messenger.sendEscalationMessage(reminder, escalationTargets, escalationLevel);
+  return await messenger.sendEscalationMessage(
+    reminder,
+    escalationTargets,
+    escalationLevel,
+  );
 }

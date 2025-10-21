@@ -6,14 +6,12 @@
 import type { Handlers } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../../lib/storage/sessions.ts";
 import {
-  getReminderById,
-  updateReminder,
   deleteReminder,
   getDeliveriesByReminder,
+  getReminderById,
+  updateReminder,
 } from "../../../lib/storage/reminders.ts";
-import type {
-  UpdateReminderInput,
-} from "../../../lib/types/reminders.ts";
+import type { UpdateReminderInput } from "../../../lib/types/reminders.ts";
 
 interface ApiResponse<T = unknown> {
   success: boolean;
@@ -33,18 +31,18 @@ export const handler: Handlers = {
       if (!session) {
         return new Response(
           JSON.stringify({ success: false, error: "Authentication required" }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
 
       const reminderId = ctx.params.id;
-      
+
       // Get reminder
       const reminder = await getReminderById(reminderId);
       if (!reminder) {
         return new Response(
           JSON.stringify({ success: false, error: "Reminder not found" }),
-          { status: 404, headers: { "Content-Type": "application/json" } }
+          { status: 404, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -52,7 +50,7 @@ export const handler: Handlers = {
       if (reminder.createdBy !== session.userId) {
         return new Response(
           JSON.stringify({ success: false, error: "Permission denied" }),
-          { status: 403, headers: { "Content-Type": "application/json" } }
+          { status: 403, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -73,7 +71,7 @@ export const handler: Handlers = {
       });
     } catch (error) {
       console.error("Error in GET /api/reminders/[id]:", error);
-      
+
       const response: ApiResponse = {
         success: false,
         error: "Internal server error",
@@ -96,20 +94,23 @@ export const handler: Handlers = {
       if (!session) {
         return new Response(
           JSON.stringify({ success: false, error: "Authentication required" }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
 
       const reminderId = ctx.params.id;
-      
+
       // Parse request body
       let input: UpdateReminderInput;
       try {
         input = await req.json();
       } catch {
         return new Response(
-          JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          JSON.stringify({
+            success: false,
+            error: "Invalid JSON in request body",
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -127,8 +128,11 @@ export const handler: Handlers = {
           headers: { "Content-Type": "application/json" },
         });
       } else {
-        const statusCode = result.errors?.includes("Reminder not found") ? 404 :
-                          result.errors?.includes("Permission denied") ? 403 : 400;
+        const statusCode = result.errors?.includes("Reminder not found")
+          ? 404
+          : result.errors?.includes("Permission denied")
+          ? 403
+          : 400;
 
         const response: ApiResponse = {
           success: false,
@@ -143,7 +147,7 @@ export const handler: Handlers = {
       }
     } catch (error) {
       console.error("Error in PUT /api/reminders/[id]:", error);
-      
+
       const response: ApiResponse = {
         success: false,
         error: "Internal server error",
@@ -166,12 +170,12 @@ export const handler: Handlers = {
       if (!session) {
         return new Response(
           JSON.stringify({ success: false, error: "Authentication required" }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
 
       const reminderId = ctx.params.id;
-      
+
       // Delete reminder
       const result = await deleteReminder(reminderId, session.userId);
 
@@ -186,8 +190,11 @@ export const handler: Handlers = {
           headers: { "Content-Type": "application/json" },
         });
       } else {
-        const statusCode = result.errors?.includes("Reminder not found") ? 404 :
-                          result.errors?.includes("Permission denied") ? 403 : 400;
+        const statusCode = result.errors?.includes("Reminder not found")
+          ? 404
+          : result.errors?.includes("Permission denied")
+          ? 403
+          : 400;
 
         const response: ApiResponse = {
           success: false,
@@ -202,7 +209,7 @@ export const handler: Handlers = {
       }
     } catch (error) {
       console.error("Error in DELETE /api/reminders/[id]:", error);
-      
+
       const response: ApiResponse = {
         success: false,
         error: "Internal server error",

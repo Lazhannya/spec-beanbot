@@ -79,10 +79,12 @@ export class TextPatternMatcher {
 
   constructor(config: Partial<PatternMatchingConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.patterns = textPatterns.filter(p => p.enabled);
-    
+    this.patterns = textPatterns.filter((p) => p.enabled);
+
     if (this.config.debugMode) {
-      console.log(`Pattern matcher initialized with ${this.patterns.length} active patterns`);
+      console.log(
+        `Pattern matcher initialized with ${this.patterns.length} active patterns`,
+      );
     }
   }
 
@@ -93,9 +95,8 @@ export class TextPatternMatcher {
     messageId: string,
     userId: string,
     channelId: string,
-    content: string
+    content: string,
   ): MessageAnalysis {
-    
     const analysis: MessageAnalysis = {
       messageId,
       userId,
@@ -115,16 +116,18 @@ export class TextPatternMatcher {
 
     // Find pattern matches
     analysis.matches = this.findMatches(content, channelId, userId);
-    
+
     // Generate suggested actions
     analysis.suggestedActions = this.generateActions(analysis.matches);
-    
+
     // Calculate overall confidence and determine if response is needed
     analysis.confidence = this.calculateConfidence(analysis.matches);
     analysis.shouldRespond = analysis.confidence >= this.config.minConfidence;
 
     if (this.config.debugMode) {
-      console.log(`Message analysis: ${analysis.matches.length} matches, confidence: ${analysis.confidence}`);
+      console.log(
+        `Message analysis: ${analysis.matches.length} matches, confidence: ${analysis.confidence}`,
+      );
     }
 
     return analysis;
@@ -139,12 +142,17 @@ export class TextPatternMatcher {
     }
 
     // Check channel whitelist
-    if (this.config.channelWhitelist && !this.config.channelWhitelist.includes(channelId)) {
+    if (
+      this.config.channelWhitelist &&
+      !this.config.channelWhitelist.includes(channelId)
+    ) {
       return false;
     }
 
     // Check user blacklist
-    if (this.config.userBlacklist && this.config.userBlacklist.includes(userId)) {
+    if (
+      this.config.userBlacklist && this.config.userBlacklist.includes(userId)
+    ) {
       return false;
     }
 
@@ -157,7 +165,7 @@ export class TextPatternMatcher {
   private findMatches(
     content: string,
     channelId: string,
-    userId: string
+    userId: string,
   ): PatternMatch[] {
     const matches: PatternMatch[] = [];
 
@@ -169,16 +177,20 @@ export class TextPatternMatcher {
         }
 
         // Check channel restrictions
-        if (pattern.restrictToChannels && 
-            pattern.restrictToChannels.length > 0 && 
-            !pattern.restrictToChannels.includes(channelId)) {
+        if (
+          pattern.restrictToChannels &&
+          pattern.restrictToChannels.length > 0 &&
+          !pattern.restrictToChannels.includes(channelId)
+        ) {
           continue;
         }
 
         // Check user restrictions
-        if (pattern.restrictToUsers && 
-            pattern.restrictToUsers.length > 0 && 
-            !pattern.restrictToUsers.includes(userId)) {
+        if (
+          pattern.restrictToUsers &&
+          pattern.restrictToUsers.length > 0 &&
+          !pattern.restrictToUsers.includes(userId)
+        ) {
           continue;
         }
 
@@ -226,18 +238,19 @@ export class TextPatternMatcher {
   private testPattern(
     content: string,
     patternStr: string,
-    pattern: TextPattern
+    pattern: TextPattern,
   ): { text: string; position: number; length: number } | null {
-    
     const testContent = pattern.caseSensitive ? content : content.toLowerCase();
-    const testPattern = pattern.caseSensitive ? patternStr : patternStr.toLowerCase();
+    const testPattern = pattern.caseSensitive
+      ? patternStr
+      : patternStr.toLowerCase();
 
     try {
       if (pattern.isRegex) {
         const flags = pattern.caseSensitive ? "g" : "gi";
         const regex = new RegExp(testPattern, flags);
         const match = regex.exec(testContent);
-        
+
         if (match) {
           return {
             text: match[0],
@@ -248,9 +261,12 @@ export class TextPatternMatcher {
       } else {
         // Simple text search
         if (pattern.wholeWordsOnly) {
-          const wordRegex = new RegExp(`\\b${this.escapeRegex(testPattern)}\\b`, pattern.caseSensitive ? "g" : "gi");
+          const wordRegex = new RegExp(
+            `\\b${this.escapeRegex(testPattern)}\\b`,
+            pattern.caseSensitive ? "g" : "gi",
+          );
           const match = wordRegex.exec(testContent);
-          
+
           if (match) {
             return {
               text: match[0],
@@ -281,7 +297,7 @@ export class TextPatternMatcher {
    */
   private calculatePatternConfidence(
     pattern: TextPattern,
-    match: { text: string; position: number; length: number }
+    match: { text: string; position: number; length: number },
   ): number {
     let confidence = 0.5; // Base confidence
 
@@ -323,11 +339,11 @@ export class TextPatternMatcher {
     }
 
     // Use highest confidence as base
-    const maxConfidence = Math.max(...matches.map(m => m.confidence));
-    
+    const maxConfidence = Math.max(...matches.map((m) => m.confidence));
+
     // Add small boost for multiple matches
     const multiMatchBoost = Math.min(0.2, (matches.length - 1) * 0.05);
-    
+
     return Math.min(1.0, maxConfidence + multiMatchBoost);
   }
 
@@ -341,7 +357,9 @@ export class TextPatternMatcher {
       const pattern = match.pattern;
 
       // Generate message response
-      if (pattern.response.type === "message" || pattern.response.type === "both") {
+      if (
+        pattern.response.type === "message" || pattern.response.type === "both"
+      ) {
         if (pattern.response.message) {
           actions.push({
             type: "message",
@@ -351,7 +369,9 @@ export class TextPatternMatcher {
       }
 
       // Generate reaction response
-      if (pattern.response.type === "reaction" || pattern.response.type === "both") {
+      if (
+        pattern.response.type === "reaction" || pattern.response.type === "both"
+      ) {
         if (pattern.response.reaction) {
           actions.push({
             type: "reaction",
@@ -404,7 +424,7 @@ export class TextPatternMatcher {
    * Escape special regex characters
    */
   private escapeRegex(text: string): string {
-    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   /**
@@ -418,7 +438,7 @@ export class TextPatternMatcher {
    * Reload patterns from data source
    */
   reloadPatterns(): void {
-    this.patterns = textPatterns.filter(p => p.enabled);
+    this.patterns = textPatterns.filter((p) => p.enabled);
     console.log(`Reloaded ${this.patterns.length} active patterns`);
   }
 
@@ -440,7 +460,7 @@ export class TextPatternMatcher {
 
     // Count patterns by category
     for (const pattern of this.patterns) {
-      stats.patternsByCategory[pattern.category] = 
+      stats.patternsByCategory[pattern.category] =
         (stats.patternsByCategory[pattern.category] || 0) + 1;
     }
 
@@ -464,7 +484,9 @@ let globalPatternMatcher: TextPatternMatcher | null = null;
 /**
  * Initialize the global pattern matcher
  */
-export function initializePatternMatcher(config?: Partial<PatternMatchingConfig>): TextPatternMatcher {
+export function initializePatternMatcher(
+  config?: Partial<PatternMatchingConfig>,
+): TextPatternMatcher {
   if (!globalPatternMatcher) {
     globalPatternMatcher = new TextPatternMatcher(config);
   }

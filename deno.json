@@ -1,0 +1,62 @@
+{
+  "name": "spec-beanbot",
+  "version": "0.1.0",
+  "description": "Discord Assistant Bot with reminder management and pattern recognition",
+  "license": "MIT",
+  "exports": "./discord-bot/main.ts",
+  "tasks": {
+    "start": "deno run -A discord-bot/main.ts",
+    "dev": "deno run -A --watch=discord-bot/static/,discord-bot/routes/ discord-bot/dev.ts",
+    "build": "deno run -A discord-bot/dev.ts build",
+    "check": "deno fmt --check && deno lint && deno check discord-bot/main.ts",
+    "deploy": "deployctl deploy --project=spec-beanbot discord-bot/main.ts",
+    "reminder": "deno run -A discord-bot/scripts/cli/reminder.ts"
+  },
+  "imports": {
+    "$fresh/": "https://deno.land/x/fresh@1.6.8/",
+    "preact": "https://esm.sh/preact@10.19.6",
+    "preact/": "https://esm.sh/preact@10.19.6/",
+    "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
+    "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
+    "twind": "https://esm.sh/twind@0.16.19",
+    "twind/": "https://esm.sh/twind@0.16.19/",
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/http": "jsr:@std/http@1",
+    "@std/crypto": "jsr:@std/crypto@1",
+    "@std/cli": "jsr:@std/cli@1",
+    "@std/fmt": "jsr:@std/fmt@1",
+    "discord-deno": "https://deno.land/x/discord@0.2.4/mod.ts"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "lib": ["dom", "dom.iterable", "esnext", "deno.ns"]
+  },
+  "exclude": [
+    "**/_fresh/*",
+    ".git/",
+    ".github/",
+    "node_modules/",
+    "docs/",
+    "specs/"
+  ],
+  "deploy": {
+    "project": "spec-beanbot",
+    "entrypoint": "discord-bot/main.ts",
+    "include": [
+      "discord-bot/"
+    ],
+    "exclude": [
+      ".env",
+      ".env.*",
+      "*.md",
+      "docs/",
+      "specs/",
+      "**/_fresh/*"
+    ]
+  }
+}

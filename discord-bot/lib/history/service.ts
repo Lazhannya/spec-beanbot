@@ -7,17 +7,17 @@ import type { AcknowledgmentMethod } from "../types/reminders.ts";
 /**
  * Reminder interaction types
  */
-export type InteractionType = 
-  | "created"       // Reminder was created
-  | "delivered"     // Reminder was delivered
-  | "acknowledged"  // User acknowledged reminder
-  | "snoozed"      // User snoozed reminder
-  | "completed"    // Reminder was marked complete
-  | "cancelled"    // Reminder was cancelled
-  | "escalated"    // Reminder was escalated
-  | "edited"       // Reminder was modified
-  | "paused"       // Reminder was paused
-  | "resumed";     // Reminder was resumed
+export type InteractionType =
+  | "created" // Reminder was created
+  | "delivered" // Reminder was delivered
+  | "acknowledged" // User acknowledged reminder
+  | "snoozed" // User snoozed reminder
+  | "completed" // Reminder was marked complete
+  | "cancelled" // Reminder was cancelled
+  | "escalated" // Reminder was escalated
+  | "edited" // Reminder was modified
+  | "paused" // Reminder was paused
+  | "resumed"; // Reminder was resumed
 
 /**
  * History entry for reminder interactions
@@ -29,7 +29,7 @@ export interface ReminderHistoryEntry {
   targetUserId?: string; // User who was targeted (for escalations)
   type: InteractionType;
   timestamp: Date;
-  
+
   // Context data
   deliveryId?: string; // Associated delivery if applicable
   acknowledgmentMethod?: AcknowledgmentMethod;
@@ -43,7 +43,7 @@ export interface ReminderHistoryEntry {
     messageId?: string;
     channelId?: string;
   };
-  
+
   // System info
   ipAddress?: string;
   userAgent?: string;
@@ -55,30 +55,30 @@ export interface ReminderHistoryEntry {
  */
 export interface ReminderAnalytics {
   reminderId: string;
-  
+
   // Delivery stats
   totalDeliveries: number;
   successfulDeliveries: number;
   failedDeliveries: number;
-  
+
   // Response stats
   totalAcknowledgments: number;
   acknowledgmentRate: number; // Percentage
   averageResponseTime: number; // Minutes
   fastestResponse: number; // Minutes
   slowestResponse: number; // Minutes
-  
+
   // Escalation stats
   totalEscalations: number;
   escalationLevels: number[];
-  
+
   // Activity timeline
   createdAt: Date;
   firstDeliveredAt?: Date;
   lastDeliveredAt?: Date;
   lastAcknowledgedAt?: Date;
   completedAt?: Date;
-  
+
   // Method breakdown
   acknowledgmentMethods: Record<AcknowledgmentMethod, number>;
 }
@@ -92,24 +92,24 @@ export interface UserActivitySummary {
     start: Date;
     end: Date;
   };
-  
+
   // Creation stats
   remindersCreated: number;
   remindersCompleted: number;
   remindersActive: number;
-  
+
   // Response stats
   totalRemindersReceived: number;
   remindersAcknowledged: number;
   averageResponseTime: number;
-  
+
   // Most active times
   mostActiveHour: number; // 0-23
   mostActiveDay: number; // 0-6 (Sunday = 0)
-  
+
   // Category preferences
   categoryBreakdown: Record<string, number>;
-  
+
   // Recent activity
   recentHistory: ReminderHistoryEntry[];
 }
@@ -118,7 +118,6 @@ export interface UserActivitySummary {
  * History tracking service
  */
 export class ReminderHistoryService {
-  
   /**
    * Log a reminder interaction
    */
@@ -134,12 +133,12 @@ export class ReminderHistoryService {
       source?: ReminderHistoryEntry["source"];
       ipAddress?: string;
       userAgent?: string;
-    } = {}
+    } = {},
   ): Promise<void> {
     try {
       const kv = await getKV();
       const historyId = crypto.randomUUID();
-      
+
       const entry: ReminderHistoryEntry = {
         id: historyId,
         reminderId,
@@ -158,36 +157,37 @@ export class ReminderHistoryService {
       // Store the history entry
       await kv.set(
         ["reminder_history", historyId],
-        entry
+        entry,
       );
 
       // Add to reminder's history index
       await kv.set(
         ["reminder_history_by_reminder", reminderId, historyId],
-        historyId
+        historyId,
       );
 
       // Add to user's activity index
       await kv.set(
         ["reminder_history_by_user", userId, historyId],
-        historyId
+        historyId,
       );
 
       // Add to type-specific index for analytics
       await kv.set(
         ["reminder_history_by_type", type, historyId],
-        historyId
+        historyId,
       );
 
       // Add to daily index for timeline queries
-      const dateKey = entry.timestamp.toISOString().split('T')[0];
+      const dateKey = entry.timestamp.toISOString().split("T")[0];
       await kv.set(
         ["reminder_history_by_date", dateKey, historyId],
-        historyId
+        historyId,
       );
 
-      console.log(`Logged reminder interaction: ${type} for reminder ${reminderId} by user ${userId}`);
-
+      console.log(
+        `Logged reminder interaction: ${type} for reminder ${reminderId} by user ${userId}`,
+      );
     } catch (error) {
       console.error("Error logging reminder interaction:", error);
     }
@@ -202,12 +202,12 @@ export class ReminderHistoryService {
       limit?: number;
       offset?: number;
       types?: InteractionType[];
-    } = {}
+    } = {},
   ): Promise<ReminderHistoryEntry[]> {
     try {
       const kv = await getKV();
       const { limit = 50, offset = 0, types } = options;
-      
+
       const entries: ReminderHistoryEntry[] = [];
       const iter = kv.list({
         prefix: ["reminder_history_by_reminder", reminderId],
@@ -224,23 +224,24 @@ export class ReminderHistoryService {
 
         const historyId = entry.value as string;
         const historyEntry = await kv.get(["reminder_history", historyId]);
-        
+
         if (historyEntry.value) {
           const entryData = historyEntry.value as ReminderHistoryEntry;
-          
+
           // Filter by types if specified
           if (!types || types.includes(entryData.type)) {
             entries.push(entryData);
           }
         }
-        
+
         count++;
         if (entries.length >= limit) break;
       }
 
       // Sort by timestamp (newest first)
-      return entries.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
+      return entries.sort((a, b) =>
+        b.timestamp.getTime() - a.timestamp.getTime()
+      );
     } catch (error) {
       console.error("Error getting reminder history:", error);
       return [];
@@ -257,12 +258,12 @@ export class ReminderHistoryService {
       offset?: number;
       startDate?: Date;
       endDate?: Date;
-    } = {}
+    } = {},
   ): Promise<ReminderHistoryEntry[]> {
     try {
       const kv = await getKV();
       const { limit = 50, offset = 0 } = options;
-      
+
       const entries: ReminderHistoryEntry[] = [];
       const iter = kv.list({
         prefix: ["reminder_history_by_user", userId],
@@ -279,10 +280,10 @@ export class ReminderHistoryService {
 
         const historyId = entry.value as string;
         const historyEntry = await kv.get(["reminder_history", historyId]);
-        
+
         if (historyEntry.value) {
           const entryData = historyEntry.value as ReminderHistoryEntry;
-          
+
           // Filter by date range if specified
           if (options.startDate && entryData.timestamp < options.startDate) {
             continue;
@@ -290,17 +291,18 @@ export class ReminderHistoryService {
           if (options.endDate && entryData.timestamp > options.endDate) {
             continue;
           }
-          
+
           entries.push(entryData);
         }
-        
+
         count++;
         if (entries.length >= limit) break;
       }
 
       // Sort by timestamp (newest first)
-      return entries.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
+      return entries.sort((a, b) =>
+        b.timestamp.getTime() - a.timestamp.getTime()
+      );
     } catch (error) {
       console.error("Error getting user activity:", error);
       return [];
@@ -310,10 +312,14 @@ export class ReminderHistoryService {
   /**
    * Generate analytics for a reminder
    */
-  static async generateReminderAnalytics(reminderId: string): Promise<ReminderAnalytics | null> {
+  static async generateReminderAnalytics(
+    reminderId: string,
+  ): Promise<ReminderAnalytics | null> {
     try {
-      const history = await this.getReminderHistory(reminderId, { limit: 1000 });
-      
+      const history = await this.getReminderHistory(reminderId, {
+        limit: 1000,
+      });
+
       if (history.length === 0) {
         return null;
       }
@@ -363,7 +369,7 @@ export class ReminderHistoryService {
           case "acknowledged":
             analytics.totalAcknowledgments++;
             analytics.lastAcknowledgedAt = entry.timestamp;
-            
+
             if (entry.acknowledgmentMethod) {
               analytics.acknowledgmentMethods[entry.acknowledgmentMethod]++;
             }
@@ -371,11 +377,19 @@ export class ReminderHistoryService {
             // Calculate response time if we have the delivery time
             if (entry.deliveryId && deliveryMap.has(entry.deliveryId)) {
               const deliveryTime = deliveryMap.get(entry.deliveryId)!;
-              const responseTime = (entry.timestamp.getTime() - deliveryTime.getTime()) / (1000 * 60); // minutes
+              const responseTime =
+                (entry.timestamp.getTime() - deliveryTime.getTime()) /
+                (1000 * 60); // minutes
               responseTimes.push(responseTime);
-              
-              analytics.fastestResponse = Math.min(analytics.fastestResponse, responseTime);
-              analytics.slowestResponse = Math.max(analytics.slowestResponse, responseTime);
+
+              analytics.fastestResponse = Math.min(
+                analytics.fastestResponse,
+                responseTime,
+              );
+              analytics.slowestResponse = Math.max(
+                analytics.slowestResponse,
+                responseTime,
+              );
             }
             break;
 
@@ -394,8 +408,10 @@ export class ReminderHistoryService {
 
       // Calculate averages
       if (responseTimes.length > 0) {
-        analytics.averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-        analytics.acknowledgmentRate = (analytics.totalAcknowledgments / analytics.totalDeliveries) * 100;
+        analytics.averageResponseTime = responseTimes.reduce((a, b) =>
+          a + b, 0) / responseTimes.length;
+        analytics.acknowledgmentRate =
+          (analytics.totalAcknowledgments / analytics.totalDeliveries) * 100;
       }
 
       if (analytics.fastestResponse === Infinity) {
@@ -403,7 +419,6 @@ export class ReminderHistoryService {
       }
 
       return analytics;
-
     } catch (error) {
       console.error("Error generating reminder analytics:", error);
       return null;
@@ -415,7 +430,7 @@ export class ReminderHistoryService {
    */
   static async generateUserSummary(
     userId: string,
-    periodDays = 30
+    periodDays = 30,
   ): Promise<UserActivitySummary> {
     try {
       const endDate = new Date();
@@ -475,11 +490,11 @@ export class ReminderHistoryService {
 
       // Calculate averages
       if (responseTimes.length > 0) {
-        summary.averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+        summary.averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) /
+          responseTimes.length;
       }
 
       return summary;
-
     } catch (error) {
       console.error("Error generating user summary:", error);
       throw error;
@@ -500,24 +515,39 @@ export class ReminderHistoryService {
 
       for await (const entry of iter) {
         const historyEntry = entry.value as ReminderHistoryEntry;
-        
+
         if (historyEntry.timestamp < cutoffDate) {
           // Delete from all indexes
           await kv.delete(["reminder_history", historyEntry.id]);
-          await kv.delete(["reminder_history_by_reminder", historyEntry.reminderId, historyEntry.id]);
-          await kv.delete(["reminder_history_by_user", historyEntry.userId, historyEntry.id]);
-          await kv.delete(["reminder_history_by_type", historyEntry.type, historyEntry.id]);
-          
-          const dateKey = historyEntry.timestamp.toISOString().split('T')[0];
-          await kv.delete(["reminder_history_by_date", dateKey, historyEntry.id]);
-          
+          await kv.delete([
+            "reminder_history_by_reminder",
+            historyEntry.reminderId,
+            historyEntry.id,
+          ]);
+          await kv.delete([
+            "reminder_history_by_user",
+            historyEntry.userId,
+            historyEntry.id,
+          ]);
+          await kv.delete([
+            "reminder_history_by_type",
+            historyEntry.type,
+            historyEntry.id,
+          ]);
+
+          const dateKey = historyEntry.timestamp.toISOString().split("T")[0];
+          await kv.delete([
+            "reminder_history_by_date",
+            dateKey,
+            historyEntry.id,
+          ]);
+
           deletedCount++;
         }
       }
 
       console.log(`Cleaned up ${deletedCount} old history entries`);
       return deletedCount;
-
     } catch (error) {
       console.error("Error cleaning up history:", error);
       return 0;
@@ -529,22 +559,27 @@ export class ReminderHistoryService {
  * Convenience functions for common logging operations
  */
 export const historyLogger = {
-  
   /**
    * Log reminder creation
    */
-  reminderCreated: (reminderId: string, userId: string, source: ReminderHistoryEntry["source"] = "web") =>
-    ReminderHistoryService.logInteraction(reminderId, userId, "created", { source }),
+  reminderCreated: (
+    reminderId: string,
+    userId: string,
+    source: ReminderHistoryEntry["source"] = "web",
+  ) =>
+    ReminderHistoryService.logInteraction(reminderId, userId, "created", {
+      source,
+    }),
 
   /**
    * Log reminder delivery
    */
   reminderDelivered: (
-    reminderId: string, 
-    userId: string, 
-    deliveryId: string, 
-    messageId?: string, 
-    channelId?: string
+    reminderId: string,
+    userId: string,
+    deliveryId: string,
+    messageId?: string,
+    channelId?: string,
   ) =>
     ReminderHistoryService.logInteraction(reminderId, userId, "delivered", {
       deliveryId,
@@ -560,7 +595,7 @@ export const historyLogger = {
     userId: string,
     deliveryId: string,
     method: AcknowledgmentMethod,
-    source: ReminderHistoryEntry["source"] = "discord"
+    source: ReminderHistoryEntry["source"] = "discord",
   ) =>
     ReminderHistoryService.logInteraction(reminderId, userId, "acknowledged", {
       deliveryId,
@@ -575,13 +610,18 @@ export const historyLogger = {
     reminderId: string,
     originalUserId: string,
     targetUserId: string,
-    escalationLevel: number
+    escalationLevel: number,
   ) =>
-    ReminderHistoryService.logInteraction(reminderId, originalUserId, "escalated", {
-      targetUserId,
-      source: "system",
-      metadata: { escalationLevel },
-    }),
+    ReminderHistoryService.logInteraction(
+      reminderId,
+      originalUserId,
+      "escalated",
+      {
+        targetUserId,
+        source: "system",
+        metadata: { escalationLevel },
+      },
+    ),
 
   /**
    * Log reminder status change
@@ -589,10 +629,13 @@ export const historyLogger = {
   reminderStatusChanged: (
     reminderId: string,
     userId: string,
-    type: Extract<InteractionType, "completed" | "cancelled" | "paused" | "resumed">,
+    type: Extract<
+      InteractionType,
+      "completed" | "cancelled" | "paused" | "resumed"
+    >,
     previousStatus: string,
     newStatus: string,
-    source: ReminderHistoryEntry["source"] = "web"
+    source: ReminderHistoryEntry["source"] = "web",
   ) =>
     ReminderHistoryService.logInteraction(reminderId, userId, type, {
       source,
@@ -606,7 +649,7 @@ export const historyLogger = {
     reminderId: string,
     userId: string,
     changes: Record<string, { from: unknown; to: unknown }>,
-    source: ReminderHistoryEntry["source"] = "web"
+    source: ReminderHistoryEntry["source"] = "web",
   ) =>
     ReminderHistoryService.logInteraction(reminderId, userId, "edited", {
       source,

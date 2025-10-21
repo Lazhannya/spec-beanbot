@@ -5,14 +5,14 @@
 import type { Handlers } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../../lib/storage/sessions.ts";
 import {
-  searchReminders,
   createReminder,
+  searchReminders,
 } from "../../../lib/storage/reminders.ts";
 import type {
-  ReminderSearchCriteria,
   CreateReminderInput,
   ReminderCategory,
   ReminderPriority,
+  ReminderSearchCriteria,
   ReminderStatus,
 } from "../../../lib/types/reminders.ts";
 
@@ -56,7 +56,7 @@ async function handleGetReminders(req: Request): Promise<Response> {
     if (!session) {
       return new Response(
         JSON.stringify({ success: false, error: "Authentication required" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -119,9 +119,18 @@ async function handleGetReminders(req: Request): Promise<Response> {
 
     // Parse sorting
     if (query.sortBy) {
-      const validSortFields = ["createdAt", "nextDeliveryAt", "priority", "title"];
+      const validSortFields = [
+        "createdAt",
+        "nextDeliveryAt",
+        "priority",
+        "title",
+      ];
       if (validSortFields.includes(query.sortBy)) {
-        criteria.sortBy = query.sortBy as "createdAt" | "nextDeliveryAt" | "priority" | "title";
+        criteria.sortBy = query.sortBy as
+          | "createdAt"
+          | "nextDeliveryAt"
+          | "priority"
+          | "title";
         criteria.sortOrder = (query.sortOrder as "asc" | "desc") || "desc";
       }
     }
@@ -149,7 +158,7 @@ async function handleGetReminders(req: Request): Promise<Response> {
     });
   } catch (error) {
     console.error("Error in GET /api/reminders:", error);
-    
+
     const response: ApiResponse = {
       success: false,
       error: "Internal server error",
@@ -172,7 +181,7 @@ async function handleCreateReminder(req: Request): Promise<Response> {
     if (!session) {
       return new Response(
         JSON.stringify({ success: false, error: "Authentication required" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -182,19 +191,22 @@ async function handleCreateReminder(req: Request): Promise<Response> {
       input = await req.json();
     } catch {
       return new Response(
-        JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({
+          success: false,
+          error: "Invalid JSON in request body",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
     // Validate required fields
     if (!input.title || !input.message || !input.category || !input.schedule) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Missing required fields: title, message, category, schedule" 
+        JSON.stringify({
+          success: false,
+          error: "Missing required fields: title, message, category, schedule",
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -230,7 +242,7 @@ async function handleCreateReminder(req: Request): Promise<Response> {
     }
   } catch (error) {
     console.error("Error in POST /api/reminders:", error);
-    
+
     const response: ApiResponse = {
       success: false,
       error: "Internal server error",

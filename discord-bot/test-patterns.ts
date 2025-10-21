@@ -4,7 +4,11 @@
 // This script tests the pattern matching service and data structures
 
 import { initializePatternMatcher } from "./lib/patterns/matcher.ts";
-import { textPatterns, getPatternById, getPatternCategories } from "./data/text-patterns.ts";
+import {
+  getPatternById,
+  getPatternCategories,
+  textPatterns,
+} from "./data/text-patterns.ts";
 
 console.log("🧪 Testing Pattern Management System");
 console.log("=====================================\n");
@@ -33,26 +37,32 @@ try {
     minConfidence: 0.5,
   });
   console.log("   Pattern matcher initialized: ✅");
-  
+
   const stats = matcher.getStats();
   console.log(`   Active patterns: ${stats.activePatterns}`);
   console.log(`   Total patterns: ${stats.totalPatterns}`);
-  console.log(`   Categories: ${Object.keys(stats.patternsByCategory).join(", ")}`);
+  console.log(
+    `   Categories: ${Object.keys(stats.patternsByCategory).join(", ")}`,
+  );
 } catch (error) {
-  console.log(`   Pattern matcher failed: ❌ ${error instanceof Error ? error.message : "Unknown error"}`);
+  console.log(
+    `   Pattern matcher failed: ❌ ${
+      error instanceof Error ? error.message : "Unknown error"
+    }`,
+  );
 }
 
 // Test 4: Pattern analysis
 console.log("\n4. Testing Pattern Analysis:");
 try {
   const matcher = initializePatternMatcher();
-  
+
   const testMessages = [
     "Hello there! Can you help me with something?",
     "I need urgent assistance right now!",
     "Thanks for all your help!",
     "What time is the meeting?",
-    "Good morning everyone!"
+    "Good morning everyone!",
   ];
 
   for (const message of testMessages) {
@@ -61,20 +71,28 @@ try {
       `test-${Date.now()}`,
       "test-user",
       "test-channel",
-      message
+      message,
     );
-    
+
     console.log(`   - Matches found: ${analysis.matches.length}`);
     console.log(`   - Confidence: ${analysis.confidence.toFixed(2)}`);
     console.log(`   - Should respond: ${analysis.shouldRespond ? "✅" : "❌"}`);
     console.log(`   - Suggested actions: ${analysis.suggestedActions.length}`);
-    
+
     if (analysis.matches.length > 0) {
-      console.log(`   - Top match: ${analysis.matches[0].pattern.name} (${analysis.matches[0].confidence.toFixed(2)})`);
+      console.log(
+        `   - Top match: ${analysis.matches[0].pattern.name} (${
+          analysis.matches[0].confidence.toFixed(2)
+        })`,
+      );
     }
   }
 } catch (error) {
-  console.log(`   Pattern analysis failed: ❌ ${error instanceof Error ? error.message : "Unknown error"}`);
+  console.log(
+    `   Pattern analysis failed: ❌ ${
+      error instanceof Error ? error.message : "Unknown error"
+    }`,
+  );
 }
 
 console.log("\n🎉 Pattern Management System Test Complete!");
@@ -123,7 +141,11 @@ if (newPatternInput.priority < 1 || newPatternInput.priority > 10) {
   validationErrors.push("Priority must be between 1 and 10");
 }
 
-console.log(`   Validation result: ${validationErrors.length === 0 ? "✅ Valid" : "❌ Invalid"}`);
+console.log(
+  `   Validation result: ${
+    validationErrors.length === 0 ? "✅ Valid" : "❌ Invalid"
+  }`,
+);
 if (validationErrors.length > 0) {
   console.log(`   Errors: ${validationErrors.join(", ")}`);
 }

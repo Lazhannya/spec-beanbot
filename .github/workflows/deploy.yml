@@ -1,0 +1,46 @@
+# Deno Deploy Configuration
+# This file configures automatic deployment from GitHub to Deno Deploy
+
+name: Deploy to Deno Deploy
+
+on:
+  push:
+    branches: [main, master, 001-discord-assistant-bot]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write # Needed for auth with Deno Deploy
+      contents: read # Needed to clone the repository
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Verify the project
+        run: deno fmt --check && deno lint && deno check discord-bot/main.ts
+
+      - name: Deploy to Deno Deploy
+        uses: denoland/deployctl@v1
+        with:
+          project: "spec-beanbot" # Replace with your Deno Deploy project name
+          entrypoint: "discord-bot/main.ts"
+          root: "."
+          exclude: |
+            .git
+            .github
+            .env
+            .env.*
+            *.md
+            docs/
+            specs/

@@ -4,8 +4,8 @@
 import type { Handlers } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../../lib/storage/sessions.ts";
 import {
-  textPatterns,
   getPatternCategories,
+  textPatterns,
 } from "../../../data/text-patterns.ts";
 import { getPatternMatcher } from "../../../lib/patterns/matcher.ts";
 
@@ -59,19 +59,21 @@ export const handler: Handlers = {
       if (!session) {
         return new Response(
           JSON.stringify({ success: false, error: "Authentication required" }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
 
       // Calculate basic statistics
       const totalPatterns = textPatterns.length;
-      const enabledPatterns = textPatterns.filter(p => p.enabled).length;
+      const enabledPatterns = textPatterns.filter((p) => p.enabled).length;
       const disabledPatterns = totalPatterns - enabledPatterns;
 
       // Patterns by category
       const patternsByCategory: Record<string, number> = {};
       for (const category of getPatternCategories()) {
-        patternsByCategory[category] = textPatterns.filter(p => p.category === category).length;
+        patternsByCategory[category] = textPatterns.filter((p) =>
+          p.category === category
+        ).length;
       }
 
       // Patterns by response type
@@ -82,29 +84,37 @@ export const handler: Handlers = {
       }
 
       // Calculate averages
-      const averagePriority = totalPatterns > 0 
-        ? textPatterns.reduce((sum, p) => sum + p.priority, 0) / totalPatterns 
+      const averagePriority = totalPatterns > 0
+        ? textPatterns.reduce((sum, p) => sum + p.priority, 0) / totalPatterns
         : 0;
 
-      const averageCooldown = totalPatterns > 0 
-        ? textPatterns.reduce((sum, p) => sum + p.cooldownMinutes, 0) / totalPatterns 
+      const averageCooldown = totalPatterns > 0
+        ? textPatterns.reduce((sum, p) => sum + p.cooldownMinutes, 0) /
+          totalPatterns
         : 0;
 
       // Pattern type counts
-      const regexPatterns = textPatterns.filter(p => p.isRegex).length;
+      const regexPatterns = textPatterns.filter((p) => p.isRegex).length;
       const textPatternsCount = totalPatterns - regexPatterns;
-      const caseSensitivePatterns = textPatterns.filter(p => p.caseSensitive).length;
-      const wholeWordPatterns = textPatterns.filter(p => p.wholeWordsOnly).length;
+      const caseSensitivePatterns = textPatterns.filter((p) =>
+        p.caseSensitive
+      ).length;
+      const wholeWordPatterns = textPatterns.filter((p) =>
+        p.wholeWordsOnly
+      ).length;
 
       // Total trigger count
-      const totalTriggerCount = textPatterns.reduce((sum, p) => sum + p.metadata.triggerCount, 0);
+      const totalTriggerCount = textPatterns.reduce(
+        (sum, p) => sum + p.metadata.triggerCount,
+        0,
+      );
 
       // Most triggered patterns (top 10)
       const mostTriggeredPatterns = textPatterns
-        .filter(p => p.metadata.triggerCount > 0)
+        .filter((p) => p.metadata.triggerCount > 0)
         .sort((a, b) => b.metadata.triggerCount - a.metadata.triggerCount)
         .slice(0, 10)
-        .map(p => ({
+        .map((p) => ({
           id: p.id,
           name: p.name,
           triggerCount: p.metadata.triggerCount,
@@ -113,9 +123,12 @@ export const handler: Handlers = {
 
       // Recently created patterns (last 10)
       const recentlyCreated = textPatterns
-        .sort((a, b) => new Date(b.metadata.createdAt).getTime() - new Date(a.metadata.createdAt).getTime())
+        .sort((a, b) =>
+          new Date(b.metadata.createdAt).getTime() -
+          new Date(a.metadata.createdAt).getTime()
+        )
         .slice(0, 10)
-        .map(p => ({
+        .map((p) => ({
           id: p.id,
           name: p.name,
           createdAt: p.metadata.createdAt,
@@ -162,7 +175,7 @@ export const handler: Handlers = {
       });
     } catch (error) {
       console.error("Error in GET /api/patterns/stats:", error);
-      
+
       const response: ApiResponse = {
         success: false,
         error: "Internal server error",

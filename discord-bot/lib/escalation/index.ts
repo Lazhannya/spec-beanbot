@@ -3,15 +3,15 @@
 
 export {
   EscalationService,
-  initializeEscalationService,
   getEscalationService,
+  initializeEscalationService,
   startEscalationService,
   stopEscalationService,
 } from "./service.ts";
 
 export type {
+  EscalationBatchResult,
   EscalationConfig,
   EscalationLevel,
   EscalationResult,
-  EscalationBatchResult,
 } from "./service.ts";

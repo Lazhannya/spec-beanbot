@@ -3,12 +3,8 @@
 
 import type { Handlers } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../../lib/storage/sessions.ts";
-import {
-  bulkOperateReminders,
-} from "../../../lib/storage/reminders.ts";
-import type {
-  BulkReminderOperation,
-} from "../../../lib/types/reminders.ts";
+import { bulkOperateReminders } from "../../../lib/storage/reminders.ts";
+import type { BulkReminderOperation } from "../../../lib/types/reminders.ts";
 
 interface ApiResponse<T = unknown> {
   success: boolean;
@@ -28,7 +24,7 @@ export const handler: Handlers = {
       if (!session) {
         return new Response(
           JSON.stringify({ success: false, error: "Authentication required" }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -38,42 +34,56 @@ export const handler: Handlers = {
         operation = await req.json();
       } catch {
         return new Response(
-          JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          JSON.stringify({
+            success: false,
+            error: "Invalid JSON in request body",
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
         );
       }
 
       // Validate required fields
-      if (!operation.operation || !operation.reminderIds || !Array.isArray(operation.reminderIds)) {
+      if (
+        !operation.operation || !operation.reminderIds ||
+        !Array.isArray(operation.reminderIds)
+      ) {
         return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: "Missing or invalid required fields: operation, reminderIds" 
+          JSON.stringify({
+            success: false,
+            error: "Missing or invalid required fields: operation, reminderIds",
           }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          { status: 400, headers: { "Content-Type": "application/json" } },
         );
       }
 
       // Validate operation type
-      const validOperations = ["delete", "pause", "resume", "complete", "update"];
+      const validOperations = [
+        "delete",
+        "pause",
+        "resume",
+        "complete",
+        "update",
+      ];
       if (!validOperations.includes(operation.operation)) {
         return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: `Invalid operation. Must be one of: ${validOperations.join(", ")}` 
+          JSON.stringify({
+            success: false,
+            error: `Invalid operation. Must be one of: ${
+              validOperations.join(", ")
+            }`,
           }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          { status: 400, headers: { "Content-Type": "application/json" } },
         );
       }
 
       // Validate that update operations have update data
       if (operation.operation === "update" && !operation.updateData) {
         return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: "Update operation requires updateData field" 
+          JSON.stringify({
+            success: false,
+            error: "Update operation requires updateData field",
           }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          { status: 400, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -91,9 +101,9 @@ export const handler: Handlers = {
       };
 
       // Return appropriate status code based on results
-      const statusCode = result.success ? 200 : 
-                        result.processed > 0 ? 207 : // Partial success
-                        400; // Complete failure
+      const statusCode = result.success ? 200 : result.processed > 0
+        ? 207 // Partial success
+        : 400; // Complete failure
 
       return new Response(JSON.stringify(response), {
         status: statusCode,
@@ -101,7 +111,7 @@ export const handler: Handlers = {
       });
     } catch (error) {
       console.error("Error in POST /api/reminders/bulk:", error);
-      
+
       const response: ApiResponse = {
         success: false,
         error: "Internal server error",

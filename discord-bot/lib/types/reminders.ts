@@ -9,38 +9,38 @@ import type { ReminderTemplate } from "../../data/reminder-templates.ts";
 export interface Reminder {
   // Unique identifier
   id: string;
-  
+
   // User and ownership
   createdBy: string; // Discord user ID who created the reminder
   targetUser: string; // Discord user ID who will receive the reminder
-  
+
   // Basic information
   title: string;
   message: string;
   category: ReminderCategory;
-  
+
   // Template association
   templateId?: string; // Optional reference to reminder template
   customFields?: Record<string, unknown>; // Additional template-specific data
-  
+
   // Scheduling configuration
   schedule: ReminderSchedule;
   timezone: string; // IANA timezone identifier
-  
+
   // Status and lifecycle
   status: ReminderStatus;
   isActive: boolean;
-  
+
   // Escalation settings
   escalation: EscalationConfig;
-  
+
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
   lastDeliveredAt?: Date;
   nextDeliveryAt?: Date;
   completedAt?: Date;
-  
+
   // Metadata
   tags?: string[];
   notes?: string;
@@ -50,9 +50,9 @@ export interface Reminder {
 /**
  * Reminder categories for organization
  */
-export type ReminderCategory = 
+export type ReminderCategory =
   | "health"
-  | "medication" 
+  | "medication"
   | "work"
   | "personal"
   | "appointment"
@@ -67,38 +67,38 @@ export type ReminderPriority = "low" | "normal" | "high" | "urgent";
 /**
  * Reminder status lifecycle
  */
-export type ReminderStatus = 
-  | "draft"        // Created but not activated
-  | "active"       // Scheduled and running
-  | "paused"       // Temporarily disabled
-  | "completed"    // Manually marked as done
-  | "expired"      // Past end date or max occurrences
-  | "failed"       // Delivery failures exceeded threshold
-  | "cancelled";   // Manually cancelled
+export type ReminderStatus =
+  | "draft" // Created but not activated
+  | "active" // Scheduled and running
+  | "paused" // Temporarily disabled
+  | "completed" // Manually marked as done
+  | "expired" // Past end date or max occurrences
+  | "failed" // Delivery failures exceeded threshold
+  | "cancelled"; // Manually cancelled
 
 /**
  * Schedule configuration for reminders
  */
 export interface ReminderSchedule {
   type: ScheduleType;
-  
+
   // Time configuration
   time: string; // HH:MM format (24-hour)
-  
+
   // Frequency-specific settings
   daysOfWeek?: number[]; // 0-6, Sunday=0 (for weekly)
   dayOfMonth?: number; // 1-31 (for monthly)
   interval?: number; // Every N days/weeks/months
-  
+
   // Date boundaries
   startDate?: Date;
   endDate?: Date;
   maxOccurrences?: number;
-  
+
   // Advanced scheduling
   cronExpression?: string; // For custom schedules
   excludeDates?: Date[]; // Skip these specific dates
-  
+
   // Execution tracking
   occurrenceCount: number; // How many times it has been delivered
   lastOccurrence?: Date;
@@ -108,14 +108,14 @@ export interface ReminderSchedule {
 /**
  * Schedule type enumeration
  */
-export type ScheduleType = 
-  | "once"      // Single execution
-  | "daily"     // Every day
-  | "weekly"    // Specific days of week
-  | "monthly"   // Monthly on specific day
-  | "yearly"    // Annual reminder
-  | "interval"  // Every N days/weeks/months
-  | "custom";   // Cron expression
+export type ScheduleType =
+  | "once" // Single execution
+  | "daily" // Every day
+  | "weekly" // Specific days of week
+  | "monthly" // Monthly on specific day
+  | "yearly" // Annual reminder
+  | "interval" // Every N days/weeks/months
+  | "custom"; // Cron expression
 
 /**
  * Escalation target specification
@@ -132,19 +132,19 @@ export interface EscalationTarget {
  */
 export interface EscalationConfig {
   enabled: boolean;
-  
+
   // Timing
   delayMinutes: number; // How long to wait before escalating
   maxEscalations: number; // Maximum escalation attempts
-  
+
   // Targets
   escalationTargets: string[]; // Discord user IDs to notify
   escalationMessage?: string; // Custom escalation message
-  
+
   // Behavior
   stopOnAcknowledgment: boolean; // Stop escalating if original user responds
   escalationInterval?: number; // Time between escalation attempts
-  
+
   // Tracking
   escalationCount: number; // Current escalation level
   lastEscalationAt?: Date;
@@ -156,28 +156,28 @@ export interface EscalationConfig {
 export interface ReminderDelivery {
   id: string;
   reminderId: string;
-  
+
   // Delivery details
   targetUser: string;
   deliveredAt: Date;
   deliveryMethod: DeliveryMethod;
-  
+
   // Message information
   messageId?: string; // Discord message ID
   channelId?: string; // Discord channel ID
   messageContent: string;
-  
+
   // Status tracking
   status: DeliveryStatus;
   acknowledged: boolean;
   acknowledgedAt?: Date;
   acknowledgmentMethod?: AcknowledgmentMethod;
-  
+
   // Error handling
   attemptCount: number;
   lastAttemptAt: Date;
   errorMessage?: string;
-  
+
   // Escalation
   isEscalation: boolean;
   escalationLevel?: number;
@@ -187,57 +187,57 @@ export interface ReminderDelivery {
 /**
  * Delivery method enumeration
  */
-export type DeliveryMethod = 
-  | "dm"          // Direct message
-  | "channel"     // Channel message
-  | "mention"     // Channel mention
-  | "webhook";    // External webhook
+export type DeliveryMethod =
+  | "dm" // Direct message
+  | "channel" // Channel message
+  | "mention" // Channel mention
+  | "webhook"; // External webhook
 
 /**
  * Delivery status tracking
  */
-export type DeliveryStatus = 
-  | "pending"     // Scheduled but not sent
-  | "sending"     // Currently being sent
-  | "delivered"   // Successfully sent
-  | "failed"      // Delivery failed
-  | "retrying";   // Retrying after failure
+export type DeliveryStatus =
+  | "pending" // Scheduled but not sent
+  | "sending" // Currently being sent
+  | "delivered" // Successfully sent
+  | "failed" // Delivery failed
+  | "retrying"; // Retrying after failure
 
 /**
  * Acknowledgment method tracking
  */
-export type AcknowledgmentMethod = 
-  | "reaction"    // Discord reaction
-  | "reply"       // Discord reply
-  | "button"      // Button interaction
-  | "web";        // Web interface
+export type AcknowledgmentMethod =
+  | "reaction" // Discord reaction
+  | "reply" // Discord reply
+  | "button" // Button interaction
+  | "web"; // Web interface
 
 /**
  * Reminder statistics for analytics
  */
 export interface ReminderStats {
   userId: string;
-  
+
   // Counts
   totalReminders: number;
   activeReminders: number;
   completedReminders: number;
-  
+
   // Delivery metrics
   totalDeliveries: number;
   successfulDeliveries: number;
   failedDeliveries: number;
   acknowledgmentRate: number; // Percentage
-  
+
   // Response times
   averageAcknowledgmentTime: number; // Minutes
   fastestAcknowledgment: number; // Minutes
   slowestAcknowledgment: number; // Minutes
-  
+
   // Categories
   categoryBreakdown: Record<ReminderCategory, number>;
   templateUsage: Record<string, number>; // Template ID -> usage count
-  
+
   // Time periods
   lastUpdated: Date;
   periodStart: Date;
@@ -254,7 +254,10 @@ export interface CreateReminderInput {
   category: ReminderCategory;
   templateId?: string;
   customFields?: Record<string, unknown>;
-  schedule: Omit<ReminderSchedule, "occurrenceCount" | "lastOccurrence" | "nextOccurrence">;
+  schedule: Omit<
+    ReminderSchedule,
+    "occurrenceCount" | "lastOccurrence" | "nextOccurrence"
+  >;
   timezone: string;
   escalation: Omit<EscalationConfig, "escalationCount" | "lastEscalationAt">;
   tags?: string[];
@@ -290,16 +293,16 @@ export interface ReminderSearchCriteria {
   priority?: ReminderPriority[];
   tags?: string[];
   templateId?: string;
-  
+
   // Date ranges
   createdAfter?: Date;
   createdBefore?: Date;
   nextDeliveryAfter?: Date;
   nextDeliveryBefore?: Date;
-  
+
   // Text search
   searchText?: string; // Search in title, message, notes
-  
+
   // Pagination
   limit?: number;
   offset?: number;
@@ -337,9 +340,9 @@ export interface ReminderValidationResult {
 /**
  * Timezone utility type
  */
-export type SupportedTimezone = 
+export type SupportedTimezone =
   | "America/New_York"
-  | "America/Chicago" 
+  | "America/Chicago"
   | "America/Denver"
   | "America/Los_Angeles"
   | "America/Toronto"
@@ -354,38 +357,72 @@ export type SupportedTimezone =
 /**
  * Export all types for easy importing
  */
-export type {
-  ReminderTemplate,
-};
+export type { ReminderTemplate };
 
 /**
  * Type guards for runtime validation
  */
-export function isValidReminderCategory(category: string): category is ReminderCategory {
-  return ["health", "medication", "work", "personal", "appointment", "task", "custom"].includes(category);
+export function isValidReminderCategory(
+  category: string,
+): category is ReminderCategory {
+  return [
+    "health",
+    "medication",
+    "work",
+    "personal",
+    "appointment",
+    "task",
+    "custom",
+  ].includes(category);
 }
 
-export function isValidReminderPriority(priority: string): priority is ReminderPriority {
+export function isValidReminderPriority(
+  priority: string,
+): priority is ReminderPriority {
   return ["low", "normal", "high", "urgent"].includes(priority);
 }
 
-export function isValidReminderStatus(status: string): status is ReminderStatus {
-  return ["draft", "active", "paused", "completed", "expired", "failed", "cancelled"].includes(status);
+export function isValidReminderStatus(
+  status: string,
+): status is ReminderStatus {
+  return [
+    "draft",
+    "active",
+    "paused",
+    "completed",
+    "expired",
+    "failed",
+    "cancelled",
+  ].includes(status);
 }
 
 export function isValidScheduleType(type: string): type is ScheduleType {
-  return ["once", "daily", "weekly", "monthly", "yearly", "interval", "custom"].includes(type);
+  return ["once", "daily", "weekly", "monthly", "yearly", "interval", "custom"]
+    .includes(type);
 }
 
-export function isValidDeliveryMethod(method: string): method is DeliveryMethod {
+export function isValidDeliveryMethod(
+  method: string,
+): method is DeliveryMethod {
   return ["dm", "channel", "mention", "webhook"].includes(method);
 }
 
-export function isValidTimezone(timezone: string): timezone is SupportedTimezone {
+export function isValidTimezone(
+  timezone: string,
+): timezone is SupportedTimezone {
   const supported: SupportedTimezone[] = [
-    "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-    "America/Toronto", "Europe/London", "Europe/Paris", "Europe/Berlin",
-    "Asia/Tokyo", "Asia/Shanghai", "Australia/Sydney", "UTC"
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "America/Toronto",
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Asia/Tokyo",
+    "Asia/Shanghai",
+    "Australia/Sydney",
+    "UTC",
   ];
   return supported.includes(timezone as SupportedTimezone);
 }

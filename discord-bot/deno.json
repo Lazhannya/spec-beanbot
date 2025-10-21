@@ -6,6 +6,9 @@
     "dev": "deno run -A --watch=static/,routes/ dev.ts",
     "build": "deno run -A dev.ts build",
     "preview": "deno run -A main.ts",
+    "start": "deno run -A main.ts",
+    "deploy": "deployctl deploy --project=spec-beanbot main.ts",
+    "check": "deno fmt --check && deno lint && deno check main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
     "reminder": "deno run -A scripts/cli/reminder.ts"
   },

@@ -5,9 +5,9 @@
 import type { Handlers } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../../lib/storage/sessions.ts";
 import {
-  textPatterns,
   getPatternById,
   getPatternCategories,
+  textPatterns,
 } from "../../../data/text-patterns.ts";
 import type { TextPattern } from "../../../data/text-patterns.ts";
 
@@ -67,7 +67,7 @@ async function handleGetPatterns(req: Request): Promise<Response> {
     if (!session) {
       return new Response(
         JSON.stringify({ success: false, error: "Authentication required" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -81,36 +81,38 @@ async function handleGetPatterns(req: Request): Promise<Response> {
     // Apply filters
     if (query.category) {
       const categories = query.category.split(",") as TextPattern["category"][];
-      filteredPatterns = filteredPatterns.filter(p => 
+      filteredPatterns = filteredPatterns.filter((p) =>
         categories.includes(p.category)
       );
     }
 
     if (query.enabled === "true") {
-      filteredPatterns = filteredPatterns.filter(p => p.enabled);
+      filteredPatterns = filteredPatterns.filter((p) => p.enabled);
     } else if (query.enabled === "false") {
-      filteredPatterns = filteredPatterns.filter(p => !p.enabled);
+      filteredPatterns = filteredPatterns.filter((p) => !p.enabled);
     }
 
     if (query.isRegex === "true") {
-      filteredPatterns = filteredPatterns.filter(p => p.isRegex);
+      filteredPatterns = filteredPatterns.filter((p) => p.isRegex);
     } else if (query.isRegex === "false") {
-      filteredPatterns = filteredPatterns.filter(p => !p.isRegex);
+      filteredPatterns = filteredPatterns.filter((p) => !p.isRegex);
     }
 
     if (query.priority) {
       const priorityFilter = parseInt(query.priority);
       if (!isNaN(priorityFilter)) {
-        filteredPatterns = filteredPatterns.filter(p => p.priority >= priorityFilter);
+        filteredPatterns = filteredPatterns.filter((p) =>
+          p.priority >= priorityFilter
+        );
       }
     }
 
     if (query.search) {
       const searchTerm = query.search.toLowerCase();
-      filteredPatterns = filteredPatterns.filter(p =>
+      filteredPatterns = filteredPatterns.filter((p) =>
         p.name.toLowerCase().includes(searchTerm) ||
         p.description.toLowerCase().includes(searchTerm) ||
-        p.patterns.some(pattern => pattern.toLowerCase().includes(searchTerm))
+        p.patterns.some((pattern) => pattern.toLowerCase().includes(searchTerm))
       );
     }
 
@@ -151,7 +153,7 @@ async function handleGetPatterns(req: Request): Promise<Response> {
       if (typeof aValue === "string" && typeof bValue === "string") {
         return aValue.localeCompare(bValue) * sortOrder;
       }
-      
+
       return ((aValue as number) - (bValue as number)) * sortOrder;
     });
 
@@ -159,7 +161,7 @@ async function handleGetPatterns(req: Request): Promise<Response> {
     const page = parseInt(query.page || "1");
     const limit = Math.min(parseInt(query.limit || "20"), 100);
     const offset = (page - 1) * limit;
-    
+
     const total = filteredPatterns.length;
     const paginatedPatterns = filteredPatterns.slice(offset, offset + limit);
     const totalPages = Math.ceil(total / limit);
@@ -181,7 +183,7 @@ async function handleGetPatterns(req: Request): Promise<Response> {
     });
   } catch (error) {
     console.error("Error in GET /api/patterns:", error);
-    
+
     const response: ApiResponse = {
       success: false,
       error: "Internal server error",
@@ -204,7 +206,7 @@ async function handleCreatePattern(req: Request): Promise<Response> {
     if (!session) {
       return new Response(
         JSON.stringify({ success: false, error: "Authentication required" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -214,8 +216,11 @@ async function handleCreatePattern(req: Request): Promise<Response> {
       input = await req.json();
     } catch {
       return new Response(
-        JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({
+          success: false,
+          error: "Invalid JSON in request body",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -236,22 +241,34 @@ async function handleCreatePattern(req: Request): Promise<Response> {
       errors.push("Invalid pattern category");
     }
 
-    if (!input.patterns || !Array.isArray(input.patterns) || input.patterns.length === 0) {
+    if (
+      !input.patterns || !Array.isArray(input.patterns) ||
+      input.patterns.length === 0
+    ) {
       errors.push("At least one pattern is required");
     }
 
-    if (typeof input.priority !== "number" || input.priority < 1 || input.priority > 10) {
+    if (
+      typeof input.priority !== "number" || input.priority < 1 ||
+      input.priority > 10
+    ) {
       errors.push("Priority must be a number between 1 and 10");
     }
 
-    if (typeof input.cooldownMinutes !== "number" || input.cooldownMinutes < 0) {
+    if (
+      typeof input.cooldownMinutes !== "number" || input.cooldownMinutes < 0
+    ) {
       errors.push("Cooldown minutes must be a non-negative number");
     }
 
     if (!input.response || !input.response.type) {
       errors.push("Response configuration is required");
     } else {
-      if (!["message", "reaction", "webhook", "both"].includes(input.response.type)) {
+      if (
+        !["message", "reaction", "webhook", "both"].includes(
+          input.response.type,
+        )
+      ) {
         errors.push("Invalid response type");
       }
 
@@ -261,9 +278,13 @@ async function handleCreatePattern(req: Request): Promise<Response> {
         }
       }
 
-      if (input.response.type === "reaction" || input.response.type === "both") {
+      if (
+        input.response.type === "reaction" || input.response.type === "both"
+      ) {
         if (!input.response.reaction?.trim()) {
-          errors.push("Response reaction emoji is required for reaction responses");
+          errors.push(
+            "Response reaction emoji is required for reaction responses",
+          );
         }
       }
 
@@ -280,9 +301,11 @@ async function handleCreatePattern(req: Request): Promise<Response> {
         try {
           new RegExp(pattern);
         } catch (regexError) {
-          errors.push(`Invalid regex pattern: "${pattern}" - ${
-            regexError instanceof Error ? regexError.message : "Unknown error"
-          }`);
+          errors.push(
+            `Invalid regex pattern: "${pattern}" - ${
+              regexError instanceof Error ? regexError.message : "Unknown error"
+            }`,
+          );
         }
       }
     }
@@ -312,7 +335,7 @@ async function handleCreatePattern(req: Request): Promise<Response> {
       name: input.name.trim(),
       description: input.description.trim(),
       category: input.category,
-      patterns: input.patterns.map(p => p.trim()).filter(p => p.length > 0),
+      patterns: input.patterns.map((p) => p.trim()).filter((p) => p.length > 0),
       isRegex: input.isRegex,
       caseSensitive: input.caseSensitive,
       wholeWordsOnly: input.wholeWordsOnly,
@@ -348,7 +371,7 @@ async function handleCreatePattern(req: Request): Promise<Response> {
     });
   } catch (error) {
     console.error("Error in POST /api/patterns:", error);
-    
+
     const response: ApiResponse = {
       success: false,
       error: "Internal server error",

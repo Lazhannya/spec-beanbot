@@ -1,16 +1,16 @@
 #!/usr/bin/env -S deno run -A
 /**
  * Reminder CLI Interface
- * 
+ *
  * Command-line interface for managing reminders in the Discord bot system.
  * Provides commands for creating, listing, updating, and managing reminders.
- * 
+ *
  * Usage:
  *   deno run -A scripts/cli/reminder.ts <command> [options]
- * 
+ *
  * Commands:
  *   list                    List reminders
- *   create                  Create a new reminder  
+ *   create                  Create a new reminder
  *   show <id>              Show reminder details
  *   update <id>            Update a reminder
  *   delete <id>            Delete a reminder
@@ -26,24 +26,27 @@
 import { parseArgs } from "@std/cli/parse-args";
 import * as colors from "@std/fmt/colors";
 import {
-  searchReminders,
-  createReminder,
-  getReminderById,
-  updateReminder,
-  deleteReminder,
-  getUserStats,
   bulkOperateReminders,
+  createReminder,
+  deleteReminder,
+  getReminderById,
+  getUserStats,
+  searchReminders,
+  updateReminder,
 } from "../../lib/storage/reminders.ts";
-import { reminderTemplates, getTemplateById } from "../../data/reminder-templates.ts";
+import {
+  getTemplateById,
+  reminderTemplates,
+} from "../../data/reminder-templates.ts";
 import type {
   CreateReminderInput,
-  UpdateReminderInput,
-  ReminderSearchCriteria,
   Reminder,
   ReminderCategory,
   ReminderPriority,
+  ReminderSearchCriteria,
   ReminderStatus,
   ScheduleType,
+  UpdateReminderInput,
 } from "../../lib/types/reminders.ts";
 
 // CLI Configuration
@@ -85,11 +88,32 @@ interface CliArgs {
  */
 async function main() {
   const args = parseArgs(Deno.args, {
-    boolean: ["help", "verbose", "json", "active-only", "all", "force", "active"],
+    boolean: [
+      "help",
+      "verbose",
+      "json",
+      "active-only",
+      "all",
+      "force",
+      "active",
+    ],
     string: [
-      "user", "status", "category", "priority", "template", 
-      "title", "message", "target", "time", "timezone",
-      "tags", "notes", "page", "limit", "sort", "order"
+      "user",
+      "status",
+      "category",
+      "priority",
+      "template",
+      "title",
+      "message",
+      "target",
+      "time",
+      "timezone",
+      "tags",
+      "notes",
+      "page",
+      "limit",
+      "sort",
+      "order",
     ],
     alias: {
       h: "help",
@@ -171,8 +195,11 @@ async function listReminders(args: CliArgs) {
   const criteria: ReminderSearchCriteria = {
     userId: args.user,
     limit: parseInt(args.limit || "20") || CLI_CONFIG.pageSize,
-    offset: ((parseInt(args.page || "1") || 1) - 1) * (parseInt(args.limit || "20") || CLI_CONFIG.pageSize),
-    sortBy: (args.sort as "createdAt" | "nextDeliveryAt" | "priority" | "title") || "createdAt",
+    offset: ((parseInt(args.page || "1") || 1) - 1) *
+      (parseInt(args.limit || "20") || CLI_CONFIG.pageSize),
+    sortBy:
+      (args.sort as "createdAt" | "nextDeliveryAt" | "priority" | "title") ||
+      "createdAt",
     sortOrder: (args.order as "asc" | "desc") || "desc",
   };
 
@@ -214,7 +241,7 @@ async function listReminders(args: CliArgs) {
   // Show pagination info
   const totalPages = Math.ceil(result.total / criteria.limit!);
   const currentPage = Math.floor(criteria.offset! / criteria.limit!) + 1;
-  
+
   if (totalPages > 1) {
     console.log(colors.dim(`\nPage ${currentPage} of ${totalPages}`));
   }
@@ -226,7 +253,9 @@ async function listReminders(args: CliArgs) {
 async function createReminderCommand(args: CliArgs) {
   if (!args.title || !args.message) {
     console.error(colors.red("Error: --title and --message are required"));
-    console.log("Usage: reminder.ts create --title 'Title' --message 'Message' [options]");
+    console.log(
+      "Usage: reminder.ts create --title 'Title' --message 'Message' [options]",
+    );
     return;
   }
 
@@ -260,7 +289,7 @@ async function createReminderCommand(args: CliArgs) {
       console.error(colors.red(`Template not found: ${args.template}`));
       return;
     }
-    
+
     input.category = template.category;
     input.schedule = {
       type: template.defaultSchedule.type,
@@ -287,7 +316,9 @@ async function createReminderCommand(args: CliArgs) {
     }
   } else {
     console.error(colors.red("❌ Failed to create reminder:"));
-    result.errors?.forEach(error => console.error(colors.red(`  - ${error}`)));
+    result.errors?.forEach((error) =>
+      console.error(colors.red(`  - ${error}`))
+    );
   }
 }
 
@@ -340,7 +371,9 @@ async function updateReminderCommand(args: CliArgs) {
 
   if (Object.keys(updateData).length === 0) {
     console.error(colors.red("Error: No update fields provided"));
-    console.log("Provide at least one field to update (--title, --message, --category, etc.)");
+    console.log(
+      "Provide at least one field to update (--title, --message, --category, etc.)",
+    );
     return;
   }
 
@@ -355,7 +388,9 @@ async function updateReminderCommand(args: CliArgs) {
     }
   } else {
     console.error(colors.red("❌ Failed to update reminder:"));
-    result.errors?.forEach(error => console.error(colors.red(`  - ${error}`)));
+    result.errors?.forEach((error) =>
+      console.error(colors.red(`  - ${error}`))
+    );
   }
 }
 
@@ -376,7 +411,9 @@ async function deleteReminderCommand(args: CliArgs) {
     console.log(colors.green(`✅ Reminder ${id} deleted successfully!`));
   } else {
     console.error(colors.red("❌ Failed to delete reminder:"));
-    result.errors?.forEach(error => console.error(colors.red(`  - ${error}`)));
+    result.errors?.forEach((error) =>
+      console.error(colors.red(`  - ${error}`))
+    );
   }
 }
 
@@ -390,14 +427,24 @@ async function toggleReminderStatus(args: CliArgs, isActive: boolean) {
     return;
   }
 
-  const result = await updateReminder(id, { isActive }, CLI_CONFIG.defaultUserId);
+  const result = await updateReminder(
+    id,
+    { isActive },
+    CLI_CONFIG.defaultUserId,
+  );
 
   if (result.success) {
     const status = isActive ? "activated" : "deactivated";
     console.log(colors.green(`✅ Reminder ${status} successfully!`));
   } else {
-    console.error(colors.red(`❌ Failed to ${isActive ? "activate" : "deactivate"} reminder:`));
-    result.errors?.forEach(error => console.error(colors.red(`  - ${error}`)));
+    console.error(
+      colors.red(
+        `❌ Failed to ${isActive ? "activate" : "deactivate"} reminder:`,
+      ),
+    );
+    result.errors?.forEach((error) =>
+      console.error(colors.red(`  - ${error}`))
+    );
   }
 }
 
@@ -406,7 +453,7 @@ async function toggleReminderStatus(args: CliArgs, isActive: boolean) {
  */
 async function showStats(args: CliArgs) {
   const userId = args._[1]?.toString() || args.user || CLI_CONFIG.defaultUserId;
-  
+
   const stats = await getUserStats(userId);
 
   if (args.json) {
@@ -415,13 +462,19 @@ async function showStats(args: CliArgs) {
   }
 
   console.log(colors.bold(`\n📊 Reminder Statistics for ${userId}\n`));
-  
+
   console.log(`${colors.cyan("Total Reminders:")} ${stats.totalReminders}`);
   console.log(`${colors.green("Active:")} ${stats.activeReminders}`);
   console.log(`${colors.blue("Completed:")} ${stats.completedReminders}`);
-  console.log(`${colors.yellow("Success Rate:")} ${Math.round(stats.acknowledgmentRate * 100)}%`);
-  console.log(`${colors.magenta("Total Deliveries:")} ${stats.totalDeliveries}`);
-  
+  console.log(
+    `${colors.yellow("Success Rate:")} ${
+      Math.round(stats.acknowledgmentRate * 100)
+    }%`,
+  );
+  console.log(
+    `${colors.magenta("Total Deliveries:")} ${stats.totalDeliveries}`,
+  );
+
   console.log(colors.bold("\n📈 Category Breakdown:"));
   Object.entries(stats.categoryBreakdown).forEach(([category, count]) => {
     if (count > 0) {
@@ -443,7 +496,7 @@ function listTemplates(args: CliArgs) {
 
   // Filter by category if specified
   if (args.category) {
-    templates = templates.filter(t => t.category === args.category);
+    templates = templates.filter((t) => t.category === args.category);
   }
 
   if (args.json) {
@@ -451,13 +504,21 @@ function listTemplates(args: CliArgs) {
     return;
   }
 
-  console.log(colors.bold(`\n📝 Reminder Templates (${templates.length} available)\n`));
+  console.log(
+    colors.bold(`\n📝 Reminder Templates (${templates.length} available)\n`),
+  );
 
   for (const template of templates) {
-    console.log(`${colors.bold(template.name)} ${colors.dim(`(${template.id})`)}`);
+    console.log(
+      `${colors.bold(template.name)} ${colors.dim(`(${template.id})`)}`,
+    );
     console.log(`  ${colors.cyan("Category:")} ${template.category}`);
     console.log(`  ${colors.dim(template.description)}`);
-    console.log(`  ${colors.yellow("Default Schedule:")} ${template.defaultSchedule.type} at ${template.defaultSchedule.time}`);
+    console.log(
+      `  ${
+        colors.yellow("Default Schedule:")
+      } ${template.defaultSchedule.type} at ${template.defaultSchedule.time}`,
+    );
     console.log();
   }
 }
@@ -479,18 +540,28 @@ async function testDelivery(args: CliArgs) {
     return;
   }
 
-  console.log(colors.bold(`\n🧪 Testing delivery for reminder: ${reminder.title}\n`));
-  
+  console.log(
+    colors.bold(`\n🧪 Testing delivery for reminder: ${reminder.title}\n`),
+  );
+
   // Simulate delivery process
   console.log(colors.green("✅ Delivery validation passed"));
   console.log(colors.blue(`📨 Would deliver to: ${reminder.targetUser}`));
   console.log(colors.yellow(`💬 Message: ${reminder.message}`));
-  console.log(colors.cyan(`⏰ Schedule: ${reminder.schedule.type} at ${reminder.schedule.time}`));
-  
+  console.log(
+    colors.cyan(
+      `⏰ Schedule: ${reminder.schedule.type} at ${reminder.schedule.time}`,
+    ),
+  );
+
   if (reminder.escalation.enabled) {
-    console.log(colors.magenta(`🚨 Escalation: Enabled (${reminder.escalation.delayMinutes} min delay)`));
+    console.log(
+      colors.magenta(
+        `🚨 Escalation: Enabled (${reminder.escalation.delayMinutes} min delay)`,
+      ),
+    );
   }
-  
+
   console.log(colors.green("\n✅ Test delivery completed successfully!"));
 }
 
@@ -512,28 +583,30 @@ async function cleanupReminders(args: CliArgs) {
   }
 
   console.log(`Found ${expiredResult.reminders.length} reminders to clean up:`);
-  
+
   for (const reminder of expiredResult.reminders) {
     console.log(`  - ${reminder.title} (${reminder.status})`);
   }
 
   // Perform bulk deletion if confirmed
   if (!args.force) {
-    console.log(colors.yellow("\nAdd --force flag to actually delete these reminders."));
+    console.log(
+      colors.yellow("\nAdd --force flag to actually delete these reminders."),
+    );
     return;
   }
 
-  const reminderIds = expiredResult.reminders.map(r => r.id);
+  const reminderIds = expiredResult.reminders.map((r) => r.id);
   const result = await bulkOperateReminders({
     operation: "delete",
     reminderIds,
   }, CLI_CONFIG.defaultUserId);
 
   console.log(colors.green(`✅ Cleaned up ${result.processed} reminders.`));
-  
+
   if (result.errors.length > 0) {
     console.log(colors.red("❌ Errors during cleanup:"));
-    result.errors.forEach(error => console.error(colors.red(`  - ${error}`)));
+    result.errors.forEach((error) => console.error(colors.red(`  - ${error}`)));
   }
 }
 
@@ -543,21 +616,29 @@ async function cleanupReminders(args: CliArgs) {
 function printReminderSummary(reminder: Reminder, verbose = false) {
   const statusColor = getStatusColor(reminder.status);
   const priorityIcon = getPriorityIcon(reminder.priority);
-  
+
   console.log(
     `${statusColor(reminder.status.toUpperCase().padEnd(10))} ` +
-    `${priorityIcon} ${colors.bold(reminder.title)} ${colors.dim(`(${reminder.id.slice(0, 8)}...)`)}`
+      `${priorityIcon} ${colors.bold(reminder.title)} ${
+        colors.dim(`(${reminder.id.slice(0, 8)}...)`)
+      }`,
   );
-  
+
   if (verbose) {
     console.log(`  ${colors.cyan("Target:")} ${reminder.targetUser}`);
     console.log(`  ${colors.yellow("Category:")} ${reminder.category}`);
-    console.log(`  ${colors.magenta("Created:")} ${reminder.createdAt.toISOString().split('T')[0]}`);
+    console.log(
+      `  ${colors.magenta("Created:")} ${
+        reminder.createdAt.toISOString().split("T")[0]
+      }`,
+    );
     if (reminder.nextDeliveryAt) {
-      console.log(`  ${colors.blue("Next:")} ${reminder.nextDeliveryAt.toISOString()}`);
+      console.log(
+        `  ${colors.blue("Next:")} ${reminder.nextDeliveryAt.toISOString()}`,
+      );
     }
   }
-  
+
   console.log();
 }
 
@@ -566,50 +647,84 @@ function printReminderSummary(reminder: Reminder, verbose = false) {
  */
 function printReminderDetails(reminder: Reminder) {
   console.log(colors.bold(`\n📋 ${reminder.title}\n`));
-  
+
   console.log(`${colors.cyan("ID:")} ${reminder.id}`);
-  console.log(`${colors.cyan("Status:")} ${getStatusColor(reminder.status)(reminder.status)}`);
+  console.log(
+    `${colors.cyan("Status:")} ${
+      getStatusColor(reminder.status)(reminder.status)
+    }`,
+  );
   console.log(`${colors.cyan("Category:")} ${reminder.category}`);
-  console.log(`${colors.cyan("Priority:")} ${reminder.priority} ${getPriorityIcon(reminder.priority)}`);
+  console.log(
+    `${colors.cyan("Priority:")} ${reminder.priority} ${
+      getPriorityIcon(reminder.priority)
+    }`,
+  );
   console.log(`${colors.cyan("Target User:")} ${reminder.targetUser}`);
   console.log(`${colors.cyan("Active:")} ${reminder.isActive ? "Yes" : "No"}`);
-  
+
   console.log(colors.bold("\n💬 Message:"));
   console.log(`  ${reminder.message}`);
-  
+
   console.log(colors.bold("\n⏰ Schedule:"));
   console.log(`  ${colors.yellow("Type:")} ${reminder.schedule.type}`);
   console.log(`  ${colors.yellow("Time:")} ${reminder.schedule.time}`);
   console.log(`  ${colors.yellow("Timezone:")} ${reminder.timezone}`);
-  console.log(`  ${colors.yellow("Occurrences:")} ${reminder.schedule.occurrenceCount}`);
-  
+  console.log(
+    `  ${colors.yellow("Occurrences:")} ${reminder.schedule.occurrenceCount}`,
+  );
+
   if (reminder.escalation.enabled) {
     console.log(colors.bold("\n🚨 Escalation:"));
-    console.log(`  ${colors.magenta("Delay:")} ${reminder.escalation.delayMinutes} minutes`);
-    console.log(`  ${colors.magenta("Max Attempts:")} ${reminder.escalation.maxEscalations}`);
-    console.log(`  ${colors.magenta("Targets:")} ${reminder.escalation.escalationTargets.join(", ")}`);
+    console.log(
+      `  ${
+        colors.magenta("Delay:")
+      } ${reminder.escalation.delayMinutes} minutes`,
+    );
+    console.log(
+      `  ${
+        colors.magenta("Max Attempts:")
+      } ${reminder.escalation.maxEscalations}`,
+    );
+    console.log(
+      `  ${colors.magenta("Targets:")} ${
+        reminder.escalation.escalationTargets.join(", ")
+      }`,
+    );
   }
-  
+
   if (reminder.tags && reminder.tags.length > 0) {
     console.log(colors.bold("\n🏷️  Tags:"));
     console.log(`  ${reminder.tags.join(", ")}`);
   }
-  
+
   if (reminder.notes) {
     console.log(colors.bold("\n📝 Notes:"));
     console.log(`  ${reminder.notes}`);
   }
-  
+
   console.log(colors.bold("\n📅 Timestamps:"));
-  console.log(`  ${colors.dim("Created:")} ${reminder.createdAt.toISOString()}`);
-  console.log(`  ${colors.dim("Updated:")} ${reminder.updatedAt.toISOString()}`);
+  console.log(
+    `  ${colors.dim("Created:")} ${reminder.createdAt.toISOString()}`,
+  );
+  console.log(
+    `  ${colors.dim("Updated:")} ${reminder.updatedAt.toISOString()}`,
+  );
   if (reminder.nextDeliveryAt) {
-    console.log(`  ${colors.dim("Next Delivery:")} ${reminder.nextDeliveryAt.toISOString()}`);
+    console.log(
+      `  ${
+        colors.dim("Next Delivery:")
+      } ${reminder.nextDeliveryAt.toISOString()}`,
+    );
   }
   if (reminder.lastDeliveredAt) {
-    console.log(`  ${colors.dim("Last Delivery:")} ${reminder.lastDeliveredAt.toISOString()}`);
+    console.log(
+      `  ${
+        colors.dim("Last Delivery:")
+      } ${reminder.lastDeliveredAt.toISOString()}`,
+    );
   }
-  
+
   console.log();
 }
 
@@ -618,14 +733,22 @@ function printReminderDetails(reminder: Reminder) {
  */
 function getStatusColor(status: string) {
   switch (status) {
-    case "active": return colors.green;
-    case "completed": return colors.blue;
-    case "paused": return colors.yellow;
-    case "draft": return colors.dim;
-    case "expired": return colors.red;
-    case "failed": return colors.red;
-    case "cancelled": return colors.strikethrough;
-    default: return colors.dim;
+    case "active":
+      return colors.green;
+    case "completed":
+      return colors.blue;
+    case "paused":
+      return colors.yellow;
+    case "draft":
+      return colors.dim;
+    case "expired":
+      return colors.red;
+    case "failed":
+      return colors.red;
+    case "cancelled":
+      return colors.strikethrough;
+    default:
+      return colors.dim;
   }
 }
 
@@ -634,11 +757,16 @@ function getStatusColor(status: string) {
  */
 function getPriorityIcon(priority: string): string {
   switch (priority) {
-    case "urgent": return "🔴";
-    case "high": return "🟡";
-    case "normal": return "🟢";
-    case "low": return "🔵";
-    default: return "⚪";
+    case "urgent":
+      return "🔴";
+    case "high":
+      return "🟡";
+    case "normal":
+      return "🟢";
+    case "low":
+      return "🔵";
+    default:
+      return "⚪";
   }
 }
 
@@ -647,10 +775,10 @@ function getPriorityIcon(priority: string): string {
  */
 function showHelp() {
   console.log(colors.bold("\n📋 Reminder CLI - Command Reference\n"));
-  
+
   console.log(colors.bold("USAGE:"));
   console.log("  deno run -A scripts/cli/reminder.ts <command> [options]\n");
-  
+
   console.log(colors.bold("COMMANDS:"));
   console.log("  list                    List reminders with filters");
   console.log("  create                  Create a new reminder");
@@ -664,7 +792,7 @@ function showHelp() {
   console.log("  test-delivery <id>     Test reminder delivery (simulation)");
   console.log("  cleanup                Clean up expired/completed reminders");
   console.log("  help                   Show this help message\n");
-  
+
   console.log(colors.bold("COMMON OPTIONS:"));
   console.log("  -h, --help             Show help");
   console.log("  -v, --verbose          Verbose output");
@@ -672,20 +800,24 @@ function showHelp() {
   console.log("  -u, --user <id>        Target user ID");
   console.log("  --page <number>        Page number for listing");
   console.log("  --limit <number>       Items per page (default: 20)\n");
-  
+
   console.log(colors.bold("FILTER OPTIONS (for list command):"));
   console.log("  --status <statuses>    Filter by status (comma-separated)");
   console.log("  --category <categories> Filter by category (comma-separated)");
   console.log("  --priority <priorities> Filter by priority (comma-separated)");
   console.log("  --tags <tags>          Filter by tags (comma-separated)");
   console.log("  --active-only          Show only active reminders");
-  console.log("  --sort <field>         Sort field (createdAt, nextDeliveryAt, priority, title)");
+  console.log(
+    "  --sort <field>         Sort field (createdAt, nextDeliveryAt, priority, title)",
+  );
   console.log("  --order <asc|desc>     Sort order (default: desc)\n");
-  
+
   console.log(colors.bold("CREATE/UPDATE OPTIONS:"));
   console.log("  --title <text>         Reminder title");
   console.log("  --message <text>       Reminder message");
-  console.log("  --category <category>  Category (health, work, personal, etc.)");
+  console.log(
+    "  --category <category>  Category (health, work, personal, etc.)",
+  );
   console.log("  --priority <priority>  Priority (low, normal, high, urgent)");
   console.log("  --target <user-id>     Target user ID");
   console.log("  --template <id>        Use template");
@@ -693,22 +825,28 @@ function showHelp() {
   console.log("  --timezone <tz>        Timezone (default: UTC)");
   console.log("  --tags <tags>          Tags (comma-separated)");
   console.log("  --notes <text>         Additional notes\n");
-  
+
   console.log(colors.bold("EXAMPLES:"));
   console.log("  # List all active reminders");
   console.log("  reminder.ts list --active-only");
   console.log("");
   console.log("  # Create a simple reminder");
-  console.log("  reminder.ts create --title 'Meeting' --message 'Team standup' --time '09:00'");
+  console.log(
+    "  reminder.ts create --title 'Meeting' --message 'Team standup' --time '09:00'",
+  );
   console.log("");
   console.log("  # Create from template");
-  console.log("  reminder.ts create --template 'medication-daily' --target 'user123'");
+  console.log(
+    "  reminder.ts create --template 'medication-daily' --target 'user123'",
+  );
   console.log("");
   console.log("  # Show reminder details");
   console.log("  reminder.ts show abc123def");
   console.log("");
   console.log("  # Update reminder");
-  console.log("  reminder.ts update abc123def --title 'New Title' --priority high");
+  console.log(
+    "  reminder.ts update abc123def --title 'New Title' --priority high",
+  );
   console.log("");
   console.log("  # Get statistics in JSON format");
   console.log("  reminder.ts stats --json");

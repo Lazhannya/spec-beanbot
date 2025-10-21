@@ -1,18 +1,26 @@
 // Acknowledgment tracking service for reminders
 // This module handles tracking user responses to reminder messages
 
-import { acknowledgeDelivery, getDeliveryById, updateReminder, getReminderById } from "../storage/reminders.ts";
-import type { AcknowledgmentMethod, ReminderDelivery } from "../types/reminders.ts";
+import {
+  acknowledgeDelivery,
+  getDeliveryById,
+  getReminderById,
+  updateReminder,
+} from "../storage/reminders.ts";
+import type {
+  AcknowledgmentMethod,
+  ReminderDelivery,
+} from "../types/reminders.ts";
 
 /**
  * Acknowledgment action types that users can take
  */
-export type AcknowledgmentAction = 
-  | "complete"    // Mark reminder as completed
-  | "snooze"      // Snooze reminder for later
-  | "dismiss"     // Dismiss/cancel reminder
-  | "escalate"    // Manual escalation request
-  | "react";      // Simple acknowledgment reaction
+export type AcknowledgmentAction =
+  | "complete" // Mark reminder as completed
+  | "snooze" // Snooze reminder for later
+  | "dismiss" // Dismiss/cancel reminder
+  | "escalate" // Manual escalation request
+  | "react"; // Simple acknowledgment reaction
 
 /**
  * Result of acknowledgment processing
@@ -32,7 +40,6 @@ export interface AcknowledgmentResult {
  * Acknowledgment tracking service
  */
 export class AcknowledgmentTracker {
-  
   /**
    * Process user acknowledgment from Discord interaction
    */
@@ -46,11 +53,13 @@ export class AcknowledgmentTracker {
       channelId?: string;
       customId?: string;
       snoozeMinutes?: number;
-    }
+    },
   ): Promise<AcknowledgmentResult> {
     try {
-      console.log(`Processing acknowledgment: delivery=${deliveryId}, user=${userId}, action=${action}, method=${method}`);
-      
+      console.log(
+        `Processing acknowledgment: delivery=${deliveryId}, user=${userId}, action=${action}, method=${method}`,
+      );
+
       // Get delivery record
       const delivery = await getDeliveryById(deliveryId);
       if (!delivery) {
@@ -58,7 +67,7 @@ export class AcknowledgmentTracker {
           success: false,
           message: "Delivery record not found",
           updated: {},
-          error: "DELIVERY_NOT_FOUND"
+          error: "DELIVERY_NOT_FOUND",
         };
       }
 
@@ -69,7 +78,7 @@ export class AcknowledgmentTracker {
           success: false,
           message: "Associated reminder not found",
           updated: {},
-          error: "REMINDER_NOT_FOUND"
+          error: "REMINDER_NOT_FOUND",
         };
       }
 
@@ -78,7 +87,7 @@ export class AcknowledgmentTracker {
           success: false,
           message: "Not authorized to acknowledge this reminder",
           updated: {},
-          error: "UNAUTHORIZED"
+          error: "UNAUTHORIZED",
         };
       }
 
@@ -88,7 +97,7 @@ export class AcknowledgmentTracker {
           success: false,
           message: "This reminder has already been acknowledged",
           updated: {},
-          error: "ALREADY_ACKNOWLEDGED"
+          error: "ALREADY_ACKNOWLEDGED",
         };
       }
 
@@ -97,18 +106,17 @@ export class AcknowledgmentTracker {
         delivery,
         action,
         method,
-        metadata
+        metadata,
       );
 
       return result;
-
     } catch (error) {
       console.error("Error processing acknowledgment:", error);
       return {
         success: false,
         message: "Failed to process acknowledgment",
         updated: {},
-        error: error instanceof Error ? error.message : "UNKNOWN_ERROR"
+        error: error instanceof Error ? error.message : "UNKNOWN_ERROR",
       };
     }
   }
@@ -125,13 +133,12 @@ export class AcknowledgmentTracker {
       channelId?: string;
       customId?: string;
       snoozeMinutes?: number;
-    }
+    },
   ): Promise<AcknowledgmentResult> {
-    
     let result: AcknowledgmentResult = {
       success: false,
       message: "",
-      updated: {}
+      updated: {},
     };
 
     // Mark delivery as acknowledged first
@@ -146,19 +153,19 @@ export class AcknowledgmentTracker {
       case "complete":
         result = await this.handleComplete(delivery, result);
         break;
-      
+
       case "snooze":
         result = this.handleSnooze(delivery, result, metadata?.snoozeMinutes);
         break;
-      
+
       case "dismiss":
         result = await this.handleDismiss(delivery, result);
         break;
-      
+
       case "escalate":
         result = this.handleEscalate(delivery, result);
         break;
-      
+
       case "react":
         result = this.handleReact(delivery, result);
         break;
@@ -184,10 +191,11 @@ export class AcknowledgmentTracker {
    */
   private static async handleComplete(
     delivery: ReminderDelivery,
-    result: AcknowledgmentResult
+    result: AcknowledgmentResult,
   ): Promise<AcknowledgmentResult> {
-    
-    const updated = await updateReminder(delivery.reminderId, { status: "completed" }, delivery.targetUser);
+    const updated = await updateReminder(delivery.reminderId, {
+      status: "completed",
+    }, delivery.targetUser);
     if (updated.success) {
       result.success = true;
       result.message = "Reminder marked as completed! 🎉";
@@ -206,9 +214,8 @@ export class AcknowledgmentTracker {
   private static handleSnooze(
     delivery: ReminderDelivery,
     result: AcknowledgmentResult,
-    snoozeMinutes = 15
+    snoozeMinutes = 15,
   ): AcknowledgmentResult {
-    
     // Calculate new delivery time
     const newDeliveryTime = new Date();
     newDeliveryTime.setMinutes(newDeliveryTime.getMinutes() + snoozeMinutes);
@@ -217,9 +224,11 @@ export class AcknowledgmentTracker {
     // For now, just acknowledge that it would be snoozed
     result.success = true;
     result.message = `Reminder snoozed for ${snoozeMinutes} minutes! ⏰`;
-    
-    console.log(`Would snooze reminder ${delivery.reminderId} until ${newDeliveryTime.toISOString()}`);
-    
+
+    console.log(
+      `Would snooze reminder ${delivery.reminderId} until ${newDeliveryTime.toISOString()}`,
+    );
+
     return result;
   }
 
@@ -228,10 +237,11 @@ export class AcknowledgmentTracker {
    */
   private static async handleDismiss(
     delivery: ReminderDelivery,
-    result: AcknowledgmentResult
+    result: AcknowledgmentResult,
   ): Promise<AcknowledgmentResult> {
-    
-    const updated = await updateReminder(delivery.reminderId, { status: "cancelled" }, delivery.targetUser);
+    const updated = await updateReminder(delivery.reminderId, {
+      status: "cancelled",
+    }, delivery.targetUser);
     if (updated.success) {
       result.success = true;
       result.message = "Reminder dismissed! 🚫";
@@ -249,16 +259,18 @@ export class AcknowledgmentTracker {
    */
   private static handleEscalate(
     delivery: ReminderDelivery,
-    result: AcknowledgmentResult
+    result: AcknowledgmentResult,
   ): AcknowledgmentResult {
-    
     // TODO: Implement manual escalation logic
     // For now, just acknowledge the request
     result.success = true;
-    result.message = "Escalation requested! 📢 We'll notify additional contacts.";
-    
-    console.log(`Manual escalation requested for reminder ${delivery.reminderId}`);
-    
+    result.message =
+      "Escalation requested! 📢 We'll notify additional contacts.";
+
+    console.log(
+      `Manual escalation requested for reminder ${delivery.reminderId}`,
+    );
+
     return result;
   }
 
@@ -267,12 +279,11 @@ export class AcknowledgmentTracker {
    */
   private static handleReact(
     _delivery: ReminderDelivery,
-    result: AcknowledgmentResult
+    result: AcknowledgmentResult,
   ): AcknowledgmentResult {
-    
     result.success = true;
     result.message = "Thanks for acknowledging! 👍";
-    
+
     return result;
   }
 
@@ -298,22 +309,24 @@ export class AcknowledgmentTracker {
         reaction: 0,
         reply: 0,
         button: 0,
-        web: 0
+        web: 0,
       },
       actionBreakdown: {
         complete: 0,
         snooze: 0,
         dismiss: 0,
         escalate: 0,
-        react: 0
-      }
+        react: 0,
+      },
     });
   }
 
   /**
    * Find delivery by Discord message ID
    */
-  static findDeliveryByMessageId(messageId: string): Promise<ReminderDelivery | null> {
+  static findDeliveryByMessageId(
+    messageId: string,
+  ): Promise<ReminderDelivery | null> {
     // TODO: Implement reverse lookup by message ID
     // This would require storing message IDs in delivery records
     // For now, return null - this will be enhanced later
@@ -326,9 +339,8 @@ export class AcknowledgmentTracker {
    */
   static async canAcknowledge(
     deliveryId: string,
-    userId: string
+    userId: string,
   ): Promise<{ authorized: boolean; reason?: string }> {
-    
     const delivery = await getDeliveryById(deliveryId);
     if (!delivery) {
       return { authorized: false, reason: "Delivery not found" };
@@ -356,7 +368,6 @@ export class AcknowledgmentTracker {
  * Utility functions for acknowledgment tracking
  */
 export const acknowledgmentUtils = {
-  
   /**
    * Parse custom ID from Discord button interaction
    */
@@ -380,7 +391,7 @@ export const acknowledgmentUtils = {
       return {
         type: "reminder_action",
         deliveryId,
-        action: action as AcknowledgmentAction
+        action: action as AcknowledgmentAction,
       };
     } catch {
       return null;
@@ -391,7 +402,9 @@ export const acknowledgmentUtils = {
    * Check if action is valid
    */
   isValidAction(action: string): action is AcknowledgmentAction {
-    return ["complete", "snooze", "dismiss", "escalate", "react"].includes(action);
+    return ["complete", "snooze", "dismiss", "escalate", "react"].includes(
+      action,
+    );
   },
 
   /**
@@ -403,7 +416,7 @@ export const acknowledgmentUtils = {
       snooze: "Snooze for later",
       dismiss: "Dismiss reminder",
       escalate: "Request escalation",
-      react: "Acknowledge"
+      react: "Acknowledge",
     };
     return descriptions[action] || "Unknown action";
   },
@@ -417,8 +430,8 @@ export const acknowledgmentUtils = {
       snooze: "⏰",
       dismiss: "🚫",
       escalate: "📢",
-      react: "👍"
+      react: "👍",
     };
     return emojis[action] || "❓";
-  }
+  },
 };
