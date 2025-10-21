@@ -1,50 +1,60 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# [Deno_BeanBot] Constitution
+Personal Assistant Discord Bot Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Modular Library Architecture
+Every bot feature starts as a standalone, reusable library; Each module (reminder system, text recognition, webhook handlers) must be self-contained with clear interfaces; Libraries must be independently testable and documented; No feature coupling - modules communicate through well-defined contracts only
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. CLI-First Development
+Every library exposes core functionality via CLI before Discord integration; Text-based I/O protocol: configuration via files/args → JSON/text output; All bot commands must have corresponding CLI equivalents for testing and automation; Human-readable and machine-readable output formats required
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Test-Driven Development (NON-NEGOTIABLE)
+TDD mandatory for all features: Write tests → Get approval → Watch tests fail → Implement to pass; Red-Green-Refactor cycle strictly enforced; No code deployment without comprehensive test coverage; Mock Discord API interactions for reliable testing
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Integration & Contract Testing
+Critical focus areas: Discord API contract tests, webhook reliability tests, reminder system end-to-end flows, text recognition accuracy tests; Database integration tests for reminder persistence; Cross-module communication validation; Fresh web interface integration tests
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Observability & Reliability
+Structured logging for all bot operations and user interactions; Error tracking with Discord user context; Webhook delivery confirmation and retry logic; Reminder system must guarantee delivery with escalation fallbacks; Performance monitoring for response times and memory usage
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Technology Stack Requirements
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+**Runtime**: Deno 2.0+ required for all components; TypeScript strict mode mandatory; ESM modules only - no CommonJS
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**Web Framework**: Deno Fresh for web interface; Islands architecture for interactive components; Server-side rendering with progressive enhancement
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Discord Integration**: Official Discord.js or discord-deno library; Webhook-based architecture for reliability; Rate limiting and retry logic built-in
+
+**Database**: SQLite for development, PostgreSQL for production; Deno KV for caching and sessions; Migration scripts required for schema changes
+
+**Authentication**: Discord OAuth2 for web interface; Bot token security via environment variables; User permission validation on all operations
+
+**Deployment**: Docker containers preferred; Environment-specific configuration files; Health check endpoints required; Graceful shutdown handling
+
+**Security**: Input validation on all user data; SQL injection prevention; XSS protection in web interface; Webhook signature verification mandatory
+
+## Development Workflow & Quality Gates
+
+**Feature Development Process**: 
+1. Design module interface and write comprehensive tests
+2. Implement CLI version with full test coverage
+3. Create Discord integration layer with mocked tests
+4. Build web interface components (if applicable)
+5. End-to-end integration testing
+6. Documentation and deployment
+
+**Code Review Requirements**: All code must pass automated tests; Security review for Discord API interactions; Performance validation for reminder system; Accessibility review for web interface components
+
+**Testing Gates**: Unit tests must achieve 90%+ coverage; Integration tests for all user-facing features; Load testing for webhook handling; Manual testing of Discord bot interactions before deployment
+
+**Deployment Process**: Staging environment deployment required; Bot testing in private Discord server; Database migration validation; Production deployment with rollback plan; Post-deployment monitoring and validation
+
+**Documentation Standards**: README per module with examples; API documentation for all public interfaces; Setup and deployment instructions; Troubleshooting guides for common issues
 
 ## Governance
 <!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+Constitution supersedes all other development practices and decisions; All feature implementations must verify compliance with these principles; Breaking changes to core principles require documented justification and migration plan; Regular architecture reviews to ensure ongoing compliance; Use this constitution as the primary guidance for all development decisions and architectural choices
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-10-21 | **Last Amended**: 2025-10-21

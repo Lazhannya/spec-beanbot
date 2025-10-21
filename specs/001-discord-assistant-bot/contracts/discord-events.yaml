@@ -1,0 +1,576 @@
+openapi: 3.0.3
+info:
+  title: Discord Bot Event Contracts
+  description: Contract definitions for Discord bot event handling
+  version: 1.0.0
+
+# Note: This is not a REST API but documents the event handling contracts
+# for Discord.js/discord-deno event processing
+
+paths: {}
+
+components:
+  schemas:
+    # Discord Events the bot must handle
+    MessageCreateEvent:
+      type: object
+      description: Triggered when a message is created in a channel the bot can see
+      required:
+        - message
+        - author
+        - channel
+        - timestamp
+      properties:
+        message:
+          $ref: '#/components/schemas/DiscordMessage'
+        author:
+          $ref: '#/components/schemas/DiscordUser'
+        channel:
+          $ref: '#/components/schemas/DiscordChannel'
+        guild:
+          $ref: '#/components/schemas/DiscordGuild'
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        mentions_bot:
+          type: boolean
+          description: Whether this message mentions our bot
+
+    InteractionCreateEvent:
+      type: object
+      description: Slash command or component interaction
+      required:
+        - interaction_id
+        - type
+        - user
+        - channel
+      properties:
+        interaction_id:
+          type: string
+        type:
+          type: string
+          enum: [APPLICATION_COMMAND, MESSAGE_COMPONENT, APPLICATION_COMMAND_AUTOCOMPLETE]
+        user:
+          $ref: '#/components/schemas/DiscordUser'
+        channel:
+          $ref: '#/components/schemas/DiscordChannel'
+        guild:
+          $ref: '#/components/schemas/DiscordGuild'
+          nullable: true
+        data:
+          type: object
+          description: Interaction-specific data
+
+    ReadyEvent:
+      type: object
+      description: Bot is ready and connected to Discord
+      required:
+        - bot_user
+        - guild_count
+        - timestamp
+      properties:
+        bot_user:
+          $ref: '#/components/schemas/DiscordUser'
+        guild_count:
+          type: integer
+          description: Number of guilds bot is in
+        timestamp:
+          type: string
+          format: date-time
+
+    # Core Discord Objects
+    DiscordMessage:
+      type: object
+      required:
+        - id
+        - content
+        - author
+        - channel_id
+        - timestamp
+      properties:
+        id:
+          type: string
+          description: Message ID (snowflake)
+        content:
+          type: string
+          maxLength: 2000
+          description: Message text content
+        author:
+          $ref: '#/components/schemas/DiscordUser'
+        channel_id:
+          type: string
+          description: Channel where message was sent
+        guild_id:
+          type: string
+          nullable: true
+          description: Guild ID (null for DMs)
+        timestamp:
+          type: string
+          format: date-time
+        edited_timestamp:
+          type: string
+          format: date-time
+          nullable: true
+        mentions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscordUser'
+          description: Users mentioned in message
+        mention_everyone:
+          type: boolean
+        mention_roles:
+          type: array
+          items:
+            type: string
+          description: Role IDs mentioned
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscordAttachment'
+        embeds:
+          type: array
+          items:
+            type: object
+          description: Rich embeds in message
+        reactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscordReaction'
+        type:
+          type: string
+          enum: [DEFAULT, RECIPIENT_ADD, RECIPIENT_REMOVE, CALL, CHANNEL_NAME_CHANGE, CHANNEL_ICON_CHANGE, PINS_ADD, GUILD_MEMBER_JOIN, USER_PREMIUM_GUILD_SUBSCRIPTION, USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1, USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2, USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3, CHANNEL_FOLLOW_ADD, GUILD_DISCOVERY_DISQUALIFIED, GUILD_DISCOVERY_REQUALIFIED, GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING, GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING, THREAD_CREATED, REPLY, APPLICATION_COMMAND, THREAD_STARTER_MESSAGE, GUILD_INVITE_REMINDER, CONTEXT_MENU_COMMAND]
+          default: DEFAULT
+
+    DiscordUser:
+      type: object
+      required:
+        - id
+        - username
+        - discriminator
+      properties:
+        id:
+          type: string
+          description: User ID (snowflake)
+        username:
+          type: string
+          description: Username (not unique across platform)
+        discriminator:
+          type: string
+          description: 4-digit discriminator
+        global_name:
+          type: string
+          nullable: true
+          description: Global display name
+        avatar:
+          type: string
+          nullable: true
+          description: Avatar hash
+        bot:
+          type: boolean
+          default: false
+        system:
+          type: boolean
+          default: false
+        mfa_enabled:
+          type: boolean
+          description: Whether user has MFA enabled
+        banner:
+          type: string
+          nullable: true
+        accent_color:
+          type: integer
+          nullable: true
+        locale:
+          type: string
+          description: User's chosen language
+        verified:
+          type: boolean
+          description: Whether email is verified
+        email:
+          type: string
+          nullable: true
+        flags:
+          type: integer
+          description: Public user flags
+        premium_type:
+          type: integer
+          description: Type of Nitro subscription
+        public_flags:
+          type: integer
+
+    DiscordChannel:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+          description: Channel ID (snowflake)
+        type:
+          type: string
+          enum: [GUILD_TEXT, DM, GUILD_VOICE, GROUP_DM, GUILD_CATEGORY, GUILD_ANNOUNCEMENT, ANNOUNCEMENT_THREAD, PUBLIC_THREAD, PRIVATE_THREAD, GUILD_STAGE_VOICE, GUILD_DIRECTORY, GUILD_FORUM]
+        guild_id:
+          type: string
+          nullable: true
+        position:
+          type: integer
+          nullable: true
+        permission_overwrites:
+          type: array
+          items:
+            type: object
+        name:
+          type: string
+          nullable: true
+        topic:
+          type: string
+          nullable: true
+        nsfw:
+          type: boolean
+          nullable: true
+        last_message_id:
+          type: string
+          nullable: true
+        bitrate:
+          type: integer
+          nullable: true
+        user_limit:
+          type: integer
+          nullable: true
+        rate_limit_per_user:
+          type: integer
+          nullable: true
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscordUser'
+          nullable: true
+        icon:
+          type: string
+          nullable: true
+        owner_id:
+          type: string
+          nullable: true
+        application_id:
+          type: string
+          nullable: true
+        parent_id:
+          type: string
+          nullable: true
+        last_pin_timestamp:
+          type: string
+          format: date-time
+          nullable: true
+
+    DiscordGuild:
+      type: object
+      required:
+        - id
+        - name
+        - owner_id
+      properties:
+        id:
+          type: string
+          description: Guild ID (snowflake)
+        name:
+          type: string
+          description: Guild name (2-100 characters)
+        icon:
+          type: string
+          nullable: true
+        icon_hash:
+          type: string
+          nullable: true
+        splash:
+          type: string
+          nullable: true
+        discovery_splash:
+          type: string
+          nullable: true
+        owner:
+          type: boolean
+          description: True if user is owner
+        owner_id:
+          type: string
+        permissions:
+          type: string
+          description: Total permissions for user in guild
+        region:
+          type: string
+          nullable: true
+        afk_channel_id:
+          type: string
+          nullable: true
+        afk_timeout:
+          type: integer
+        widget_enabled:
+          type: boolean
+        widget_channel_id:
+          type: string
+          nullable: true
+        verification_level:
+          type: integer
+        default_message_notifications:
+          type: integer
+        explicit_content_filter:
+          type: integer
+        roles:
+          type: array
+          items:
+            type: object
+        emojis:
+          type: array
+          items:
+            type: object
+        features:
+          type: array
+          items:
+            type: string
+        mfa_level:
+          type: integer
+        application_id:
+          type: string
+          nullable: true
+        system_channel_id:
+          type: string
+          nullable: true
+        system_channel_flags:
+          type: integer
+        rules_channel_id:
+          type: string
+          nullable: true
+        max_presences:
+          type: integer
+          nullable: true
+        max_members:
+          type: integer
+        vanity_url_code:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        banner:
+          type: string
+          nullable: true
+        premium_tier:
+          type: integer
+        premium_subscription_count:
+          type: integer
+        preferred_locale:
+          type: string
+        public_updates_channel_id:
+          type: string
+          nullable: true
+        max_video_channel_users:
+          type: integer
+        approximate_member_count:
+          type: integer
+        approximate_presence_count:
+          type: integer
+        welcome_screen:
+          type: object
+          nullable: true
+        nsfw_level:
+          type: integer
+        stickers:
+          type: array
+          items:
+            type: object
+        premium_progress_bar_enabled:
+          type: boolean
+
+    DiscordAttachment:
+      type: object
+      required:
+        - id
+        - filename
+        - size
+        - url
+        - proxy_url
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        description:
+          type: string
+          nullable: true
+        content_type:
+          type: string
+          nullable: true
+        size:
+          type: integer
+        url:
+          type: string
+        proxy_url:
+          type: string
+        height:
+          type: integer
+          nullable: true
+        width:
+          type: integer
+          nullable: true
+        ephemeral:
+          type: boolean
+
+    DiscordReaction:
+      type: object
+      required:
+        - count
+        - me
+        - emoji
+      properties:
+        count:
+          type: integer
+        me:
+          type: boolean
+        emoji:
+          type: object
+          required:
+            - id
+            - name
+          properties:
+            id:
+              type: string
+              nullable: true
+            name:
+              type: string
+              nullable: true
+            roles:
+              type: array
+              items:
+                type: string
+            user:
+              $ref: '#/components/schemas/DiscordUser'
+            require_colons:
+              type: boolean
+            managed:
+              type: boolean
+            animated:
+              type: boolean
+            available:
+              type: boolean
+
+    # Bot Response Contracts
+    BotMessageResponse:
+      type: object
+      description: Standard bot message response format
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          maxLength: 2000
+          description: Message text content
+        embeds:
+          type: array
+          items:
+            type: object
+          description: Rich embed objects
+        components:
+          type: array
+          items:
+            type: object
+          description: Action row components
+        files:
+          type: array
+          items:
+            type: object
+          description: File attachments
+        allowed_mentions:
+          type: object
+          description: Control mention parsing
+        flags:
+          type: integer
+          description: Message flags
+        ephemeral:
+          type: boolean
+          description: Only visible to command user
+
+    WebhookPayload:
+      type: object
+      description: Payload sent to n8n webhook
+      required:
+        - event_type
+        - timestamp
+        - data
+      properties:
+        event_type:
+          type: string
+          enum: [mention, pattern_match, reminder_trigger]
+        timestamp:
+          type: string
+          format: date-time
+        bot_id:
+          type: string
+          description: Bot user ID
+        data:
+          oneOf:
+            - $ref: '#/components/schemas/MentionEventData'
+            - $ref: '#/components/schemas/PatternMatchData'
+            - $ref: '#/components/schemas/ReminderTriggerData'
+
+    MentionEventData:
+      type: object
+      required:
+        - message
+        - author
+        - channel
+      properties:
+        message:
+          $ref: '#/components/schemas/DiscordMessage'
+        author:
+          $ref: '#/components/schemas/DiscordUser'
+        channel:
+          $ref: '#/components/schemas/DiscordChannel'
+        guild:
+          $ref: '#/components/schemas/DiscordGuild'
+          nullable: true
+        mention_type:
+          type: string
+          enum: [direct, reply, dm]
+
+    PatternMatchData:
+      type: object
+      required:
+        - pattern_id
+        - matched_text
+        - message
+      properties:
+        pattern_id:
+          type: string
+          format: uuid
+        pattern:
+          type: string
+        matched_text:
+          type: string
+        response_sent:
+          type: string
+        message:
+          $ref: '#/components/schemas/DiscordMessage'
+
+    ReminderTriggerData:
+      type: object
+      required:
+        - reminder_id
+        - target_user
+        - message_content
+      properties:
+        reminder_id:
+          type: string
+          format: uuid
+        target_user:
+          $ref: '#/components/schemas/DiscordUser'
+        secondary_user:
+          $ref: '#/components/schemas/DiscordUser'
+          nullable: true
+        message_content:
+          type: string
+        scheduled_time:
+          type: string
+          format: date-time
+        creator_user:
+          $ref: '#/components/schemas/DiscordUser'

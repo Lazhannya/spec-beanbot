@@ -1,0 +1,437 @@
+openapi: 3.0.3
+info:
+  title: Discord Bot Web Interface API
+  description: Fresh web application API for reminder management
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://your-bot-domain.com
+    description: Production server
+
+paths:
+  /api/auth/discord:
+    get:
+      summary: Initiate Discord OAuth2 authentication
+      description: Redirects user to Discord OAuth2 authorization
+      operationId: initiateDiscordAuth
+      responses:
+        '302':
+          description: Redirect to Discord OAuth2
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "https://discord.com/api/oauth2/authorize?client_id=..."
+
+  /api/auth/callback:
+    get:
+      summary: Handle Discord OAuth2 callback
+      description: Process OAuth2 authorization code and create session
+      operationId: handleDiscordCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: OAuth2 authorization code
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: CSRF protection state parameter
+      responses:
+        '302':
+          description: Redirect to dashboard on success
+        '400':
+          description: Invalid authorization code or state
+        '500':
+          description: OAuth2 processing error
+
+  /api/reminders:
+    get:
+      summary: List user's reminders
+      description: Get all reminders created by authenticated user
+      operationId: listReminders
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, triggered, completed, all]
+            default: all
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of reminders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderList'
+        '401':
+          description: Not authenticated
+      security:
+        - sessionAuth: []
+
+    post:
+      summary: Create new reminder
+      description: Schedule a new reminder with escalation
+      operationId: createReminder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReminderRequest'
+      responses:
+        '201':
+          description: Reminder created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '400':
+          description: Invalid reminder data
+        '401':
+          description: Not authenticated
+      security:
+        - sessionAuth: []
+
+  /api/reminders/{reminderId}:
+    get:
+      summary: Get specific reminder
+      operationId: getReminder
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Reminder details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '404':
+          description: Reminder not found
+        '401':
+          description: Not authenticated
+      security:
+        - sessionAuth: []
+
+    put:
+      summary: Update reminder
+      operationId: updateReminder
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReminderRequest'
+      responses:
+        '200':
+          description: Reminder updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '400':
+          description: Invalid update data
+        '404':
+          description: Reminder not found
+        '401':
+          description: Not authenticated
+      security:
+        - sessionAuth: []
+
+    delete:
+      summary: Cancel reminder
+      operationId: cancelReminder
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Reminder cancelled successfully
+        '404':
+          description: Reminder not found
+        '401':
+          description: Not authenticated
+      security:
+        - sessionAuth: []
+
+  /api/patterns:
+    get:
+      summary: List text patterns
+      description: Get all text patterns created by authenticated user
+      operationId: listTextPatterns
+      responses:
+        '200':
+          description: List of text patterns
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextPatternList'
+        '401':
+          description: Not authenticated
+      security:
+        - sessionAuth: []
+
+    post:
+      summary: Create text pattern
+      description: Create a new text recognition pattern
+      operationId: createTextPattern
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTextPatternRequest'
+      responses:
+        '201':
+          description: Pattern created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextPattern'
+        '400':
+          description: Invalid pattern data
+        '401':
+          description: Not authenticated
+      security:
+        - sessionAuth: []
+
+components:
+  schemas:
+    ReminderList:
+      type: object
+      properties:
+        reminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reminder'
+        total:
+          type: integer
+          description: Total number of reminders
+        has_more:
+          type: boolean
+          description: Whether more results exist
+
+    Reminder:
+      type: object
+      required:
+        - id
+        - creator_id
+        - target_user_id
+        - message_content
+        - scheduled_time
+        - timeout_minutes
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        creator_id:
+          type: string
+          description: Discord ID of creator
+        target_user:
+          $ref: '#/components/schemas/UserInfo'
+        secondary_user:
+          $ref: '#/components/schemas/UserInfo'
+          nullable: true
+        message_content:
+          type: string
+          maxLength: 2000
+        scheduled_time:
+          type: string
+          format: date-time
+        timeout_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        status:
+          type: string
+          enum: [pending, triggered, acknowledged, escalated, completed, cancelled]
+        created_at:
+          type: string
+          format: date-time
+        triggered_at:
+          type: string
+          format: date-time
+          nullable: true
+        escalated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateReminderRequest:
+      type: object
+      required:
+        - target_user_id
+        - message_content
+        - scheduled_time
+        - timeout_minutes
+      properties:
+        target_user_id:
+          type: string
+          description: Discord ID of reminder recipient
+        secondary_user_id:
+          type: string
+          nullable: true
+          description: Discord ID for escalation
+        message_content:
+          type: string
+          maxLength: 2000
+          example: "Time to take your medication!"
+        scheduled_time:
+          type: string
+          format: date-time
+          example: "2025-10-21T20:00:00Z"
+        timeout_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          default: 15
+          example: 30
+        repeat_pattern:
+          type: string
+          nullable: true
+          description: Cron-like pattern for recurring reminders
+          example: "0 8 * * *"
+
+    UpdateReminderRequest:
+      type: object
+      properties:
+        message_content:
+          type: string
+          maxLength: 2000
+        scheduled_time:
+          type: string
+          format: date-time
+        timeout_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        secondary_user_id:
+          type: string
+          nullable: true
+
+    TextPatternList:
+      type: object
+      properties:
+        patterns:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextPattern'
+        total:
+          type: integer
+
+    TextPattern:
+      type: object
+      required:
+        - id
+        - pattern
+        - response_message
+        - match_type
+        - is_active
+        - priority
+      properties:
+        id:
+          type: string
+          format: uuid
+        pattern:
+          type: string
+          example: "hello|hi|hey"
+        response_message:
+          type: string
+          maxLength: 2000
+          example: "Hello! How can I help you today?"
+        match_type:
+          type: string
+          enum: [exact, contains, regex, starts_with, ends_with]
+        is_active:
+          type: boolean
+        priority:
+          type: integer
+          minimum: 0
+        usage_count:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateTextPatternRequest:
+      type: object
+      required:
+        - pattern
+        - response_message
+        - match_type
+      properties:
+        pattern:
+          type: string
+          maxLength: 500
+        response_message:
+          type: string
+          maxLength: 2000
+        match_type:
+          type: string
+          enum: [exact, contains, regex, starts_with, ends_with]
+        priority:
+          type: integer
+          minimum: 0
+          default: 0
+
+    UserInfo:
+      type: object
+      required:
+        - discord_id
+        - username
+      properties:
+        discord_id:
+          type: string
+        username:
+          type: string
+        display_name:
+          type: string
+          nullable: true
+
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session_id
+      description: Session-based authentication via Discord OAuth2

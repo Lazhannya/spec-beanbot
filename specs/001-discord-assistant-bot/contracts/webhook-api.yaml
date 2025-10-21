@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: Discord Bot Webhook API
+  description: API contracts for webhook integration with n8n workflows
+  version: 1.0.0
+
+servers:
+  - url: https://your-n8n-instance.com/webhook
+    description: Production n8n webhook endpoint
+
+paths:
+  /discord-mention:
+    post:
+      summary: Forward Discord mention to n8n workflow
+      description: Called when bot is mentioned in Discord server or DM
+      operationId: forwardDiscordMention
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscordMentionPayload'
+      responses:
+        '200':
+          description: Webhook received successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponse'
+        '400':
+          description: Invalid payload format
+        '401':
+          description: Unauthorized - invalid signature
+        '500':
+          description: n8n workflow processing error
+      security:
+        - webhookSignature: []
+
+components:
+  schemas:
+    DiscordMentionPayload:
+      type: object
+      required:
+        - message_id
+        - channel_id
+        - author
+        - content
+        - timestamp
+        - guild_id
+      properties:
+        message_id:
+          type: string
+          description: Discord message ID (snowflake)
+          example: "1234567890123456789"
+        channel_id:
+          type: string
+          description: Discord channel ID where mention occurred
+          example: "9876543210987654321"
+        author:
+          $ref: '#/components/schemas/DiscordUser'
+        content:
+          type: string
+          description: Full message content including the mention
+          example: "@BeanBot please help me with this task"
+          maxLength: 2000
+        timestamp:
+          type: string
+          format: date-time
+          description: When message was sent (ISO 8601)
+          example: "2025-10-21T10:30:00Z"
+        guild_id:
+          type: string
+          nullable: true
+          description: Discord server ID (null for DMs)
+          example: "1111111111111111111"
+        mention_type:
+          type: string
+          enum: [direct_mention, reply, dm]
+          description: How the bot was mentioned
+        bot_permissions:
+          type: array
+          items:
+            type: string
+          description: Bot's permissions in the channel
+          example: ["SEND_MESSAGES", "READ_MESSAGE_HISTORY"]
+
+    DiscordUser:
+      type: object
+      required:
+        - id
+        - username
+        - discriminator
+      properties:
+        id:
+          type: string
+          description: Discord user ID (snowflake)
+          example: "5555555555555555555"
+        username:
+          type: string
+          description: Discord username
+          example: "johndoe"
+        discriminator:
+          type: string
+          description: Discord discriminator (4 digits)
+          example: "1234"
+        display_name:
+          type: string
+          nullable: true
+          description: Server-specific display name
+          example: "John Doe"
+        avatar:
+          type: string
+          nullable: true
+          description: Avatar hash
+          example: "a1b2c3d4e5f6g7h8i9j0"
+
+    WebhookResponse:
+      type: object
+      required:
+        - success
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Whether webhook was processed successfully
+        message:
+          type: string
+          description: Optional response message
+          example: "Webhook received and processed"
+        timestamp:
+          type: string
+          format: date-time
+          description: Processing timestamp
+        workflow_id:
+          type: string
+          description: n8n workflow identifier
+          example: "workflow-123"
+
+  securitySchemes:
+    webhookSignature:
+      type: apiKey
+      in: header
+      name: X-Webhook-Signature
+      description: HMAC-SHA256 signature for webhook verification
