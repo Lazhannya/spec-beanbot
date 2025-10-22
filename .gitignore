@@ -3,9 +3,11 @@
 coverage/
 *.log
 
-# Fresh framework
+# Fresh framework generated files
 fresh.gen.ts
-_fresh/
+
+# Fresh build output (but keep our source _fresh/ directory)
+# _fresh/ - commented out to allow our discord-bot/_fresh/ source code
 
 # TypeScript
 *.tsbuildinfo
