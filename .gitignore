@@ -1,0 +1,46 @@
+# Deno
+.deno/
+coverage/
+*.log
+
+# Fresh framework
+fresh.gen.ts
+_fresh/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+temp/
+tmp/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Dependencies (if any)
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
