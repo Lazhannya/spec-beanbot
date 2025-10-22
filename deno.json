@@ -1,6 +1,7 @@
 {
   "lock": false,
   "tasks": {
+    "dev": "deno run -A --watch=static/,routes/ dev.ts",
     "start": "deno run -A --watch=static/,routes/ dev.ts",
     "build": "deno run -A dev.ts build",
     "preview": "deno run -A main.ts",
@@ -9,18 +10,20 @@
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": ["**/_fresh/*"],
   "imports": {
-    "$fresh/": "https://deno.land/x/fresh@1.6.8/",
-    "preact": "https://esm.sh/preact@10.19.6",
-    "preact/": "https://esm.sh/preact@10.19.6/",
+    "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "preact": "https://esm.sh/preact@10.22.0",
+    "preact/": "https://esm.sh/preact@10.22.0/",
     "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
     "twind": "https://esm.sh/twind@0.16.19",
     "twind/": "https://esm.sh/twind@0.16.19/",
     "@twind/": "https://esm.sh/@twind/core@1.1.3/",
-    "$std/": "https://deno.land/std@0.208.0/"
+    "$std/": "https://deno.land/std@0.208.0/",
+    "@twind/core": "https://esm.sh/@twind/core@1.1.3",
+    "@twind/preset-tailwind": "https://esm.sh/@twind/preset-tailwind@1.1.4/",
+    "@twind/preset-autoprefix": "https://esm.sh/@twind/preset-autoprefix@1.0.7/"
   },
   "compilerOptions": {
-    "allowJs": true,
     "lib": ["deno.window", "dom", "dom.iterable", "es2022"],
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
@@ -29,5 +32,5 @@
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true
   },
-  "nodeModulesDir": false
+  "nodeModulesDir": "none"
 }
