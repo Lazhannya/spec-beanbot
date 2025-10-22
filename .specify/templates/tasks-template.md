@@ -13,8 +13,10 @@ description: "Task list template for feature implementation"
 
 ## Format: `[ID] [P?] [Story] Description`
 - **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)  
 - Include exact file paths in descriptions
+- **Module Focus**: Each task should create focused modules under 200 lines
+- **Quality Gates**: Include code review checkpoints for modularity and readability
 
 ## Path Conventions
 - **Single project**: `src/`, `tests/` at repository root

@@ -1,0 +1,465 @@
+openapi: 3.0.3
+info:
+  title: Reminder Management API
+  description: REST API for Discord reminder management with escalation and testing
+  version: 1.0.0
+  contact:
+    name: Spec Beanbot API
+
+servers:
+  - url: https://spec-beanbot.deno.dev
+    description: Production Deno Deploy server
+  - url: http://localhost:8000
+    description: Local development server
+
+security:
+  - DiscordOAuth: []
+
+paths:
+  # Authentication endpoints
+  /auth/login:
+    get:
+      summary: Initiate Discord OAuth login
+      description: Redirects to Discord OAuth for admin authentication
+      responses:
+        '302':
+          description: Redirect to Discord OAuth
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "https://discord.com/api/oauth2/authorize?..."
+
+  /auth/callback:
+    get:
+      summary: Handle Discord OAuth callback
+      description: Processes Discord OAuth response and creates admin session
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to admin dashboard
+        '401':
+          description: Authentication failed
+
+  /auth/logout:
+    post:
+      summary: Logout admin user
+      description: Invalidates admin session
+      responses:
+        '204':
+          description: Logout successful
+
+  # Reminder management endpoints
+  /api/reminders:
+    get:
+      summary: List reminders
+      description: Retrieve paginated list of reminders with filtering
+      parameters:
+        - name: status
+          in: query
+          description: Filter by reminder status
+          schema:
+            $ref: '#/components/schemas/ReminderStatus'
+        - name: userId
+          in: query
+          description: Filter by target user ID
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Offset for pagination
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of reminders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reminders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Reminder'
+                  total:
+                    type: integer
+                  hasMore:
+                    type: boolean
+
+    post:
+      summary: Create reminder
+      description: Create a new scheduled reminder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReminderRequest'
+      responses:
+        '201':
+          description: Reminder created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/reminders/{reminderId}:
+    get:
+      summary: Get reminder details
+      description: Retrieve detailed information about a specific reminder
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reminder details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '404':
+          description: Reminder not found
+
+    put:
+      summary: Update reminder
+      description: Update reminder details (only for pending reminders)
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReminderRequest'
+      responses:
+        '200':
+          description: Reminder updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '400':
+          description: Invalid request or reminder cannot be updated
+        '404':
+          description: Reminder not found
+
+    delete:
+      summary: Delete reminder
+      description: Cancel and delete a pending reminder
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Reminder deleted successfully
+        '400':
+          description: Cannot delete non-pending reminder
+        '404':
+          description: Reminder not found
+
+  /api/reminders/{reminderId}/test:
+    post:
+      summary: Test reminder trigger
+      description: Manually trigger reminder for testing purposes
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestReminderRequest'
+      responses:
+        '200':
+          description: Test trigger initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestExecution'
+        '400':
+          description: Invalid test request
+        '404':
+          description: Reminder not found
+
+  # Discord webhook endpoints (internal)
+  /webhook/discord/response:
+    post:
+      summary: Handle Discord user responses
+      description: Webhook endpoint for Discord bot to report user responses
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscordResponseWebhook'
+      responses:
+        '200':
+          description: Response processed successfully
+        '400':
+          description: Invalid webhook payload
+
+components:
+  securitySchemes:
+    DiscordOAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://discord.com/api/oauth2/authorize
+          tokenUrl: https://discord.com/api/oauth2/token
+          scopes:
+            identify: Access user identity
+
+  schemas:
+    Reminder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        targetUserId:
+          type: string
+          pattern: '^[0-9]{17,19}$'
+        scheduledTime:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ReminderStatus'
+        escalation:
+          $ref: '#/components/schemas/EscalationRule'
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseLog'
+        testExecutions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TestExecution'
+        createdBy:
+          type: string
+        deliveryAttempts:
+          type: integer
+          minimum: 0
+        lastDeliveryAttempt:
+          type: string
+          format: date-time
+
+    ReminderStatus:
+      type: string
+      enum:
+        - pending
+        - sent
+        - acknowledged
+        - declined
+        - escalated
+        - escalated_acknowledged
+        - failed
+        - cancelled
+
+    EscalationRule:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        secondaryUserId:
+          type: string
+          pattern: '^[0-9]{17,19}$'
+        timeoutMinutes:
+          type: integer
+          minimum: 1
+          maximum: 10080
+        escalatedAt:
+          type: string
+          format: date-time
+        escalationType:
+          type: string
+          enum: [timeout, declined, manual]
+
+    ResponseLog:
+      type: object
+      properties:
+        id:
+          type: string
+        reminderId:
+          type: string
+        userId:
+          type: string
+        action:
+          type: string
+          enum: [acknowledged, declined, escalated, delivered, failed]
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+
+    TestExecution:
+      type: object
+      properties:
+        id:
+          type: string
+        reminderId:
+          type: string
+        testType:
+          type: string
+          enum: [immediate_delivery, escalation_flow, response_tracking]
+        triggeredBy:
+          type: string
+        triggeredAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        success:
+          type: boolean
+        errorMessage:
+          type: string
+        preservedSchedule:
+          type: boolean
+
+    CreateReminderRequest:
+      type: object
+      required:
+        - content
+        - targetUserId
+        - scheduledTime
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        targetUserId:
+          type: string
+          pattern: '^[0-9]{17,19}$'
+        scheduledTime:
+          type: string
+          format: date-time
+        escalation:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            secondaryUserId:
+              type: string
+              pattern: '^[0-9]{17,19}$'
+            timeoutMinutes:
+              type: integer
+              minimum: 1
+              maximum: 10080
+              default: 60
+
+    UpdateReminderRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        scheduledTime:
+          type: string
+          format: date-time
+        escalation:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            secondaryUserId:
+              type: string
+              pattern: '^[0-9]{17,19}$'
+            timeoutMinutes:
+              type: integer
+              minimum: 1
+              maximum: 10080
+
+    TestReminderRequest:
+      type: object
+      required:
+        - testType
+      properties:
+        testType:
+          type: string
+          enum: [immediate_delivery, escalation_flow, response_tracking]
+        targetUser:
+          type: string
+          description: Override target user for testing (optional)
+
+    DiscordResponseWebhook:
+      type: object
+      required:
+        - reminderId
+        - userId
+        - action
+      properties:
+        reminderId:
+          type: string
+        userId:
+          type: string
+        action:
+          type: string
+          enum: [acknowledged, declined]
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object

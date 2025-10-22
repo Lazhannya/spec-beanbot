@@ -100,6 +100,14 @@
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
+### Code Quality Requirements *(mandatory for all features)*
+
+- **CQ-001**: All modules MUST be under 200 lines with single responsibility
+- **CQ-002**: Function names MUST clearly describe purpose and side effects  
+- **CQ-003**: Error handling MUST provide debugging context (user ID, operation, timestamp)
+- **CQ-004**: Dependencies MUST be minimized and explicitly justified
+- **CQ-005**: TypeScript interfaces MUST be explicit for all Discord API interactions
+
 ## Success Criteria *(mandatory)*
 
 <!--

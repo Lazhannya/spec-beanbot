@@ -31,7 +31,13 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] **Lightweight Modular Design**: Single responsibility modules under 200 lines, minimal dependencies, no circular imports
+- [ ] **Discord-Native Integration**: Uses native fetch, 3-second response compliance, explicit TypeScript interfaces  
+- [ ] **Deno Deploy Optimized**: Built-in APIs only, minimal bundle size, static imports, seamless environment config
+- [ ] **Reminder-Centric Clarity**: Clear reminder lifecycle roles, optimized time-based queries, no unnecessary abstractions
+- [ ] **Readable Debuggable Code**: Descriptive names, contextual errors, structured logging, clear intermediate steps
+- [ ] **Module Architecture**: Single exports, domain-aligned boundaries, explicit dependency injection
+- [ ] **Error Handling**: Result<T, Error> types, operation context in errors, traceable production issues
 
 ## Project Structure
 
