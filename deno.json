@@ -1,8 +1,8 @@
 {
   "lock": false,
   "tasks": {
-    "dev": "deno run -A --watch=static/,routes/ dev.ts",
-    "start": "deno run -A --watch=static/,routes/ dev.ts",
+    "dev": "deno run -A --watch=static/,routes/,components/,islands/,middleware/ dev.ts",
+    "start": "deno run -A --watch=static/,routes/,components/,islands/,middleware/ dev.ts",
     "build": "deno run -A dev.ts build",
     "preview": "deno run -A main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
