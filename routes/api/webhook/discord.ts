@@ -1,5 +1,3 @@
-/// <reference lib="deno.unstable" />
-
 /**
  * Discord Interactions Webhook Endpoint
  * Handles button interactions (acknowledge/decline) from Discord
@@ -8,9 +6,9 @@
 import { Handlers } from "$fresh/server.ts";
 import { verifyDiscordSignature } from "../../../discord-bot/lib/discord/verify.ts";
 import { getConfig } from "../../../discord-bot/lib/config/env.ts";
-import { DiscordDeliveryService } from "../../../discord-bot/lib/discord/delivery.ts";
 import { ReminderService } from "../../../discord-bot/lib/reminder/service.ts";
 import { ReminderRepository } from "../../../discord-bot/lib/reminder/repository.ts";
+import { ResponseType } from "../../../discord-bot/types/reminder.ts";
 
 // Discord Interaction Types
 const InteractionType = {
@@ -53,13 +51,16 @@ export const handler: Handlers = {
   },
 
   async POST(req) {
+    const startTime = Date.now();
     console.log("=== DISCORD WEBHOOK RECEIVED ===");
     console.log("Request URL:", req.url);
     console.log("Request method:", req.method);
     
     try {
       // Get raw body for signature verification
+      const bodyStartTime = Date.now();
       const body = await req.text();
+      console.log("Body read time:", Date.now() - bodyStartTime, "ms");
       console.log("Body length:", body.length);
       console.log("Body preview:", body.substring(0, 200));
       
@@ -82,13 +83,14 @@ export const handler: Handlers = {
       console.log("Public key length:", config.publicKey?.length);
       console.log("Public key preview:", config.publicKey?.substring(0, 20) + "...");
       
+      const verifyStartTime = Date.now();
       const isValid = await verifyDiscordSignature(
         body,
         signature,
         timestamp,
         config.publicKey
       );
-
+      console.log("Signature verification time:", Date.now() - verifyStartTime, "ms");
       console.log("Signature verification result:", isValid);
 
       if (!isValid) {
@@ -101,11 +103,14 @@ export const handler: Handlers = {
       }
 
       // Parse interaction data
+      const parseStartTime = Date.now();
       const interaction = JSON.parse(body);
+      console.log("JSON parse time:", Date.now() - parseStartTime, "ms");
       console.log("✅ Interaction parsed successfully");
       console.log("Interaction type:", interaction.type);
       console.log("Interaction data:", JSON.stringify(interaction.data, null, 2));
       console.log("Custom ID:", interaction.data?.custom_id);
+      console.log("Total time so far:", Date.now() - startTime, "ms");
 
       // Handle PING (Discord verification)
       if (interaction.type === InteractionType.PING) {
@@ -143,6 +148,8 @@ export const handler: Handlers = {
           
           console.log(`✅ Parsed - Action: ${action}, Reminder ID: ${reminderId || 'unknown'}, User: ${userId}`);
           
+          const responseStartTime = Date.now();
+          
           // Respond immediately to Discord to prevent "interaction failed"
           const responseMessage = action === "acknowledge"
             ? "✅ **Reminder acknowledged!** Thank you for confirming."
@@ -156,6 +163,8 @@ export const handler: Handlers = {
             },
           };
           
+          console.log("Response payload prepared in:", Date.now() - responseStartTime, "ms");
+          console.log("Total processing time before response:", Date.now() - startTime, "ms");
           console.log("Sending response to Discord:", JSON.stringify(responsePayload, null, 2));
 
           // Send immediate response to update the message
@@ -167,7 +176,8 @@ export const handler: Handlers = {
             }
           );
 
-          console.log("✅ Response sent successfully");
+          console.log("✅ Response created, returning to Discord");
+          console.log("Total response time:", Date.now() - startTime, "ms");
 
           // Process the response asynchronously (don't await)
           // This prevents blocking the Discord interaction response
@@ -219,76 +229,37 @@ async function processReminderResponse(
   userId: string,
   action: "acknowledge" | "decline",
   reminderId: string | undefined,
-  message: Record<string, unknown>
+  _message: Record<string, unknown>
 ) {
   try {
     console.log(`Processing ${action} response from user ${userId} for reminder ${reminderId || 'unknown'}`);
     
-    // Log the response
-    console.log({
-      reminderId,
-      userId,
-      action,
-      timestamp: new Date().toISOString(),
-      messageId: message.id,
-    });
+    if (!reminderId) {
+      console.warn("⚠️ No reminder ID provided, cannot update database");
+      return;
+    }
+
+    // Initialize database connection and services
+    const kv = await Deno.openKv();
+    const repository = new ReminderRepository(kv);
+    const service = new ReminderService(repository);
     
-    // If reminder was declined, send escalation message
-    if (action === "decline" && reminderId) {
-      console.log(`🚨 Reminder ${reminderId} was declined, checking for escalation target...`);
-      
-      try {
-        // Get the reminder from database
-        const kv = await Deno.openKv();
-        const repository = new ReminderRepository(kv);
-        const reminderService = new ReminderService(repository);
-        const reminderResult = await reminderService.getReminder(reminderId);
-        
-        if (!reminderResult.success || !reminderResult.data) {
-          console.error(`❌ Reminder ${reminderId} not found in database`);
-          return;
-        }
-        
-        const reminder = reminderResult.data;
-        console.log(`Found reminder: ${reminder.id}, has escalation: ${!!reminder.escalation}`);
-        
-        // Check if reminder has escalation configured
-        if (reminder.escalation && reminder.escalation.isActive && reminder.escalation.secondaryUserId) {
-          console.log(`📤 Sending escalation to user ${reminder.escalation.secondaryUserId}`);
-          
-          // Initialize Discord delivery service
-          const config = getConfig();
-          const deliveryService = new DiscordDeliveryService(config.discordToken);
-          
-          // Create escalation message
-          const escalationMessage = `🚨 **Reminder Declined by User**\n\n` +
-            `**Original Reminder:**\n${reminder.content}\n\n` +
-            `**Status:** The reminder was manually declined by <@${userId}>\n` +
-            `**Time:** ${new Date().toISOString()}\n\n` +
-            `This reminder requires your attention as the escalation contact.`;
-          
-          // Send escalation message
-          const result = await deliveryService.sendEscalation(reminder, escalationMessage);
-          
-          if (result.success) {
-            console.log(`✅ Escalation message sent successfully to ${reminder.escalation.secondaryUserId}`);
-            console.log(`Message ID: ${result.messageId}`);
-          } else {
-            console.error(`❌ Failed to send escalation message: ${result.error}`);
-          }
-        } else {
-          console.log(`ℹ️ No escalation configured for reminder ${reminderId}`);
-        }
-      } catch (error) {
-        console.error(`❌ Error processing declined reminder escalation:`, error);
-        console.error(error instanceof Error ? error.stack : String(error));
-      }
-    } else if (action === "acknowledge") {
-      console.log(`✅ Reminder ${reminderId} was acknowledged - no escalation needed`);
+    // Map action to ResponseType
+    const responseType = action === "acknowledge" 
+      ? ResponseType.ACKNOWLEDGED 
+      : ResponseType.DECLINED;
+    
+    // Record the user response
+    const result = await service.recordUserResponse(reminderId, userId, responseType);
+    
+    if (result.success) {
+      console.log(`✅ Successfully recorded ${action} response for reminder ${reminderId}`);
+    } else {
+      console.error(`❌ Failed to record response: ${result.error?.message}`);
     }
     
   } catch (error) {
-    console.error("Failed to process reminder response:", error);
-    throw error;
+    console.error("💥 Failed to process reminder response:", error);
+    console.error("Error details:", error instanceof Error ? error.stack : String(error));
   }
 }

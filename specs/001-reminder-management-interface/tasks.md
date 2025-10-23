@@ -221,6 +221,8 @@ description: "Task list for reminder management web interface implementation"
 
 **Goal**: Enable Discord button interactions (Acknowledge/Decline) with proper webhook handling
 
+**⚠️ INTEGRITY FIX (2025-10-23)**: Removed redundant `discord-debug.ts` file that was causing routing conflicts with the production webhook endpoint.
+
 ### Implementation for Discord Interactions
 
 - [x] T079 [P] [INT] Create Discord webhook endpoint in routes/api/webhook/discord.ts
