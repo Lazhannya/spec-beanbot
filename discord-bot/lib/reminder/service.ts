@@ -3,7 +3,7 @@
  * Handles reminder operations, validation, and coordination between repository and external services
  */
 
-import { Reminder, ReminderStatus, ResponseLog, ResponseType, TestExecution, TestType } from "../../types/reminder.ts";
+import { Reminder, ReminderStatus, ResponseLog, ResponseType, TestExecution, TestType, RepeatFrequency, RepeatEndCondition } from "../../types/reminder.ts";
 import { ReminderRepository } from "./repository.ts";
 
 /**
@@ -28,6 +28,13 @@ export interface CreateReminderOptions {
   escalation?: {
     secondaryUserId: string;
     timeoutMinutes: number;
+  };
+  repeatRule?: {
+    frequency: RepeatFrequency;
+    interval: number;
+    endCondition: RepeatEndCondition;
+    endDate?: Date;
+    maxOccurrences?: number;
   };
 }
 
@@ -78,6 +85,28 @@ export class ReminderService {
           secondaryUserId: options.escalation.secondaryUserId,
           timeoutMinutes: options.escalation.timeoutMinutes,
           triggerConditions: ["timeout", "declined"], // Default triggers
+          createdAt: now,
+          isActive: true,
+        };
+      }
+
+      // Add repeat rule if provided
+      if (options.repeatRule) {
+        const nextScheduledTime = this.calculateNextRepeatTime(
+          options.scheduledTime,
+          options.repeatRule.frequency,
+          options.repeatRule.interval
+        );
+
+        reminder.repeatRule = {
+          id: crypto.randomUUID(),
+          frequency: options.repeatRule.frequency,
+          interval: options.repeatRule.interval,
+          endCondition: options.repeatRule.endCondition,
+          ...(options.repeatRule.endDate && { endDate: options.repeatRule.endDate }),
+          ...(options.repeatRule.maxOccurrences && { maxOccurrences: options.repeatRule.maxOccurrences }),
+          currentOccurrence: 1, // This is the first occurrence
+          nextScheduledTime,
           createdAt: now,
           isActive: true,
         };
@@ -517,5 +546,109 @@ export class ReminderService {
       success: true,
       data: undefined
     };
+  }
+
+  /**
+   * Calculate the next scheduled time for a repeat reminder
+   */
+  private calculateNextRepeatTime(currentTime: Date, frequency: RepeatFrequency, interval: number): Date {
+    const nextTime = new Date(currentTime);
+
+    switch (frequency) {
+      case RepeatFrequency.DAILY:
+        nextTime.setDate(nextTime.getDate() + interval);
+        break;
+      case RepeatFrequency.WEEKLY:
+        nextTime.setDate(nextTime.getDate() + (interval * 7));
+        break;
+      case RepeatFrequency.MONTHLY:
+        nextTime.setMonth(nextTime.getMonth() + interval);
+        break;
+      case RepeatFrequency.YEARLY:
+        nextTime.setFullYear(nextTime.getFullYear() + interval);
+        break;
+    }
+
+    return nextTime;
+  }
+
+  /**
+   * Schedule the next occurrence of a repeat reminder
+   */
+  async scheduleNextRepeatOccurrence(reminderId: string): Promise<Result<Reminder | null>> {
+    try {
+      const reminder = await this.repository.getById(reminderId);
+      if (!reminder || !reminder.repeatRule || !reminder.repeatRule.isActive) {
+        return {
+          success: true,
+          data: null // No repeat needed
+        };
+      }
+
+      const repeatRule = reminder.repeatRule;
+
+      // Check if we've reached the end condition
+      if (repeatRule.endCondition === RepeatEndCondition.COUNT_BASED) {
+        if (repeatRule.currentOccurrence >= (repeatRule.maxOccurrences || 1)) {
+          return {
+            success: true,
+            data: null // Reached max occurrences
+          };
+        }
+      }
+
+      if (repeatRule.endCondition === RepeatEndCondition.DATE_BASED) {
+        if (repeatRule.endDate && repeatRule.nextScheduledTime >= repeatRule.endDate) {
+          return {
+            success: true,
+            data: null // Reached end date
+          };
+        }
+      }
+
+      // Calculate next occurrence time
+      const nextTime = this.calculateNextRepeatTime(
+        repeatRule.nextScheduledTime,
+        repeatRule.frequency,
+        repeatRule.interval
+      );
+
+      // Create new reminder for next occurrence
+      const nextReminder: Reminder = {
+        ...reminder,
+        id: crypto.randomUUID(),
+        scheduledTime: nextTime,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: ReminderStatus.PENDING,
+        responses: [],
+        testExecutions: [],
+        deliveryAttempts: 0,
+        repeatRule: {
+          ...repeatRule,
+          currentOccurrence: repeatRule.currentOccurrence + 1,
+          nextScheduledTime: this.calculateNextRepeatTime(nextTime, repeatRule.frequency, repeatRule.interval)
+        }
+      };
+
+      // Save the new reminder
+      const created = await this.repository.create(nextReminder);
+      if (!created) {
+        return {
+          success: false,
+          error: new Error("Failed to create next repeat reminder")
+        };
+      }
+
+      return {
+        success: true,
+        data: nextReminder
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error("Unknown error occurred")
+      };
+    }
   }
 }

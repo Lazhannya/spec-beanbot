@@ -4,7 +4,7 @@
  */
 
 import { PageProps } from "$fresh/server.ts";
-import ReminderForm, { ReminderFormData } from "../../../components/ReminderForm.tsx";
+import ReminderForm, { ReminderFormData } from "../../../islands/ReminderForm.tsx";
 
 export default function NewReminderPage({ url }: PageProps) {
   

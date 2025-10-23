@@ -111,6 +111,20 @@ export class ReminderScheduler {
       
       if (deliveryResult.success) {
         console.log(`Successfully marked reminder ${reminder.id} as delivered`);
+        
+        // Check if this is a repeat reminder and schedule next occurrence
+        if (reminder.repeatRule && reminder.repeatRule.isActive) {
+          console.log(`Scheduling next occurrence for repeat reminder ${reminder.id}`);
+          const nextOccurrenceResult = await this.service.scheduleNextRepeatOccurrence(reminder.id);
+          
+          if (nextOccurrenceResult.success && nextOccurrenceResult.data) {
+            console.log(`Successfully scheduled next occurrence: ${nextOccurrenceResult.data.id} at ${nextOccurrenceResult.data.scheduledTime}`);
+          } else if (nextOccurrenceResult.success && !nextOccurrenceResult.data) {
+            console.log(`Repeat reminder ${reminder.id} has reached its end condition`);
+          } else if (!nextOccurrenceResult.success) {
+            console.error(`Failed to schedule next occurrence for ${reminder.id}:`, nextOccurrenceResult.error);
+          }
+        }
       } else {
         console.error(`Failed to mark reminder ${reminder.id} as delivered:`, deliveryResult.error);
       }

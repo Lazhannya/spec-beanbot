@@ -18,10 +18,39 @@ export interface Reminder {
   // Test execution tracking
   testExecutions: TestExecution[]; // Array of manual test triggers
   
+  // Repeat configuration
+  repeatRule?: RepeatRule;      // Optional recurring schedule settings
+  
   // Metadata
   createdBy: string;            // Admin user ID who created reminder
   deliveryAttempts: number;     // Count of delivery attempts
   lastDeliveryAttempt?: Date;   // Timestamp of last delivery attempt
+}
+
+export interface RepeatRule {
+  id: string;                   // UUID for repeat rule
+  frequency: RepeatFrequency;   // How often to repeat
+  interval: number;             // Interval value (e.g., every 2 weeks)
+  endCondition: RepeatEndCondition; // When to stop repeating
+  endDate?: Date;               // End date (if DATE_BASED end condition)
+  maxOccurrences?: number;      // Max occurrences (if COUNT_BASED end condition)
+  currentOccurrence: number;    // Current occurrence count
+  nextScheduledTime: Date;      // Next scheduled occurrence
+  createdAt: Date;              // Rule creation timestamp
+  isActive: boolean;            // Whether rule is currently active
+}
+
+export enum RepeatFrequency {
+  DAILY = "daily",              // Repeat daily
+  WEEKLY = "weekly",            // Repeat weekly
+  MONTHLY = "monthly",          // Repeat monthly
+  YEARLY = "yearly"             // Repeat yearly
+}
+
+export enum RepeatEndCondition {
+  NEVER = "never",              // Never end (indefinite)
+  DATE_BASED = "date_based",    // End on specific date
+  COUNT_BASED = "count_based"   // End after X occurrences
 }
 
 export enum ReminderStatus {

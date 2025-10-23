@@ -77,6 +77,8 @@ description: "Task list for reminder management web interface implementation"
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
+**Note**: Fixed useState hook error by converting ReminderForm to Fresh Island component (moved from components/ to islands/ directory). Fresh framework requires useState hooks to be in Island components only for client-side interactivity.
+
 ---
 
 ## Phase 4: User Story 2 - Edit and Manage Existing Reminders (Priority: P2)
@@ -177,6 +179,27 @@ description: "Task list for reminder management web interface implementation"
 - [ ] T066 Performance optimization: Review KV query patterns and indexing
 - [ ] T067 Security review: Validate Discord OAuth implementation and session handling
 - [ ] T068 Run quickstart.md validation and deployment testing
+
+---
+
+## Phase 9: Extended Features - Recurring Reminders and Testing (Priority: P6)
+
+**Goal**: Enhanced reminder functionality with recurring schedules and manual testing capabilities
+
+### Implementation for Extended Features
+
+- [x] T069 [P] [EXT] Extend Reminder interface with RepeatRule in discord-bot/types/reminder.ts
+- [x] T070 [P] [EXT] Add RepeatFrequency and RepeatEndCondition enums in discord-bot/types/reminder.ts
+- [x] T071 [EXT] Update ReminderForm component with repeat configuration options in islands/ReminderForm.tsx
+- [x] T072 [EXT] Extend CreateReminderOptions interface in discord-bot/lib/reminder/service.ts
+- [x] T073 [EXT] Implement calculateNextRepeatTime method in discord-bot/lib/reminder/service.ts
+- [x] T074 [EXT] Add scheduleNextRepeatOccurrence method in discord-bot/lib/reminder/service.ts
+- [x] T075 [EXT] Update scheduler to handle repeat reminders in discord-bot/lib/reminder/scheduler.ts
+- [x] T076 [P] [EXT] Create TestTrigger Island component in islands/TestTrigger.tsx
+- [x] T077 [EXT] Create test reminder API endpoint in routes/api/reminders/[id]/test.ts
+- [x] T078 [EXT] Update dashboard with test trigger functionality in routes/index.tsx
+
+**Checkpoint**: Extended features fully functional - reminders can repeat regularly and be tested manually
 
 ---
 

@@ -360,8 +360,41 @@ export default function DashboardPage({ url }: PageProps) {
             }
 
             function testReminder(id) {
-              // TODO: Implement test functionality
-              alert('Test functionality will be implemented in User Story 5');
+              const button = event.target;
+              const originalText = button.textContent;
+              
+              // Show loading state
+              button.textContent = 'Testing...';
+              button.disabled = true;
+              
+              // Call test API
+              fetch(\`/api/reminders/\${id}/test\`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  testType: 'immediate_delivery',
+                  preserveSchedule: true
+                })
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  alert(\`Test successful: \${data.message}\`);
+                } else {
+                  alert(\`Test failed: \${data.error || 'Unknown error'}\`);
+                }
+              })
+              .catch(error => {
+                console.error('Test error:', error);
+                alert('Test failed: Network error');
+              })
+              .finally(() => {
+                // Reset button state
+                button.textContent = originalText;
+                button.disabled = false;
+              });
             }
 
             async function deleteReminder(id) {
