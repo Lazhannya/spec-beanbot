@@ -14,6 +14,7 @@ const EXCLUDED_PATHS = [
   "/api/webhook/discord",
   "/api/webhook/discord-debug",
   "/api/webhook/discord-simple",
+  "/api/webhook/discord-minimal",
   "/auth/callback",
 ];const ADMIN_ONLY_PATHS = [
   "/admin",
