@@ -22,6 +22,8 @@ export interface ReminderFormData {
   enableEscalation: boolean;
   escalationUserId: string;
   escalationTimeoutMinutes: number;
+  timeoutMessage: string; // Custom message for timeout escalation
+  declineMessage: string; // Custom message for decline escalation
   // Repeat settings
   enableRepeat: boolean;
   repeatFrequency: string; // 'daily' | 'weekly' | 'monthly' | 'yearly'
@@ -46,6 +48,8 @@ export default function ReminderForm({
     enableEscalation: initialData?.enableEscalation || false,
     escalationUserId: initialData?.escalationUserId || "",
     escalationTimeoutMinutes: initialData?.escalationTimeoutMinutes || 60,
+    timeoutMessage: initialData?.timeoutMessage || "",
+    declineMessage: initialData?.declineMessage || "",
     // Repeat settings
     enableRepeat: initialData?.enableRepeat || false,
     repeatFrequency: initialData?.repeatFrequency || "weekly",
@@ -135,6 +139,8 @@ export default function ReminderForm({
             enableEscalation: false,
             escalationUserId: "",
             escalationTimeoutMinutes: 60,
+            timeoutMessage: "",
+            declineMessage: "",
             // Reset repeat settings
             enableRepeat: false,
             repeatFrequency: "weekly",
@@ -348,6 +354,46 @@ export default function ReminderForm({
                 )}
                 <p class="mt-1 text-sm text-gray-500">
                   How long to wait before escalating if no response (5-1440 minutes)
+                </p>
+              </div>
+
+              {/* Timeout Message */}
+              <div>
+                <label htmlFor="timeoutMessage" class="block text-sm font-medium text-gray-700 mb-2">
+                  Timeout Message (optional)
+                </label>
+                <textarea
+                  id="timeoutMessage"
+                  name="timeoutMessage"
+                  value={formData.timeoutMessage}
+                  onInput={(e) => handleInputChange('timeoutMessage', (e.target as HTMLTextAreaElement).value)}
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  placeholder="Custom message when user doesn't respond in time (defaults provided if empty)"
+                  disabled={isLoading}
+                />
+                <p class="mt-1 text-sm text-gray-500">
+                  Custom message sent to escalation user when timeout occurs
+                </p>
+              </div>
+
+              {/* Decline Message */}
+              <div>
+                <label htmlFor="declineMessage" class="block text-sm font-medium text-gray-700 mb-2">
+                  Decline Message (optional)
+                </label>
+                <textarea
+                  id="declineMessage"
+                  name="declineMessage"
+                  value={formData.declineMessage}
+                  onInput={(e) => handleInputChange('declineMessage', (e.target as HTMLTextAreaElement).value)}
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  placeholder="Custom message when user declines reminder (defaults provided if empty)"
+                  disabled={isLoading}
+                />
+                <p class="mt-1 text-sm text-gray-500">
+                  Custom message sent to escalation user when reminder is declined
                 </p>
               </div>
             </div>

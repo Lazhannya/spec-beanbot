@@ -6,6 +6,7 @@
 import { ReminderService } from "./service.ts";
 import { Reminder } from "../../types/reminder.ts";
 import { DiscordDeliveryService } from "../discord/delivery.ts";
+import { EscalationProcessor } from "./escalation.ts";
 
 /**
  * Scheduler for monitoring and triggering reminder deliveries
@@ -13,6 +14,7 @@ import { DiscordDeliveryService } from "../discord/delivery.ts";
 export class ReminderScheduler {
   private service: ReminderService;
   private deliveryService: DiscordDeliveryService;
+  private escalationProcessor: EscalationProcessor;
   private isRunning = false;
   private intervalId?: number | undefined;
   private readonly checkInterval = 30000; // Check every 30 seconds
@@ -20,6 +22,7 @@ export class ReminderScheduler {
   constructor(service: ReminderService, deliveryService: DiscordDeliveryService) {
     this.service = service;
     this.deliveryService = deliveryService;
+    this.escalationProcessor = new EscalationProcessor(deliveryService);
   }
 
   /**
@@ -36,10 +39,12 @@ export class ReminderScheduler {
 
     // Run initial check
     this.checkDueReminders();
+    this.checkTimeoutEscalations();
 
     // Set up recurring check
     this.intervalId = setInterval(() => {
       this.checkDueReminders();
+      this.checkTimeoutEscalations();
     }, this.checkInterval);
   }
 
@@ -144,6 +149,90 @@ export class ReminderScheduler {
 
     } catch (error) {
       console.error(`Error processing reminder ${reminder.id}:`, error);
+    }
+  }
+
+  /**
+   * Check for reminders that have timed out without response and need escalation
+   */
+  private async checkTimeoutEscalations(): Promise<void> {
+    try {
+      console.log("Checking for timeout escalations...");
+      
+      // Get all delivered reminders with escalation enabled
+      const result = await this.service.getDeliveredRemindersWithEscalation();
+      if (!result.success) {
+        console.error("Failed to get delivered reminders with escalation:", result.error);
+        return;
+      }
+
+      const deliveredReminders = result.data;
+      console.log(`Found ${deliveredReminders.length} delivered reminders with escalation`);
+
+      const now = Date.now();
+      
+      // Check each reminder for timeout
+      for (const reminder of deliveredReminders) {
+        if (!reminder.escalation || !reminder.escalation.isActive) {
+          continue;
+        }
+
+        if (!reminder.lastDeliveryAttempt) {
+          continue; // Skip if no delivery timestamp
+        }
+
+        // Calculate timeout deadline
+        const deliveredTime = new Date(reminder.lastDeliveryAttempt).getTime();
+        const timeoutMs = reminder.escalation.timeoutMinutes * 60 * 1000;
+        const timeoutDeadline = deliveredTime + timeoutMs;
+
+        // Check if timeout has passed
+        if (now >= timeoutDeadline) {
+          console.log(`Reminder ${reminder.id} has timed out, triggering escalation`);
+          await this.processTimeoutEscalation(reminder);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking timeout escalations:", error);
+    }
+  }
+
+  /**
+   * Process timeout escalation for a reminder
+   */
+  private async processTimeoutEscalation(reminder: Reminder): Promise<void> {
+    try {
+      console.log(`Processing timeout escalation for reminder ${reminder.id}`);
+      
+      // Trigger escalation through processor
+      const escalationResult = await this.escalationProcessor.processEscalation(
+        reminder,
+        "timeout"
+      );
+
+      if (escalationResult.success) {
+        console.log(`Successfully sent timeout escalation for reminder ${reminder.id}`);
+        
+        // Mark escalation as triggered in the reminder
+        const updateResult = await this.service.markEscalationTriggered(
+          reminder.id,
+          "timeout"
+        );
+        
+        if (!updateResult.success) {
+          console.error(
+            `Failed to mark escalation as triggered for ${reminder.id}:`,
+            updateResult.error
+          );
+        }
+      } else {
+        console.error(
+          `Failed to send timeout escalation for ${reminder.id}:`,
+          escalationResult.error
+        );
+      }
+    } catch (error) {
+      console.error(`Error processing timeout escalation for ${reminder.id}:`, error);
     }
   }
 

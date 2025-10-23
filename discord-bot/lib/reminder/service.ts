@@ -30,6 +30,8 @@ export interface CreateReminderOptions {
   escalation?: {
     secondaryUserId: string;
     timeoutMinutes: number;
+    timeoutMessage?: string;
+    declineMessage?: string;
   };
   repeatRule?: {
     frequency: RepeatFrequency;
@@ -88,6 +90,8 @@ export class ReminderService {
           secondaryUserId: options.escalation.secondaryUserId,
           timeoutMinutes: options.escalation.timeoutMinutes,
           triggerConditions: [EscalationTrigger.TIMEOUT, EscalationTrigger.DECLINED], // Default triggers
+          ...(options.escalation.timeoutMessage && { timeoutMessage: options.escalation.timeoutMessage }),
+          ...(options.escalation.declineMessage && { declineMessage: options.escalation.declineMessage }),
           createdAt: now,
           isActive: true,
         };
@@ -491,6 +495,88 @@ export class ReminderService {
       return {
         success: false,
         error: error instanceof Error ? error : new Error("Failed to get reminders")
+      };
+    }
+  }
+
+  /**
+   * Get delivered reminders with active escalation configured
+   */
+  async getDeliveredRemindersWithEscalation(): Promise<Result<Reminder[]>> {
+    try {
+      const reminders = await this.repository.getByStatus(ReminderStatus.SENT, 200);
+      
+      // Filter for reminders with active escalation
+      const escalationReminders = reminders.filter(r => 
+        r.escalation && 
+        r.escalation.isActive && 
+        r.escalation.secondaryUserId &&
+        !r.escalation.triggeredAt // Not already escalated
+      );
+      
+      return {
+        success: true,
+        data: escalationReminders
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error("Failed to get reminders with escalation")
+      };
+    }
+  }
+
+  /**
+   * Mark escalation as triggered for a reminder
+   */
+  async markEscalationTriggered(
+    reminderId: string, 
+    escalationType: "timeout" | "decline"
+  ): Promise<Result<void>> {
+    try {
+      const reminder = await this.repository.getById(reminderId);
+      if (!reminder) {
+        return {
+          success: false,
+          error: new Error("Reminder not found")
+        };
+      }
+
+      if (!reminder.escalation) {
+        return {
+          success: false,
+          error: new Error("No escalation configured")
+        };
+      }
+
+      // Update escalation with trigger info
+      const updatedEscalation = {
+        ...reminder.escalation,
+        triggeredAt: new Date(),
+        triggerReason: escalationType
+      };
+
+      const success = await this.repository.update(reminderId, {
+        escalation: updatedEscalation,
+        status: ReminderStatus.ESCALATED,
+        updatedAt: new Date()
+      });
+
+      if (!success) {
+        return {
+          success: false,
+          error: new Error("Failed to update reminder")
+        };
+      }
+      
+      return { 
+        success: true,
+        data: undefined
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error("Failed to mark escalation as triggered")
       };
     }
   }

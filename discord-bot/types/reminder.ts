@@ -72,8 +72,12 @@ export interface EscalationRule {
   secondaryUserId: string;      // Discord user ID for escalation
   timeoutMinutes: number;       // Minutes to wait before escalating
   triggerConditions: EscalationTrigger[]; // When to escalate
-  createdAt: Date;              // Rule creation timestamp
-  isActive: boolean;            // Whether rule is currently active
+  timeoutMessage?: string;      // Custom message for timeout escalation
+  declineMessage?: string;      // Custom message for decline escalation
+  triggeredAt?: Date;           // When escalation was triggered
+  triggerReason?: "timeout" | "decline"; // Why escalation was triggered
+  createdAt: Date;              // When rule was created
+  isActive: boolean;            // Whether rule is currently enabled
 }
 
 export enum EscalationTrigger {

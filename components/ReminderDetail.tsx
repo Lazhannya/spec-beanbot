@@ -141,13 +141,59 @@ export default function ReminderDetail({ reminder, onEdit, onDelete, onTest }: R
       {reminder.escalation?.isActive && (
         <div class="border-t pt-4">
           <h3 class="text-sm font-semibold text-gray-700 mb-2">Escalation Settings</h3>
-          <div class="bg-yellow-50 p-4 rounded space-y-2">
-            <p class="text-gray-900">
-              <span class="font-medium">Secondary User:</span> <code class="bg-white px-2 py-1 rounded">{reminder.escalation.secondaryUserId}</code>
-            </p>
-            <p class="text-gray-900">
-              <span class="font-medium">Timeout:</span> {reminder.escalation.timeoutMinutes} minutes
-            </p>
+          <div class="bg-yellow-50 p-4 rounded space-y-3">
+            <div>
+              <p class="text-gray-900">
+                <span class="font-medium">Secondary User:</span> <code class="bg-white px-2 py-1 rounded">{reminder.escalation.secondaryUserId}</code>
+              </p>
+              <p class="text-gray-900 mt-1">
+                <span class="font-medium">Timeout:</span> {reminder.escalation.timeoutMinutes} minutes
+              </p>
+            </div>
+
+            {/* Escalation Status */}
+            {reminder.escalation.triggeredAt && (
+              <div class="border-t border-yellow-200 pt-3">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-semibold">
+                    ESCALATED
+                  </span>
+                  {reminder.escalation.triggerReason && (
+                    <span class="text-sm text-gray-600">
+                      Reason: {reminder.escalation.triggerReason}
+                    </span>
+                  )}
+                </div>
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Triggered:</span> {formatDate(reminder.escalation.triggeredAt)}
+                </p>
+              </div>
+            )}
+
+            {/* Custom Messages */}
+            {(reminder.escalation.timeoutMessage || reminder.escalation.declineMessage) && (
+              <div class="border-t border-yellow-200 pt-3">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2">Custom Escalation Messages</h4>
+                
+                {reminder.escalation.timeoutMessage && (
+                  <div class="mb-2">
+                    <p class="text-xs font-medium text-gray-600 mb-1">Timeout Message:</p>
+                    <div class="bg-white p-2 rounded text-sm text-gray-900 border border-yellow-200">
+                      {reminder.escalation.timeoutMessage}
+                    </div>
+                  </div>
+                )}
+
+                {reminder.escalation.declineMessage && (
+                  <div>
+                    <p class="text-xs font-medium text-gray-600 mb-1">Decline Message:</p>
+                    <div class="bg-white p-2 rounded text-sm text-gray-900 border border-yellow-200">
+                      {reminder.escalation.declineMessage}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
