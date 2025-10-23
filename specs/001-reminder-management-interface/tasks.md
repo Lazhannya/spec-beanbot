@@ -221,8 +221,12 @@ description: "Task list for reminder management web interface implementation"
 - [x] T088 [P] [INT] Create Discord interactions setup documentation in DISCORD_INTERACTIONS_SETUP.md
 - [x] T089 [P] [INT] Create debugging guide in DEBUGGING_INTERACTIONS.md
 - [x] T090 [P] [INT] Create implementation summary in DISCORD_BUTTONS_FIX.md
+- [x] T091 [INT] Implement decline button escalation in routes/api/webhook/discord.ts
+- [x] T092 [INT] Add includeButtons parameter to sendMessage in discord-bot/lib/discord/delivery.ts
+- [x] T093 [INT] Update sendEscalation to send notification-only messages
+- [x] T094 [P] [INT] Create decline escalation feature documentation in DECLINE_ESCALATION_FEATURE.md
 
-**Checkpoint**: Discord button interactions functional with comprehensive debugging
+**Checkpoint**: Discord button interactions fully functional with automatic escalation on decline
 
 **Deployment Requirements**:
 - PUBLIC_KEY environment variable must be set in production
