@@ -180,11 +180,14 @@ if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
     >&2 echo "[specify] Truncated to: $BRANCH_NAME (${#BRANCH_NAME} bytes)"
 fi
 
-if [ "$HAS_GIT" = true ]; then
-    git checkout -b "$BRANCH_NAME"
-else
-    >&2 echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME"
-fi
+# Branch creation disabled - working directly on current branch
+# To re-enable branch creation, uncomment the following:
+# if [ "$HAS_GIT" = true ]; then
+#     git checkout -b "$BRANCH_NAME"
+# else
+#     >&2 echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME"
+# fi
+>&2 echo "[specify] Working directly on current branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'master')"
 
 FEATURE_DIR="$SPECS_DIR/$BRANCH_NAME"
 mkdir -p "$FEATURE_DIR"

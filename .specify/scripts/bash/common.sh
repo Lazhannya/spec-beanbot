@@ -72,9 +72,17 @@ check_feature_branch() {
         return 0
     fi
 
+    # Allow master/main branch for direct development
+    if [[ "$branch" == "master" ]] || [[ "$branch" == "main" ]]; then
+        echo "[specify] Working on $branch branch (direct development mode)" >&2
+        return 0
+    fi
+
+    # Feature branches should still follow naming convention if used
     if [[ ! "$branch" =~ ^[0-9]{3}- ]]; then
         echo "ERROR: Not on a feature branch. Current branch: $branch" >&2
         echo "Feature branches should be named like: 001-feature-name" >&2
+        echo "Or work directly on master/main branch." >&2
         return 1
     fi
 
