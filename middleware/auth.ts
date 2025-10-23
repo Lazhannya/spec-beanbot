@@ -11,6 +11,7 @@ export interface AuthState {
 
 const EXCLUDED_PATHS = [
   "/api/health",
+  "/api/diagnostic",
   "/api/webhook/discord",
   "/api/webhook/discord-debug",
   "/api/webhook/discord-simple",
