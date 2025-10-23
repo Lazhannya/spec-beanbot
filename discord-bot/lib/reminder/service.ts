@@ -3,7 +3,7 @@
  * Handles reminder operations, validation, and coordination between repository and external services
  */
 
-import { Reminder, ReminderStatus, ResponseLog, ResponseType, TestExecution, TestType, RepeatFrequency, RepeatEndCondition } from "../../types/reminder.ts";
+import { Reminder, ReminderStatus, ResponseLog, ResponseType, TestExecution, TestType, RepeatFrequency, RepeatEndCondition, EscalationTrigger, TestResult } from "../../types/reminder.ts";
 import { ReminderRepository } from "./repository.ts";
 
 /**
@@ -84,7 +84,7 @@ export class ReminderService {
           id: crypto.randomUUID(),
           secondaryUserId: options.escalation.secondaryUserId,
           timeoutMinutes: options.escalation.timeoutMinutes,
-          triggerConditions: ["timeout", "declined"], // Default triggers
+          triggerConditions: [EscalationTrigger.TIMEOUT, EscalationTrigger.DECLINED], // Default triggers
           createdAt: now,
           isActive: true,
         };
@@ -258,6 +258,48 @@ export class ReminderService {
   }
 
   /**
+   * Delete a pending reminder permanently
+   * Removes the reminder and all its schedule indexes
+   */
+  async deleteReminder(id: string): Promise<Result<void>> {
+    try {
+      const current = await this.repository.getById(id);
+      if (!current) {
+        return {
+          success: false,
+          error: new Error("Reminder not found")
+        };
+      }
+
+      // Only allow deleting pending reminders
+      if (current.status !== ReminderStatus.PENDING) {
+        return {
+          success: false,
+          error: new Error("Cannot delete reminder that has already been sent. Use cancel instead.")
+        };
+      }
+
+      const success = await this.repository.delete(id);
+      if (!success) {
+        return {
+          success: false,
+          error: new Error("Failed to delete reminder")
+        };
+      }
+
+      return {
+        success: true,
+        data: undefined
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error("Unknown error occurred")
+      };
+    }
+  }
+
+  /**
    * Mark reminder as delivered
    */
   async markAsDelivered(id: string): Promise<Result<void>> {
@@ -355,9 +397,9 @@ export class ReminderService {
         id: crypto.randomUUID(),
         reminderId: id,
         testType,
-        triggeredBy,
-        triggeredAt: new Date(),
-        success: true, // Assume success for now
+        executedBy: triggeredBy,
+        executedAt: new Date(),
+        result: TestResult.SUCCESS, // Assume success for now
         preservedSchedule: true, // Tests preserve original schedule
       };
 
@@ -461,7 +503,7 @@ export class ReminderService {
       id: crypto.randomUUID(),
       reminderId,
       userId,
-      action,
+      responseType: action,
       timestamp: new Date(),
     };
 

@@ -70,6 +70,8 @@ interface EscalationRule {
   enabled: boolean;             // Whether escalation is active
   secondaryUserId: string;      // Discord user ID for escalation
   timeoutMinutes: number;       // Minutes before auto-escalation
+  timeoutMessage: string;       // Custom message sent to secondary user on timeout
+  declineMessage: string;       // Custom message sent to secondary user on decline
   escalatedAt?: Date;          // When escalation was triggered
   escalationType: EscalationType; // How escalation was triggered
 }
@@ -146,11 +148,15 @@ enum AdminRole {
 - `scheduledTime`: Required, must be future timestamp, max 1 year ahead
 - `escalation.secondaryUserId`: If provided, valid Discord snowflake, different from targetUserId
 - `escalation.timeoutMinutes`: If provided, between 1-10080 (1 week max)
+- `escalation.timeoutMessage`: If provided, 1-2000 characters (Discord message limit)
+- `escalation.declineMessage`: If provided, 1-2000 characters (Discord message limit)
 
 ### Business Rules
 - Cannot edit reminders after they are sent (status != PENDING)
 - Cannot schedule reminders in the past
 - Escalation secondary user must be different from primary user
+- Escalation messages use defaults if custom messages are not provided
+- Custom escalation messages are validated for Discord length limits
 - Test executions do not modify reminder status or schedule
 - Maximum 1000 pending reminders per admin user
 
