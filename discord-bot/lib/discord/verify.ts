@@ -40,7 +40,7 @@ export async function verifyDiscordSignature(
     console.log("Importing public key...");
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
-      publicKeyBytes,
+      publicKeyBytes as BufferSource,
       {
         name: "Ed25519",
         namedCurve: "Ed25519",
@@ -55,7 +55,7 @@ export async function verifyDiscordSignature(
     const isValid = await crypto.subtle.verify(
       "Ed25519",
       cryptoKey,
-      signatureBytes,
+      signatureBytes as BufferSource,
       message
     );
     
@@ -74,7 +74,8 @@ export async function verifyDiscordSignature(
  * Convert hex string to Uint8Array
  */
 function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
+  const buffer = new ArrayBuffer(hex.length / 2);
+  const bytes = new Uint8Array(buffer);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
   }
