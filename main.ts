@@ -32,5 +32,9 @@ try {
 import { start } from "$fresh/server.ts";
 import manifest from "./fresh.gen.ts";
 import config from "./fresh.config.ts";
+import { initializeScheduler } from "./init-scheduler.ts";
+
+// Initialize the reminder scheduler for automatic delivery
+await initializeScheduler();
 
 await start(manifest, config);

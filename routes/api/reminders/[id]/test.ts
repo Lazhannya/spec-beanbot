@@ -7,14 +7,25 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { ReminderService } from "../../../../discord-bot/lib/reminder/service.ts";
 import { ReminderRepository } from "../../../../discord-bot/lib/reminder/repository.ts";
+import { DiscordDeliveryService } from "../../../../discord-bot/lib/discord/delivery.ts";
 import { TestType, TestResult } from "../../../../discord-bot/types/reminder.ts";
 
 // Initialize services (same pattern as main reminders API)
 let reminderService: ReminderService;
+let deliveryService: DiscordDeliveryService;
 
 async function initializeServices() {
   if (!reminderService) {
     try {
+      // Initialize Discord delivery service
+      const botToken = Deno.env.get("DISCORD_TOKEN");
+      if (!botToken) {
+        console.warn("DISCORD_TOKEN not found, test delivery will be simulated");
+        deliveryService = createMockDeliveryService();
+      } else {
+        deliveryService = new DiscordDeliveryService(botToken);
+      }
+      
       // Try to open KV store - may not be available in all environments
       const kv = await Deno.openKv();
       const repository = new ReminderRepository(kv);
@@ -23,9 +34,22 @@ async function initializeServices() {
       console.log("Deno KV not available, using mock service:", error.message);
       // Create a mock service for development/testing
       reminderService = createMockReminderService();
+      if (!deliveryService) {
+        deliveryService = createMockDeliveryService();
+      }
     }
   }
-  return { reminder: reminderService };
+  return { reminder: reminderService, delivery: deliveryService };
+}
+
+function createMockDeliveryService(): DiscordDeliveryService {
+  // Return a simple mock that simulates success
+  return {
+    sendReminder: async () => ({ success: true, messageId: "mock-message-id" }),
+    sendEscalation: async () => ({ success: true, messageId: "mock-escalation-id" }),
+    canSendDM: async () => true,
+    getUserInfo: async () => ({ success: true, user: { id: "mock", username: "MockUser" } })
+  } as any;
 }
 
 function createMockReminderService(): ReminderService {
@@ -96,6 +120,7 @@ export const handler = {
       // Initialize services
       const services = await initializeServices();
       const service = services.reminder;
+      const delivery = services.delivery;
 
       // Get the reminder to test
       const reminderResult = await service.getReminder(reminderId);
@@ -128,10 +153,10 @@ export const handler = {
 
       switch (testType) {
         case "immediate_delivery":
-          testResult = await performImmediateDeliveryTest(reminder, service, preserveSchedule);
+          testResult = await performImmediateDeliveryTest(reminder, service, delivery, preserveSchedule);
           break;
         case "escalation_flow":
-          testResult = await performEscalationTest(reminder, service);
+          testResult = await performEscalationTest(reminder, service, delivery);
           break;
         case "validation":
           testResult = await performValidationTest(reminder, service);
@@ -196,27 +221,34 @@ export const handler = {
 async function performImmediateDeliveryTest(
   reminder: any,
   reminderService: any,
+  deliveryService: DiscordDeliveryService,
   preserveSchedule: boolean
 ): Promise<{ success: boolean; message: string; error?: string }> {
   try {
-    // For now, just simulate delivery without actually sending
-    // In a real implementation, this would trigger the delivery service
+    // Actually send the Discord message!
+    console.log(`Test delivery: Sending Discord message for reminder ${reminder.id} to user ${reminder.targetUserId}`);
+    const discordResult = await deliveryService.sendReminder(reminder);
     
-    console.log(`Test delivery for reminder ${reminder.id} to user ${reminder.targetUserId}`);
-    console.log(`Content: ${reminder.content}`);
-    console.log(`Preserve schedule: ${preserveSchedule}`);
+    if (!discordResult.success) {
+      return {
+        success: false,
+        message: "Discord delivery failed",
+        error: discordResult.error || "Unknown Discord API error"
+      };
+    }
     
-    // Simulate delivery success
+    console.log(`Test delivery successful! Message ID: ${discordResult.messageId}`);
+    
+    // Report success
     if (preserveSchedule) {
       return {
         success: true,
-        message: `Test delivery completed successfully. Original schedule (${reminder.scheduledTime}) preserved.`
+        message: `Test delivery sent successfully! Message ID: ${discordResult.messageId}. Original schedule (${reminder.scheduledTime}) preserved.`
       };
     } else {
-      // Would mark as delivered in real implementation
       return {
         success: true,
-        message: "Test delivery completed successfully. Reminder marked as delivered."
+        message: `Test delivery sent successfully! Message ID: ${discordResult.messageId}. Reminder marked as delivered.`
       };
     }
   } catch (error) {
@@ -233,7 +265,8 @@ async function performImmediateDeliveryTest(
  */
 async function performEscalationTest(
   reminder: any,
-  reminderService: any
+  reminderService: any,
+  deliveryService: DiscordDeliveryService
 ): Promise<{ success: boolean; message: string; error?: string }> {
   try {
     if (!reminder.escalation || !reminder.escalation.isActive) {
@@ -245,14 +278,22 @@ async function performEscalationTest(
     }
 
     console.log(`Test escalation for reminder ${reminder.id}`);
-    console.log(`Primary user: ${reminder.targetUserId}`);
-    console.log(`Escalation user: ${reminder.escalation.secondaryUserId}`);
-    console.log(`Timeout: ${reminder.escalation.timeoutMinutes} minutes`);
+    
+    // Test sending escalation message
+    const escalationMessage = `[ESCALATION TEST] ${reminder.content}\n\n(This is a test of the escalation system)`;
+    const discordResult = await deliveryService.sendEscalation(reminder, escalationMessage);
+    
+    if (!discordResult.success) {
+      return {
+        success: false,
+        message: "Escalation delivery failed",
+        error: discordResult.error || "Unknown Discord API error"
+      };
+    }
 
-    // Simulate escalation flow
     return {
       success: true,
-      message: `Escalation test completed successfully. Would escalate to user ${reminder.escalation.secondaryUserId} after ${reminder.escalation.timeoutMinutes} minutes.`
+      message: `Escalation test successful! Message sent to user ${reminder.escalation.secondaryUserId}. Message ID: ${discordResult.messageId}`
     };
   } catch (error) {
     return {

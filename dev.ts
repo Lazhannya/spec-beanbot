@@ -26,4 +26,8 @@ try {
   console.log("No .env file found, using environment variables from platform");
 }
 
+// Initialize the reminder scheduler for automatic delivery
+import { initializeScheduler } from "./init-scheduler.ts";
+await initializeScheduler();
+
 await dev(import.meta.url, "./main.ts", config);

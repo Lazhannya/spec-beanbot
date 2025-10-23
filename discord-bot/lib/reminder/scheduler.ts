@@ -5,18 +5,21 @@
 
 import { ReminderService } from "./service.ts";
 import { Reminder } from "../../types/reminder.ts";
+import { DiscordDeliveryService } from "../discord/delivery.ts";
 
 /**
  * Scheduler for monitoring and triggering reminder deliveries
  */
 export class ReminderScheduler {
   private service: ReminderService;
+  private deliveryService: DiscordDeliveryService;
   private isRunning = false;
   private intervalId?: number | undefined;
   private readonly checkInterval = 30000; // Check every 30 seconds
 
-  constructor(service: ReminderService) {
+  constructor(service: ReminderService, deliveryService: DiscordDeliveryService) {
     this.service = service;
+    this.deliveryService = deliveryService;
   }
 
   /**
@@ -104,9 +107,19 @@ export class ReminderScheduler {
         return;
       }
 
-      // Attempt delivery through external delivery service
-      // For now, we'll just mark as delivered - the actual Discord delivery
-      // will be handled by the delivery service in T020
+      // Attempt delivery through Discord delivery service
+      console.log(`Attempting to send Discord message for reminder ${reminder.id}`);
+      const discordResult = await this.deliveryService.sendReminder(currentReminder);
+      
+      if (!discordResult.success) {
+        console.error(`Failed to send Discord message for ${reminder.id}:`, discordResult.error);
+        // TODO: Mark as failed - need to add updateReminderStatus method to service
+        return;
+      }
+      
+      console.log(`Successfully sent Discord message for reminder ${reminder.id}, message ID: ${discordResult.messageId}`);
+      
+      // Mark as delivered after successful Discord send
       const deliveryResult = await this.service.markAsDelivered(reminder.id);
       
       if (deliveryResult.success) {
