@@ -33,7 +33,7 @@ export default function DashboardPage({ url }: PageProps) {
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="px-4 sm:px-0">
           {/* Statistics Cards */}
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <div id="stats-pending" class="bg-white overflow-hidden shadow rounded-lg">
               <div class="p-5">
                 <div class="flex items-center">
@@ -81,6 +81,24 @@ export default function DashboardPage({ url }: PageProps) {
                   <div class="ml-5 w-0 flex-1">
                     <dl>
                       <dt class="text-sm font-medium text-gray-500 truncate">Acknowledged</dt>
+                      <dd class="text-lg font-medium text-gray-900">-</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="stats-responses" class="bg-white overflow-hidden shadow rounded-lg">
+              <div class="p-5">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                      <span class="text-white text-sm font-bold">💬</span>
+                    </div>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">Responses</dt>
                       <dd class="text-lg font-medium text-gray-900">-</dd>
                     </dl>
                   </div>
@@ -238,10 +256,16 @@ export default function DashboardPage({ url }: PageProps) {
 
             // Update statistics cards
             function updateStatistics() {
+              // Calculate response count (total responses across all reminders)
+              const totalResponses = reminders.reduce((count, r) => {
+                return count + (r.responses ? r.responses.length : 0);
+              }, 0);
+
               const stats = {
                 pending: reminders.filter(r => r.status === 'pending').length,
                 sent: reminders.filter(r => r.status === 'sent').length,
                 acknowledged: reminders.filter(r => r.status === 'acknowledged' || r.status === 'escalated_acknowledged').length,
+                responses: totalResponses,
                 total: reminders.length
               };
 
@@ -249,6 +273,8 @@ export default function DashboardPage({ url }: PageProps) {
               updateStatCard('stats-pending', stats.pending);
               updateStatCard('stats-sent', stats.sent);
               updateStatCard('stats-acknowledged', stats.acknowledged);
+              updateStatCard('stats-responses', stats.responses);
+              updateStatCard('stats-total', stats.total);
               updateStatCard('stats-total', stats.total);
             }
 

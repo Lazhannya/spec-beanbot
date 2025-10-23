@@ -11,6 +11,8 @@ import { Reminder } from "../../../../discord-bot/types/reminder.ts";
 import { ReminderService } from "../../../../discord-bot/lib/reminder/service.ts";
 import { ReminderRepository } from "../../../../discord-bot/lib/reminder/repository.ts";
 import ReminderDetail from "../../../../components/ReminderDetail.tsx";
+import ResponseLog from "../../../../components/ResponseLog.tsx";
+import StatusUpdate from "../../../../islands/StatusUpdate.tsx";
 
 interface ReminderDetailPageData {
   reminder?: Reminder;
@@ -105,8 +107,24 @@ export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPag
           <h1 class="text-3xl font-bold text-gray-900">Reminder Details</h1>
         </div>
 
+        {/* Real-time Status Updates */}
+        <div class="mb-6">
+          <StatusUpdate 
+            reminderId={data.reminder.id} 
+            initialStatus={data.reminder.status}
+            pollInterval={10000}
+          />
+        </div>
+
         {/* Reminder detail component */}
         <ReminderDetail reminder={data.reminder} />
+
+        {/* Detailed Response History */}
+        {data.reminder.responses && data.reminder.responses.length > 0 && (
+          <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+            <ResponseLog responses={data.reminder.responses} />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -80,8 +80,8 @@ export class DiscordDeliveryService {
         };
       }
 
-      // Send escalation message (without interactive buttons)
-      const message = await this.sendMessage(dmChannel.channelId!, escalationMessage, undefined, false);
+      // Send escalation message
+      const message = await this.sendMessage(dmChannel.channelId!, escalationMessage);
       if (!message.success) {
         return {
           success: false,
@@ -149,45 +149,37 @@ export class DiscordDeliveryService {
   private async sendMessage(
     channelId: string, 
     content: string, 
-    reminderId?: string,
-    includeButtons: boolean = true
+    reminderId?: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      // Build message payload
-      const messagePayload: Record<string, unknown> = {
-        content: content,
-      };
-      
-      // Only include buttons if requested (typically for reminders, not escalations)
-      if (includeButtons) {
-        messagePayload.components = [
-          {
-            type: 1, // Action Row
-            components: [
-              {
-                type: 2, // Button
-                style: 3, // Success/Green
-                label: "Acknowledge",
-                custom_id: reminderId ? `acknowledge_reminder_${reminderId}` : "acknowledge_reminder"
-              },
-              {
-                type: 2, // Button
-                style: 4, // Danger/Red
-                label: "Decline",
-                custom_id: reminderId ? `decline_reminder_${reminderId}` : "decline_reminder"
-              }
-            ]
-          }
-        ];
-      }
-      
       const response = await fetch(`${this.baseUrl}/channels/${channelId}/messages`, {
         method: "POST",
         headers: {
           "Authorization": `Bot ${this.botToken}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(messagePayload)
+        body: JSON.stringify({
+          content: content,
+          components: [
+            {
+              type: 1, // Action Row
+              components: [
+                {
+                  type: 2, // Button
+                  style: 3, // Success/Green
+                  label: "Acknowledge",
+                  custom_id: reminderId ? `acknowledge_reminder_${reminderId}` : "acknowledge_reminder"
+                },
+                {
+                  type: 2, // Button
+                  style: 4, // Danger/Red
+                  label: "Decline",
+                  custom_id: reminderId ? `decline_reminder_${reminderId}` : "decline_reminder"
+                }
+              ]
+            }
+          ]
+        })
       });
 
       if (!response.ok) {
