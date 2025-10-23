@@ -115,7 +115,7 @@ description: "Task list for reminder management web interface implementation"
 - [ ] T037 [US3] Implement escalation configuration in reminder form in discord-bot/_fresh/components/ReminderForm.tsx
 - [ ] T038 [US3] Create escalation processing service in discord-bot/lib/reminder/escalation.ts
 - [ ] T039 [US3] Implement timeout monitoring in discord-bot/lib/reminder/scheduler.ts
-- [ ] T040 [US3] Add Discord webhook endpoint for user responses in discord-bot/_fresh/routes/api/webhook/discord.ts
+- [x] T040 [US3] Add Discord webhook endpoint for user responses in discord-bot/_fresh/routes/api/webhook/discord.ts
 - [ ] T041 [US3] Create response tracking in discord-bot/lib/reminder/response-tracker.ts
 - [ ] T042 [US3] Update reminder service with escalation logic in discord-bot/lib/reminder/service.ts
 - [ ] T043 [US3] Add escalation status display to reminder components in discord-bot/_fresh/components/ReminderDetail.tsx
@@ -200,6 +200,44 @@ description: "Task list for reminder management web interface implementation"
 - [x] T078 [EXT] Update dashboard with test trigger functionality in routes/index.tsx
 
 **Checkpoint**: Extended features fully functional - reminders can repeat regularly and be tested manually
+
+---
+
+## Phase 10: Discord Interactions - Button Response Handling (Priority: P7)
+
+**Goal**: Enable Discord button interactions (Acknowledge/Decline) with proper webhook handling
+
+### Implementation for Discord Interactions
+
+- [x] T079 [P] [INT] Create Discord webhook endpoint in routes/api/webhook/discord.ts
+- [x] T080 [P] [INT] Implement Ed25519 signature verification in discord-bot/lib/discord/verify.ts
+- [x] T081 [INT] Update sendMessage to include reminder ID in button custom_id in discord-bot/lib/discord/delivery.ts
+- [x] T082 [INT] Add PING/MESSAGE_COMPONENT interaction handlers in routes/api/webhook/discord.ts
+- [x] T083 [INT] Implement immediate response pattern (< 3 seconds) for Discord interactions
+- [x] T084 [P] [INT] Add comprehensive debugging logs to webhook endpoint
+- [x] T085 [P] [INT] Add debugging logs to signature verification
+- [x] T086 [P] [INT] Create health check endpoint in routes/api/health.ts
+- [x] T087 [P] [INT] Create webhook test script in test-webhook.sh
+- [x] T088 [P] [INT] Create Discord interactions setup documentation in DISCORD_INTERACTIONS_SETUP.md
+- [x] T089 [P] [INT] Create debugging guide in DEBUGGING_INTERACTIONS.md
+- [x] T090 [P] [INT] Create implementation summary in DISCORD_BUTTONS_FIX.md
+
+**Checkpoint**: Discord button interactions functional with comprehensive debugging
+
+**Deployment Requirements**:
+- PUBLIC_KEY environment variable must be set in production
+- Interactions Endpoint URL configured in Discord Developer Portal
+- HTTPS endpoint required (Deno Deploy provides this automatically)
+
+**Testing Checklist**:
+- [ ] Health check endpoint returns valid configuration: `GET /api/health`
+- [ ] Webhook endpoint is accessible: `GET /api/webhook/discord`
+- [ ] Discord PING verification succeeds when saving Interactions Endpoint URL
+- [ ] Button clicks trigger webhook with proper logs
+- [ ] Signature verification passes (check logs)
+- [ ] Messages update within 3 seconds of button click
+- [ ] Buttons disappear after interaction
+- [ ] No "interaction failed" errors in Discord
 
 ---
 

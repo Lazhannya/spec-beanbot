@@ -16,15 +16,28 @@ export async function verifyDiscordSignature(
   timestamp: string,
   publicKey: string
 ): Promise<boolean> {
+  console.log("--- Signature Verification Debug ---");
+  console.log("Body length:", body.length);
+  console.log("Signature length:", signature.length);
+  console.log("Timestamp:", timestamp);
+  console.log("Public key length:", publicKey.length);
+  
   try {
     // Convert hex strings to Uint8Array
+    console.log("Converting signature from hex...");
     const signatureBytes = hexToBytes(signature);
+    console.log("Signature bytes length:", signatureBytes.length);
+    
+    console.log("Converting public key from hex...");
     const publicKeyBytes = hexToBytes(publicKey);
+    console.log("Public key bytes length:", publicKeyBytes.length);
     
     // Create message to verify (timestamp + body)
     const message = new TextEncoder().encode(timestamp + body);
+    console.log("Message to verify length:", message.length);
     
     // Import the public key
+    console.log("Importing public key...");
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
       publicKeyBytes,
@@ -35,8 +48,10 @@ export async function verifyDiscordSignature(
       false,
       ["verify"]
     );
+    console.log("✅ Public key imported successfully");
     
     // Verify the signature
+    console.log("Verifying signature...");
     const isValid = await crypto.subtle.verify(
       "Ed25519",
       cryptoKey,
@@ -44,9 +59,13 @@ export async function verifyDiscordSignature(
       message
     );
     
+    console.log("Verification result:", isValid ? "✅ VALID" : "❌ INVALID");
     return isValid;
   } catch (error) {
-    console.error("Error verifying Discord signature:", error);
+    console.error("💥 Error during signature verification:");
+    console.error("Error type:", error?.constructor?.name);
+    console.error("Error message:", error instanceof Error ? error.message : String(error));
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
     return false;
   }
 }
