@@ -32,8 +32,8 @@ export class DiscordDeliveryService {
         };
       }
 
-      // Send reminder message
-      const message = await this.sendMessage(dmChannel.channelId!, reminder.content);
+      // Send reminder message with reminder ID in buttons
+      const message = await this.sendMessage(dmChannel.channelId!, reminder.content, reminder.id);
       if (!message.success) {
         return {
           success: false,
@@ -146,7 +146,11 @@ export class DiscordDeliveryService {
   /**
    * Send message to a Discord channel
    */
-  private async sendMessage(channelId: string, content: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  private async sendMessage(
+    channelId: string, 
+    content: string, 
+    reminderId?: string
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       const response = await fetch(`${this.baseUrl}/channels/${channelId}/messages`, {
         method: "POST",
@@ -164,13 +168,13 @@ export class DiscordDeliveryService {
                   type: 2, // Button
                   style: 3, // Success/Green
                   label: "Acknowledge",
-                  custom_id: "acknowledge_reminder"
+                  custom_id: reminderId ? `acknowledge_reminder_${reminderId}` : "acknowledge_reminder"
                 },
                 {
                   type: 2, // Button
                   style: 4, // Danger/Red
                   label: "Decline",
-                  custom_id: "decline_reminder"
+                  custom_id: reminderId ? `decline_reminder_${reminderId}` : "decline_reminder"
                 }
               ]
             }
