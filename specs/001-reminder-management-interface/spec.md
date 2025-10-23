@@ -41,17 +41,18 @@ A system administrator views a list of all reminders (pending, sent, completed),
 
 ### User Story 3 - Escalation Management (Priority: P3)
 
-A system administrator sets up escalation rules when creating a reminder, specifying a secondary Discord user ID who will receive the reminder if the primary recipient doesn't respond within a specified timeout period or manually declines the reminder.
+A system administrator sets up escalation rules when creating a reminder, specifying a secondary Discord user ID who will receive the reminder if the primary recipient doesn't respond within a specified timeout period or manually declines the reminder. The administrator can define custom messages for the secondary user that differ based on whether the escalation occurred due to timeout or manual decline, providing appropriate context for each escalation scenario.
 
-**Why this priority**: Advanced functionality that adds significant value for important reminders that require guaranteed acknowledgment.
+**Why this priority**: Advanced functionality that adds significant value for important reminders that require guaranteed acknowledgment, with contextual messaging that helps secondary users understand why they're receiving the escalated reminder.
 
-**Independent Test**: Create a reminder with escalation settings, have primary user decline or ignore, and verify secondary user receives the escalated reminder.
+**Independent Test**: Create a reminder with escalation settings including custom timeout and decline messages, have primary user decline or ignore, and verify secondary user receives the escalated reminder with the appropriate custom message for that scenario.
 
 **Acceptance Scenarios**:
 
-1. **Given** admin creates a reminder with escalation enabled, **When** they specify secondary user ID and timeout duration, **Then** escalation settings are saved with the reminder
-2. **Given** primary user receives a reminder with escalation, **When** timeout period expires without response, **Then** secondary user receives the escalated reminder
-3. **Given** primary user explicitly declines a reminder, **When** they use the decline action, **Then** secondary user immediately receives the escalated reminder
+1. **Given** admin creates a reminder with escalation enabled, **When** they specify secondary user ID, timeout duration, timeout message, and decline message, **Then** escalation settings are saved with the reminder
+2. **Given** primary user receives a reminder with escalation, **When** timeout period expires without response, **Then** secondary user receives the escalated reminder with the custom timeout message defined by the administrator
+3. **Given** primary user explicitly declines a reminder, **When** they use the decline action, **Then** secondary user immediately receives the escalated reminder with the custom decline message defined by the administrator
+4. **Given** admin edits escalation messages after reminder creation, **When** escalation triggers, **Then** secondary user receives the most recently saved version of the appropriate message
 
 ---
 
@@ -94,6 +95,8 @@ A system administrator can manually trigger reminders for testing purposes, bypa
 - What happens when Discord bot goes offline while reminders are pending delivery?
 - How does system handle test triggers when Discord API is temporarily unavailable?
 - What occurs when admin attempts to test a reminder that has already been delivered?
+- How does system handle escalation when custom timeout or decline messages are not defined (use default messages)?
+- What happens when escalation messages exceed Discord's message length limits?
 
 ## Requirements *(mandatory)*
 
@@ -104,24 +107,25 @@ A system administrator can manually trigger reminders for testing purposes, bypa
 - **FR-003**: System MUST display a list of all reminders with their current status (pending, sent, acknowledged, declined, escalated)
 - **FR-004**: Users MUST be able to edit reminder content, schedule, and escalation settings before the reminder is sent
 - **FR-005**: System MUST delete reminders and prevent delivery when explicitly removed by administrators
-- **FR-006**: System MUST support escalation configuration with secondary Discord user ID and timeout duration
-- **FR-007**: System MUST automatically escalate reminders when timeout expires without user response
-- **FR-008**: System MUST immediately escalate reminders when primary user explicitly declines
-- **FR-009**: System MUST track and display user responses (acknowledged, declined, no response) with timestamps
-- **FR-010**: System MUST authenticate administrators before allowing access to reminder management functions
-- **FR-011**: System MUST validate reminder schedule times and prevent creation of past-dated reminders
-- **FR-012**: System MUST handle Discord API failures gracefully and retry delivery with exponential backoff
-- **FR-013**: System MUST provide "Test Send Now" functionality to manually trigger reminder delivery for testing purposes
-- **FR-014**: System MUST allow testing of escalation workflows without affecting the original reminder's scheduled delivery
-- **FR-015**: System MUST clearly distinguish between test deliveries and scheduled deliveries in logs and status tracking
-- **FR-016**: System MUST preserve original reminder schedules when test triggers are used
+- **FR-006**: System MUST support escalation configuration with secondary Discord user ID, timeout duration, custom timeout message, and custom decline message
+- **FR-007**: System MUST automatically escalate reminders when timeout expires without user response, sending the administrator-defined timeout message to the secondary user
+- **FR-008**: System MUST immediately escalate reminders when primary user explicitly declines, sending the administrator-defined decline message to the secondary user
+- **FR-009**: System MUST allow administrators to define separate escalation messages for timeout and decline scenarios, providing appropriate context for each escalation trigger
+- **FR-011**: Users MUST be able to edit escalation messages (timeout and decline) for reminders before they are sent
+- **FR-012**: System MUST authenticate administrators before allowing access to reminder management functions
+- **FR-013**: System MUST validate reminder schedule times and prevent creation of past-dated reminders
+- **FR-014**: System MUST handle Discord API failures gracefully and retry delivery with exponential backoff
+- **FR-015**: System MUST provide "Test Send Now" functionality to manually trigger reminder delivery for testing purposes
+- **FR-016**: System MUST allow testing of escalation workflows without affecting the original reminder's scheduled delivery
+- **FR-017**: System MUST clearly distinguish between test deliveries and scheduled deliveries in logs and status tracking
+- **FR-018**: System MUST preserve original reminder schedules when test triggers are used
 
 ### Key Entities *(include if feature involves data)*
 
 - **Reminder**: Represents a scheduled message with content, target user ID, schedule time, escalation settings, delivery status, and response tracking
 - **User**: Discord user identified by user ID who can receive reminders and provide responses (acknowledge/decline)
 - **Admin**: System administrator who can create, edit, delete, and monitor reminders through the web interface
-- **EscalationRule**: Configuration linking a reminder to a secondary user ID with timeout duration for automatic escalation
+- **EscalationRule**: Configuration linking a reminder to a secondary user ID with timeout duration, custom timeout message, and custom decline message for contextual escalation notifications
 - **ResponseLog**: Audit trail of user interactions with reminders including timestamps and action types
 - **TestExecution**: Record of manual test triggers including test type, timestamp, results, and original reminder preservation status
 

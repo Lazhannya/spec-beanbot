@@ -3,8 +3,6 @@
  * Displays a list of reminders with filtering, sorting, and status indicators
  */
 
-import { JSX } from "preact";
-
 // Type definitions
 interface Reminder {
   id: string;
@@ -35,6 +33,13 @@ interface ReminderListProps {
   onRefresh?: () => void;
   statusFilter?: string;
   onStatusFilterChange?: (status: string) => void;
+  // Pagination props
+  currentPage?: number;
+  totalPages?: number;
+  pageSize?: number;
+  totalCount?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
 }
 
 export default function ReminderList({
@@ -46,6 +51,12 @@ export default function ReminderList({
   onRefresh,
   statusFilter = "all",
   onStatusFilterChange,
+  currentPage = 1,
+  totalPages = 1,
+  pageSize = 20,
+  totalCount,
+  onPageChange,
+  onPageSizeChange,
 }: ReminderListProps) {
   
   // Status styling
@@ -94,6 +105,9 @@ export default function ReminderList({
     )[0];
   };
 
+  // Page size options
+  const pageSizeOptions = [10, 20, 50, 100];
+
   // Filter options
   const statusOptions = [
     { value: "all", label: "All Reminders" },
@@ -133,6 +147,7 @@ export default function ReminderList({
             {/* Refresh Button */}
             {onRefresh && (
               <button
+                type="button"
                 onClick={onRefresh}
                 disabled={loading}
                 class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
@@ -213,6 +228,7 @@ export default function ReminderList({
                   <div class="ml-4 flex flex-col space-y-1">
                     {onEdit && reminder.status === "pending" && (
                       <button
+                        type="button"
                         onClick={() => onEdit(reminder.id)}
                         class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-500"
                       >
@@ -222,6 +238,7 @@ export default function ReminderList({
                     
                     {onTest && (
                       <button
+                        type="button"
                         onClick={() => onTest(reminder.id)}
                         class="px-2 py-1 text-xs font-medium text-green-600 hover:text-green-500"
                       >
@@ -231,6 +248,7 @@ export default function ReminderList({
                     
                     {onDelete && reminder.status === "pending" && (
                       <button
+                        type="button"
                         onClick={() => onDelete(reminder.id)}
                         class="px-2 py-1 text-xs font-medium text-red-600 hover:text-red-500"
                       >
@@ -245,13 +263,134 @@ export default function ReminderList({
         )}
       </div>
 
-      {/* Footer */}
-      {reminders.length > 0 && (
+      {/* Footer with Pagination */}
+      {(reminders.length > 0 || totalCount) && (
         <div class="px-6 py-3 bg-gray-50 border-t border-gray-200">
-          <p class="text-xs text-gray-500">
-            Showing {reminders.length} reminder{reminders.length !== 1 ? 's' : ''}
-            {statusFilter !== "all" && ` with status: ${formatStatus(statusFilter)}`}
-          </p>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+            {/* Count Information */}
+            <div class="text-xs text-gray-500">
+              {totalCount !== undefined ? (
+                <>
+                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} reminder{totalCount !== 1 ? 's' : ''}
+                  {statusFilter !== "all" && ` (${formatStatus(statusFilter)})`}
+                </>
+              ) : (
+                <>
+                  Showing {reminders.length} reminder{reminders.length !== 1 ? 's' : ''}
+                  {statusFilter !== "all" && ` with status: ${formatStatus(statusFilter)}`}
+                </>
+              )}
+            </div>
+
+            {/* Pagination Controls */}
+            {onPageChange && totalPages > 1 && (
+              <div class="flex items-center space-x-4">
+                {/* Page Size Selector */}
+                {onPageSizeChange && (
+                  <div class="flex items-center space-x-2">
+                    <label class="text-xs text-gray-500">Per page:</label>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => onPageSizeChange(parseInt((e.target as HTMLSelectElement).value))}
+                      class="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {pageSizeOptions.map(size => (
+                        <option key={size} value={size}>{size}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Page Navigation */}
+                <div class="flex items-center space-x-2">
+                  {/* Previous Button */}
+                  <button
+                    type="button"
+                    onClick={() => onPageChange(currentPage - 1)}
+                    disabled={currentPage <= 1 || loading}
+                    class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div class="flex items-center space-x-1">
+                    {/* First page */}
+                    {currentPage > 3 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onPageChange(1)}
+                          disabled={loading}
+                          class="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          1
+                        </button>
+                        {currentPage > 4 && <span class="text-gray-500">...</span>}
+                      </>
+                    )}
+
+                    {/* Current page and neighbors */}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+
+                      if (pageNum < 1 || pageNum > totalPages) return null;
+
+                      return (
+                        <button
+                          key={pageNum}
+                          type="button"
+                          onClick={() => onPageChange(pageNum)}
+                          disabled={loading}
+                          class={`px-2 py-1 text-xs font-medium rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                            currentPage === pageNum
+                              ? 'bg-blue-600 text-white border border-blue-600'
+                              : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+
+                    {/* Last page */}
+                    {currentPage < totalPages - 2 && (
+                      <>
+                        {currentPage < totalPages - 3 && <span class="text-gray-500">...</span>}
+                        <button
+                          type="button"
+                          onClick={() => onPageChange(totalPages)}
+                          disabled={loading}
+                          class="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    type="button"
+                    onClick={() => onPageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages || loading}
+                    class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
