@@ -51,39 +51,11 @@ export class ReminderRepository {
   async getById(id: string): Promise<Reminder | null> {
     try {
       const result = await this.kv.get<Reminder>(["reminders", id]);
-      if (!result.value) return null;
-      
-      // Deserialize dates from ISO strings
-      return this.deserializeReminder(result.value);
+      return result.value;
     } catch (error) {
       console.error("Failed to get reminder by ID:", error);
       return null;
     }
-  }
-
-  /**
-   * Deserialize reminder dates from KV storage
-   */
-  private deserializeReminder(reminder: any): Reminder {
-    return {
-      ...reminder,
-      scheduledTime: new Date(reminder.scheduledTime),
-      createdAt: new Date(reminder.createdAt),
-      updatedAt: new Date(reminder.updatedAt),
-      lastDeliveryAttempt: reminder.lastDeliveryAttempt 
-        ? new Date(reminder.lastDeliveryAttempt) 
-        : undefined,
-      repeatRule: reminder.repeatRule ? {
-        ...reminder.repeatRule,
-        endDate: reminder.repeatRule.endDate 
-          ? new Date(reminder.repeatRule.endDate) 
-          : undefined,
-      } : undefined,
-      escalation: reminder.escalation ? {
-        ...reminder.escalation,
-        createdAt: new Date(reminder.escalation.createdAt),
-      } : undefined,
-    };
   }
 
   /**
@@ -164,7 +136,7 @@ export class ReminderRepository {
 
       for await (const entry of entries) {
         const reminderId = entry.key[2] as string;
-        const reminder = await this.getById(reminderId); // Already deserialized by getById
+        const reminder = await this.getById(reminderId);
         if (reminder && reminder.status === ReminderStatus.PENDING) {
           reminders.push(reminder);
         }
@@ -271,7 +243,7 @@ export class ReminderRepository {
         
         if (reminders.length >= limit) break;
 
-        const reminder = this.deserializeReminder(entry.value);
+        const reminder = entry.value as Reminder;
         reminders.push(reminder);
         count++;
       }

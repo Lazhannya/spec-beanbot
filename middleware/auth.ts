@@ -10,14 +10,15 @@ export interface AuthState {
 }
 
 const EXCLUDED_PATHS = [
-  "/api/health",
-  "/api/diagnostic",
+  "/auth/login",
+  "/auth/callback", 
+  "/auth/logout",
   "/api/webhook/discord",
-  "/api/webhook/discord-debug",
-  "/api/webhook/discord-simple",
-  "/api/webhook/discord-minimal",
-  "/auth/callback",
-];const ADMIN_ONLY_PATHS = [
+  "/_fresh",
+  "/static",
+];
+
+const ADMIN_ONLY_PATHS = [
   "/admin",
   "/api/reminders",
 ];

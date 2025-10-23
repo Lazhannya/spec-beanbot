@@ -1,10 +1,7 @@
 /**
  * Discord Signature Verification
- * Verifies webhook signatures using Ed25519 via TweetNaCl
- * Based on official Deno Deploy Discord example
+ * Verifies webhook signatures using Ed25519
  */
-
-import nacl from "https://cdn.skypack.dev/tweetnacl@v1.0.3";
 
 /**
  * Verify Discord interaction signature using Ed25519
@@ -19,29 +16,47 @@ export async function verifyDiscordSignature(
   timestamp: string,
   publicKey: string
 ): Promise<boolean> {
-  console.log("--- Signature Verification (TweetNaCl) ---");
+  console.log("--- Signature Verification Debug ---");
   console.log("Body length:", body.length);
   console.log("Signature length:", signature.length);
   console.log("Timestamp:", timestamp);
   console.log("Public key length:", publicKey.length);
   
   try {
-    // Create message to verify (timestamp + body)
-    const message = new TextEncoder().encode(timestamp + body);
-    console.log("Message length:", message.length);
-    
     // Convert hex strings to Uint8Array
-    const signatureBytes = hexToUint8Array(signature);
-    const publicKeyBytes = hexToUint8Array(publicKey);
-    
+    console.log("Converting signature from hex...");
+    const signatureBytes = hexToBytes(signature);
     console.log("Signature bytes length:", signatureBytes.length);
+    
+    console.log("Converting public key from hex...");
+    const publicKeyBytes = hexToBytes(publicKey);
     console.log("Public key bytes length:", publicKeyBytes.length);
     
-    // Verify using TweetNaCl (same as official Deno Deploy example)
-    const isValid = nacl.sign.detached.verify(
-      message,
+    // Create message to verify (timestamp + body)
+    const message = new TextEncoder().encode(timestamp + body);
+    console.log("Message to verify length:", message.length);
+    
+    // Import the public key
+    console.log("Importing public key...");
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      publicKeyBytes,
+      {
+        name: "Ed25519",
+        namedCurve: "Ed25519",
+      },
+      false,
+      ["verify"]
+    );
+    console.log("✅ Public key imported successfully");
+    
+    // Verify the signature
+    console.log("Verifying signature...");
+    const isValid = await crypto.subtle.verify(
+      "Ed25519",
+      cryptoKey,
       signatureBytes,
-      publicKeyBytes
+      message
     );
     
     console.log("Verification result:", isValid ? "✅ VALID" : "❌ INVALID");
@@ -58,8 +73,10 @@ export async function verifyDiscordSignature(
 /**
  * Convert hex string to Uint8Array
  */
-function hexToUint8Array(hex: string): Uint8Array {
-  return new Uint8Array(
-    hex.match(/.{1,2}/g)!.map((val) => parseInt(val, 16))
-  );
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
 }
