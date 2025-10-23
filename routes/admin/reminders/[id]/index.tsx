@@ -13,6 +13,7 @@ import { ReminderRepository } from "../../../../discord-bot/lib/reminder/reposit
 import ReminderDetail from "../../../../components/ReminderDetail.tsx";
 import ResponseLog from "../../../../components/ResponseLog.tsx";
 import StatusUpdate from "../../../../islands/StatusUpdate.tsx";
+import TestTrigger from "../../../../islands/TestTrigger.tsx";
 
 interface ReminderDetailPageData {
   reminder?: Reminder;
@@ -114,6 +115,20 @@ export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPag
             initialStatus={data.reminder.status}
             pollInterval={10000}
           />
+        </div>
+
+        {/* Test Trigger Section */}
+        <div class="mb-6 bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Test Reminder Delivery</h2>
+          <TestTrigger 
+            reminderId={data.reminder.id}
+            isDisabled={data.reminder.status !== "pending"}
+          />
+          {data.reminder.status !== "pending" && (
+            <p class="mt-2 text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-2">
+              ℹ️ Testing is only available for pending reminders to ensure original schedules are preserved
+            </p>
+          )}
         </div>
 
         {/* Reminder detail component */}
