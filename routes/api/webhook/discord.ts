@@ -1,3 +1,5 @@
+/// <reference lib="deno.unstable" />
+
 /**
  * Discord Interactions Webhook Endpoint
  * Handles button interactions (acknowledge/decline) from Discord
@@ -6,6 +8,9 @@
 import { Handlers } from "$fresh/server.ts";
 import { verifyDiscordSignature } from "../../../discord-bot/lib/discord/verify.ts";
 import { getConfig } from "../../../discord-bot/lib/config/env.ts";
+import { DiscordDeliveryService } from "../../../discord-bot/lib/discord/delivery.ts";
+import { ReminderService } from "../../../discord-bot/lib/reminder/service.ts";
+import { ReminderRepository } from "../../../discord-bot/lib/reminder/repository.ts";
 
 // Discord Interaction Types
 const InteractionType = {
@@ -210,7 +215,7 @@ export const handler: Handlers = {
 /**
  * Process reminder response asynchronously
  */
-function processReminderResponse(
+async function processReminderResponse(
   userId: string,
   action: "acknowledge" | "decline",
   reminderId: string | undefined,
@@ -219,14 +224,7 @@ function processReminderResponse(
   try {
     console.log(`Processing ${action} response from user ${userId} for reminder ${reminderId || 'unknown'}`);
     
-    // TODO: Update reminder status in database
-    // In a full implementation, you would:
-    // 1. Get the reminder from database using reminderId
-    // 2. Update the reminder status (acknowledged/declined)
-    // 3. Log the response with timestamp
-    // 4. Cancel escalation if it was acknowledged
-    
-    // Log the response (this is a simplified version)
+    // Log the response
     console.log({
       reminderId,
       userId,
@@ -235,10 +233,59 @@ function processReminderResponse(
       messageId: message.id,
     });
     
-    // If you have the reminder ID, you can update it in the database:
-    // const kv = await Deno.openKv();
-    // const reminderService = new ReminderService(kv);
-    // await reminderService.recordResponse(reminderId, userId, action);
+    // If reminder was declined, send escalation message
+    if (action === "decline" && reminderId) {
+      console.log(`🚨 Reminder ${reminderId} was declined, checking for escalation target...`);
+      
+      try {
+        // Get the reminder from database
+        const kv = await Deno.openKv();
+        const repository = new ReminderRepository(kv);
+        const reminderService = new ReminderService(repository);
+        const reminderResult = await reminderService.getReminder(reminderId);
+        
+        if (!reminderResult.success || !reminderResult.data) {
+          console.error(`❌ Reminder ${reminderId} not found in database`);
+          return;
+        }
+        
+        const reminder = reminderResult.data;
+        console.log(`Found reminder: ${reminder.id}, has escalation: ${!!reminder.escalation}`);
+        
+        // Check if reminder has escalation configured
+        if (reminder.escalation && reminder.escalation.isActive && reminder.escalation.secondaryUserId) {
+          console.log(`📤 Sending escalation to user ${reminder.escalation.secondaryUserId}`);
+          
+          // Initialize Discord delivery service
+          const config = getConfig();
+          const deliveryService = new DiscordDeliveryService(config.discordToken);
+          
+          // Create escalation message
+          const escalationMessage = `🚨 **Reminder Declined by User**\n\n` +
+            `**Original Reminder:**\n${reminder.content}\n\n` +
+            `**Status:** The reminder was manually declined by <@${userId}>\n` +
+            `**Time:** ${new Date().toISOString()}\n\n` +
+            `This reminder requires your attention as the escalation contact.`;
+          
+          // Send escalation message
+          const result = await deliveryService.sendEscalation(reminder, escalationMessage);
+          
+          if (result.success) {
+            console.log(`✅ Escalation message sent successfully to ${reminder.escalation.secondaryUserId}`);
+            console.log(`Message ID: ${result.messageId}`);
+          } else {
+            console.error(`❌ Failed to send escalation message: ${result.error}`);
+          }
+        } else {
+          console.log(`ℹ️ No escalation configured for reminder ${reminderId}`);
+        }
+      } catch (error) {
+        console.error(`❌ Error processing declined reminder escalation:`, error);
+        console.error(error instanceof Error ? error.stack : String(error));
+      }
+    } else if (action === "acknowledge") {
+      console.log(`✅ Reminder ${reminderId} was acknowledged - no escalation needed`);
+    }
     
   } catch (error) {
     console.error("Failed to process reminder response:", error);
