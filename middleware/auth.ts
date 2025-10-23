@@ -14,6 +14,8 @@ const EXCLUDED_PATHS = [
   "/auth/callback", 
   "/auth/logout",
   "/api/webhook/discord",
+  "/api/webhook/discord-debug", // Temporary debug endpoint
+  "/api/health", // Health check endpoint
   "/_fresh",
   "/static",
 ];
