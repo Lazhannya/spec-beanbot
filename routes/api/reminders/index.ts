@@ -106,40 +106,62 @@ async function handleGetReminders(url: URL) {
     }
 
     // Transform reminders for API response
-    const reminders = result.data.map(reminder => ({
-      id: reminder.id,
-      content: reminder.content,
-      targetUserId: reminder.targetUserId,
-      scheduledTime: reminder.scheduledTime.toISOString(),
-      createdAt: reminder.createdAt.toISOString(),
-      updatedAt: reminder.updatedAt.toISOString(),
-      status: reminder.status,
-      deliveryAttempts: reminder.deliveryAttempts,
-      lastDeliveryAttempt: reminder.lastDeliveryAttempt?.toISOString(),
-      escalation: reminder.escalation ? {
-        id: reminder.escalation.id,
-        secondaryUserId: reminder.escalation.secondaryUserId,
-        timeoutMinutes: reminder.escalation.timeoutMinutes,
-        isActive: reminder.escalation.isActive,
-        createdAt: reminder.escalation.createdAt.toISOString(),
-      } : undefined,
-      responses: reminder.responses.map(response => ({
-        id: response.id,
-        userId: response.userId,
-        responseType: response.responseType,
-        timestamp: response.timestamp.toISOString(),
-        messageId: response.messageId,
-      })),
-      testExecutions: reminder.testExecutions.map(execution => ({
-        id: execution.id,
-        testType: execution.testType,
-        executedBy: execution.executedBy,
-        executedAt: execution.executedAt.toISOString(),
-        result: execution.result,
-        preservedSchedule: execution.preservedSchedule,
-        errorMessage: execution.errorMessage,
-      })),
-    }));
+    const reminders = result.data.map(reminder => {
+      // Helper to safely convert dates
+      const toISOStringOrNull = (date: any) => {
+        if (!date) return null;
+        try {
+          const d = date instanceof Date ? date : new Date(date);
+          return isNaN(d.getTime()) ? null : d.toISOString();
+        } catch {
+          return null;
+        }
+      };
+
+      return {
+        id: reminder.id,
+        content: reminder.content,
+        targetUserId: reminder.targetUserId,
+        scheduledTime: toISOStringOrNull(reminder.scheduledTime),
+        createdAt: toISOStringOrNull(reminder.createdAt),
+        updatedAt: toISOStringOrNull(reminder.updatedAt),
+        status: reminder.status,
+        deliveryAttempts: reminder.deliveryAttempts,
+        lastDeliveryAttempt: toISOStringOrNull(reminder.lastDeliveryAttempt),
+        escalation: reminder.escalation ? {
+          id: reminder.escalation.id,
+          secondaryUserId: reminder.escalation.secondaryUserId,
+          timeoutMinutes: reminder.escalation.timeoutMinutes,
+          isActive: reminder.escalation.isActive,
+          createdAt: toISOStringOrNull(reminder.escalation.createdAt),
+        } : undefined,
+        responses: reminder.responses?.map(response => ({
+          id: response.id,
+          userId: response.userId,
+          responseType: response.responseType,
+          timestamp: toISOStringOrNull(response.timestamp),
+          messageId: response.messageId,
+        })) || [],
+        testExecutions: reminder.testExecutions?.map(execution => ({
+          id: execution.id,
+          testType: execution.testType,
+          executedBy: execution.executedBy,
+          executedAt: toISOStringOrNull(execution.executedAt),
+          result: execution.result,
+          preservedSchedule: execution.preservedSchedule,
+          errorMessage: execution.errorMessage,
+        })) || [],
+        repeatRule: reminder.repeatRule ? {
+          frequency: reminder.repeatRule.frequency,
+          interval: reminder.repeatRule.interval,
+          endCondition: reminder.repeatRule.endCondition,
+          endDate: toISOStringOrNull(reminder.repeatRule.endDate),
+          maxOccurrences: reminder.repeatRule.maxOccurrences,
+          currentOccurrence: reminder.repeatRule.currentOccurrence,
+        } : undefined,
+        createdBy: reminder.createdBy,
+      };
+    });
 
     return new Response(
       JSON.stringify({
