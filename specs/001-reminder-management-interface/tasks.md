@@ -16,7 +16,7 @@ description: "Task list for reminder management web interface implementation"
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)  
 - Include exact file paths in descriptions
 - **Module Focus**: Each task should create focused modules under 200 lines
-- **Quality Gates**: Include code review checkpoints for modularity and readability
+- **Quality Gates**: Include code review checkpoints for modularity, readability, and UI cleanliness
 
 ## Path Conventions
 - Fresh web application integrated with existing Discord bot
@@ -255,6 +255,46 @@ description: "Task list for reminder management web interface implementation"
 
 ---
 
+## Phase 11: UI Polish - Clean Minimal Design (Priority: P8)
+
+**Goal**: Enhance user interface with clean, minimal design following constitutional principle VI
+
+**Independent Test**: Navigate through all pages, verify visual consistency, clean layouts, no rendering bugs, and intuitive navigation (max 3 clicks to any feature)
+
+### Implementation for UI Improvements
+
+- [ ] T091 [P] [UI] Audit all UI components for simplicity - replace complex elements with Unicode/CSS in routes/admin/reminders/[id]/index.tsx
+- [ ] T092 [P] [UI] Review and simplify navigation arrows - ensure Unicode characters used consistently in routes/admin/reminders/[id]/edit.tsx
+- [ ] T093 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/ReminderForm.tsx
+- [ ] T094 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/EditReminderForm.tsx
+- [ ] T095 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/ReminderForm.tsx
+- [ ] T096 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/EditReminderForm.tsx
+- [ ] T097 [P] [UI] Enhance loading states - add clear loading indicators for all async operations in routes/index.tsx
+- [ ] T098 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderList.tsx
+- [ ] T099 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderDetail.tsx
+- [ ] T100 [P] [UI] Simplify dashboard - remove unnecessary visual elements in routes/index.tsx
+- [ ] T101 [P] [UI] Optimize button styles - use simple, proven button patterns in components/ReminderDetail.tsx
+- [ ] T102 [P] [UI] Clean up table layouts - ensure readable, accessible data tables in components/ReminderList.tsx
+- [ ] T103 [P] [UI] Remove complex SVG icons - replace with Unicode where appropriate across all routes and components
+- [ ] T104 [P] [UI] Test cross-browser compatibility - verify consistent rendering in Chrome, Firefox, Safari
+- [ ] T105 [UI] Create UI style guide - document minimal design patterns in docs/ui-guidelines.md
+
+**Checkpoint**: UI meets clean minimal design requirements (UI-001 through UI-010)
+
+**UI Quality Checklist**:
+- [ ] All pages load and become interactive within 2 seconds
+- [ ] Navigation is intuitive with max 3 clicks to any feature
+- [ ] No complex graphics or animations that aren't essential
+- [ ] Forms provide immediate, clear validation feedback
+- [ ] Loading states are clear and immediate for all actions
+- [ ] Visual appearance is consistent across Chrome, Firefox, Safari
+- [ ] No SVG rendering bugs or giant symbols appearing
+- [ ] All UI components use simple, proven patterns
+- [ ] Interface is visually clean without unnecessary complexity
+- [ ] Accessibility maintained (keyboard navigation, screen readers)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -265,6 +305,9 @@ description: "Task list for reminder management web interface implementation"
   - User stories can then proceed in parallel (if staffed)
   - Or sequentially in priority order (P1 → P2 → P3 → P4 → P5)
 - **Polish (Phase 8)**: Depends on all desired user stories being complete
+- **Extended Features (Phase 9)**: Optional enhancements, depends on core user stories
+- **Discord Interactions (Phase 10)**: Optional enhancement, can run in parallel with UI Polish
+- **UI Polish (Phase 11)**: Can start after Phase 2, improves all user stories - recommended after core features complete
 
 ### User Story Dependencies
 
@@ -325,7 +368,8 @@ Task: "Create reminder list component in discord-bot/_fresh/components/ReminderL
 4. Add User Story 3 → Test independently → Deploy/Demo
 5. Add User Story 4 → Test independently → Deploy/Demo
 6. Add User Story 5 → Test independently → Deploy/Demo
-7. Each story adds value without breaking previous stories
+7. Apply UI Polish (Phase 11) → Enhance visual design across all features
+8. Each story adds value without breaking previous stories
 
 ### Parallel Team Strategy
 

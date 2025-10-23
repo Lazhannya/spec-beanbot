@@ -107,6 +107,7 @@
 - **CQ-003**: Error handling MUST provide debugging context (user ID, operation, timestamp)
 - **CQ-004**: Dependencies MUST be minimized and explicitly justified
 - **CQ-005**: TypeScript interfaces MUST be explicit for all Discord API interactions
+- **CQ-006**: UI components MUST be visually clean without unnecessary complexity or bug risks
 
 ## Success Criteria *(mandatory)*
 

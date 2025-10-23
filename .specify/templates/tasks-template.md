@@ -16,7 +16,7 @@ description: "Task list template for feature implementation"
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)  
 - Include exact file paths in descriptions
 - **Module Focus**: Each task should create focused modules under 200 lines
-- **Quality Gates**: Include code review checkpoints for modularity and readability
+- **Quality Gates**: Include code review checkpoints for modularity, readability, and UI cleanliness
 
 ## Path Conventions
 - **Single project**: `src/`, `tests/` at repository root

@@ -118,9 +118,7 @@ export default function EditReminderPage({ data }: PageProps<EditReminderPageDat
               href={`/admin/reminders/${data.reminder.id}`}
               class="text-blue-600 hover:text-blue-800 underline inline-flex items-center"
             >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
+              <span class="mr-2">←</span>
               Back to Reminder Details
             </a>
             <a

@@ -36,6 +36,7 @@
 - [ ] **Deno Deploy Optimized**: Built-in APIs only, minimal bundle size, static imports, seamless environment config
 - [ ] **Reminder-Centric Clarity**: Clear reminder lifecycle roles, optimized time-based queries, no unnecessary abstractions
 - [ ] **Readable Debuggable Code**: Descriptive names, contextual errors, structured logging, clear intermediate steps
+- [ ] **Clean Minimal UI Design**: Visually clean interfaces, simple proven patterns, no unnecessary complexity or bug risks
 - [ ] **Module Architecture**: Single exports, domain-aligned boundaries, explicit dependency injection
 - [ ] **Error Handling**: Result<T, Error> types, operation context in errors, traceable production issues
 

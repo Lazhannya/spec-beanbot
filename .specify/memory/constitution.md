@@ -1,19 +1,15 @@
 <!--
 === SYNC IMPACT REPORT ===
-Version change: 1.0.0 → 1.1.0
-Modified principles: 
-- I. Deno-First Architecture → I. Lightweight Modular Design
-- II. Discord Bot Integration → II. Discord-Native Integration
-- III. Deployment-Ready Simplicity → III. Deno Deploy Optimized
-- IV. Reminder-Centric Design (retained with clarity enhancements)
-- V. Security by Default → V. Readable Debuggable Code
-Added sections: Code Quality Standards, enhanced Integration Standards, comprehensive Development Workflow
-Removed sections: Basic Technical Standards (replaced with comprehensive quality focus)
+Version change: 1.1.0 → 1.2.0
+Modified principles: None
+Added sections:
+- VI. Clean Minimal UI Design (new principle)
+Removed sections: None
 Templates requiring updates:
-✅ Updated plan-template.md with modular design constitution checks
-✅ Updated spec-template.md with code quality requirements section  
-✅ Updated tasks-template.md with module focus and quality gates
-Follow-up TODOs: None - all templates updated for code quality and modularity focus
+✅ Updated plan-template.md with UI design constitution check
+✅ Updated spec-template.md with UI requirements in code quality section
+✅ Updated tasks-template.md with UI cleanliness in quality gates
+Follow-up TODOs: None - all templates updated for UI design standards
 =============================
 -->
 
@@ -45,6 +41,11 @@ Every function and module MUST clearly indicate its role in the reminder lifecyc
 All functions MUST have descriptive names explaining their purpose and side effects. Error messages MUST include context for debugging (user ID, reminder ID, operation type). Logging MUST be structured with consistent levels. Complex logic MUST be broken into named intermediate steps with clear variable names.
 
 **Rationale**: Readable code reduces maintenance burden and enables rapid debugging of production issues, especially critical for time-sensitive reminder delivery.
+
+### VI. Clean Minimal UI Design
+User interfaces MUST be visually clean and appealing without introducing unnecessary complexity or bug risks. UI components MUST use simple, proven patterns over elaborate frameworks. Visual enhancements MUST NOT compromise functionality, accessibility, or maintainability. Complex SVG or dynamic elements MUST be replaced with simpler alternatives (Unicode, CSS) unless essential for user experience.
+
+**Rationale**: Clean interfaces improve user adoption and reduce support burden. Minimalist design reduces attack surface, simplifies testing, and prevents rendering bugs across different browsers and devices.
 
 ## Code Quality Standards
 
@@ -93,4 +94,4 @@ Constitution changes require updating dependent templates and validating backwar
 ### Exception Handling
 Temporary violations MUST be documented with GitHub issues and target resolution dates. Technical debt from violations MUST be tracked and prioritized in sprint planning. No exceptions allowed for core reminder functionality or Discord integration code.
 
-**Version**: 1.1.0 | **Ratified**: 2024-10-22 | **Last Amended**: 2025-10-22
+**Version**: 1.2.0 | **Ratified**: 2024-10-22 | **Last Amended**: 2025-10-23

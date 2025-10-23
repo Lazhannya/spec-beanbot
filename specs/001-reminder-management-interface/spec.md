@@ -136,6 +136,20 @@ A system administrator can manually trigger reminders for testing purposes, bypa
 - **CQ-003**: Error handling MUST provide debugging context (user ID, operation, timestamp)
 - **CQ-004**: Dependencies MUST be minimized and explicitly justified
 - **CQ-005**: TypeScript interfaces MUST be explicit for all Discord API interactions
+- **CQ-006**: UI components MUST be visually clean without unnecessary complexity or bug risks
+
+### User Interface Requirements *(mandatory)*
+
+- **UI-001**: Interface MUST use a clean, minimal design that prioritizes functionality over elaborate visuals
+- **UI-002**: All forms MUST provide clear, immediate validation feedback with user-friendly error messages
+- **UI-003**: Navigation MUST be intuitive with no more than 3 clicks to reach any feature
+- **UI-004**: Interface MUST use simple, proven UI patterns (standard forms, tables, buttons) over complex custom components
+- **UI-005**: Visual elements MUST NOT compromise accessibility, functionality, or maintainability
+- **UI-006**: Complex graphics or animations MUST be avoided unless essential for user understanding
+- **UI-007**: Interface MUST render correctly across modern browsers without client-side framework dependencies
+- **UI-008**: Loading states and feedback MUST be clear and immediate for all user actions
+- **UI-009**: UI components MUST use Unicode characters or CSS styling over SVG when appropriate for simplicity
+- **UI-010**: Interface design MUST minimize bug risks through simple, testable markup and minimal client-side JavaScript
 
 ## Success Criteria *(mandatory)*
 
@@ -151,4 +165,8 @@ A system administrator can manually trigger reminders for testing purposes, bypa
 - **SC-008**: 100% of user responses (acknowledge/decline) are captured and visible in the interface within 5 minutes
 - **SC-009**: Test reminder triggers complete within 15 seconds of admin initiating the test action
 - **SC-010**: 95% of test triggers successfully deliver without affecting original reminder schedules or status
+- **SC-011**: Interface loads and becomes interactive within 2 seconds on standard network connections
+- **SC-012**: 90% of administrators can complete common tasks without consulting documentation
+- **SC-013**: Zero critical UI bugs (rendering issues, broken interactions) reported in production
+- **SC-014**: Interface maintains consistent visual appearance across Chrome, Firefox, and Safari browsers
 
