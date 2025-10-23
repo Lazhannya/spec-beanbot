@@ -4,6 +4,7 @@
  */
 
 import type { Reminder } from "../discord-bot/types/reminder.ts";
+import { formatDateTimeForDisplay, DEFAULT_TIMEZONE } from "../discord-bot/lib/utils/timezone.ts";
 
 interface ReminderDetailProps {
   reminder: Reminder;
@@ -15,7 +16,8 @@ interface ReminderDetailProps {
 export default function ReminderDetail({ reminder, onEdit, onDelete, onTest }: ReminderDetailProps) {
   const formatDate = (date: Date | string) => {
     const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleString();
+    const timezone = reminder.timezone || DEFAULT_TIMEZONE;
+    return formatDateTimeForDisplay(d, timezone);
   };
 
   const getStatusBadge = (status: string) => {
@@ -102,6 +104,7 @@ export default function ReminderDetail({ reminder, onEdit, onDelete, onTest }: R
         <div>
           <h3 class="text-sm font-semibold text-gray-700 mb-1">Scheduled Time</h3>
           <p class="text-gray-900">{formatDate(reminder.scheduledTime)}</p>
+          <p class="text-xs text-gray-500 mt-1">Timezone: {reminder.timezone || DEFAULT_TIMEZONE}</p>
         </div>
         <div>
           <h3 class="text-sm font-semibold text-gray-700 mb-1">Created</h3>

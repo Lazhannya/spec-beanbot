@@ -5,6 +5,7 @@
 
 import { Reminder, ReminderStatus, ResponseLog, ResponseType, TestExecution, TestType, RepeatFrequency, RepeatEndCondition, EscalationTrigger, TestResult } from "../../types/reminder.ts";
 import { ReminderRepository } from "./repository.ts";
+import { getSafeTimezone } from "../utils/timezone.ts";
 
 /**
  * Result type for operations that can fail
@@ -24,6 +25,7 @@ export interface CreateReminderOptions {
   content: string;
   targetUserId: string;
   scheduledTime: Date;
+  timezone?: string; // IANA timezone (optional, defaults to Europe/Berlin)
   createdBy: string;
   escalation?: {
     secondaryUserId: string;
@@ -69,6 +71,7 @@ export class ReminderService {
         content: options.content,
         targetUserId: options.targetUserId,
         scheduledTime: options.scheduledTime,
+        timezone: getSafeTimezone(options.timezone),
         createdAt: now,
         updatedAt: now,
         status: ReminderStatus.PENDING,

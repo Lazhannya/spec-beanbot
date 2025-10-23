@@ -5,6 +5,7 @@
 
 import { useState } from "preact/hooks";
 import { JSX } from "preact";
+import { DEFAULT_TIMEZONE, getTimezonesByRegion } from "../discord-bot/lib/utils/timezone.ts";
 
 interface ReminderFormProps {
   onSubmit?: (data: ReminderFormData) => void;
@@ -17,6 +18,7 @@ export interface ReminderFormData {
   content: string;
   targetUserId: string;
   scheduledTime: string; // ISO string
+  timezone: string; // IANA timezone (default: Europe/Berlin)
   enableEscalation: boolean;
   escalationUserId: string;
   escalationTimeoutMinutes: number;
@@ -40,6 +42,7 @@ export default function ReminderForm({
     content: initialData?.content || "",
     targetUserId: initialData?.targetUserId || "",
     scheduledTime: initialData?.scheduledTime || "",
+    timezone: initialData?.timezone || DEFAULT_TIMEZONE,
     enableEscalation: initialData?.enableEscalation || false,
     escalationUserId: initialData?.escalationUserId || "",
     escalationTimeoutMinutes: initialData?.escalationTimeoutMinutes || 60,
@@ -128,6 +131,7 @@ export default function ReminderForm({
             content: "",
             targetUserId: "",
             scheduledTime: "",
+            timezone: DEFAULT_TIMEZONE,
             enableEscalation: false,
             escalationUserId: "",
             escalationTimeoutMinutes: 60,
@@ -145,7 +149,8 @@ export default function ReminderForm({
           alert(`Error creating reminder: ${error.error || 'Unknown error'}`);
         }
       } catch (error) {
-        alert(`Error creating reminder: ${error.message}`);
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        alert(`Error creating reminder: ${message}`);
       }
     }
   };
@@ -248,6 +253,34 @@ export default function ReminderForm({
           )}
           <p class="mt-1 text-sm text-gray-500">
             When should this reminder be sent?
+          </p>
+        </div>
+
+        {/* Timezone */}
+        <div>
+          <label htmlFor="timezone" class="block text-sm font-medium text-gray-700 mb-2">
+            Timezone *
+          </label>
+          <select
+            id="timezone"
+            name="timezone"
+            value={formData.timezone}
+            onChange={(e) => handleInputChange('timezone', (e.target as HTMLSelectElement).value)}
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoading}
+          >
+            {Object.entries(getTimezonesByRegion()).map(([region, timezones]) => (
+              <optgroup key={region} label={region}>
+                {timezones.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <p class="mt-1 text-sm text-gray-500">
+            Timezone for the scheduled time (default: Europe/Berlin)
           </p>
         </div>
 

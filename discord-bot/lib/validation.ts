@@ -4,6 +4,7 @@
  */
 
 import { EscalationRule } from "../types/reminder.ts";
+import { isSupportedTimezone, isValidTimezone } from "./utils/timezone.ts";
 
 // Validation result type
 export interface ValidationResult {
@@ -145,16 +146,23 @@ export function validateTimezone(timezone?: string): FieldValidation {
     return { isValid: true }; // Optional field
   }
 
-  try {
-    // Test if timezone is valid by creating a date formatter
-    new Intl.DateTimeFormat('en-US', { timeZone: timezone });
-    return { isValid: true };
-  } catch (error) {
+  // First check if it's a valid IANA timezone
+  if (!isValidTimezone(timezone)) {
     return {
       isValid: false,
       message: "Invalid timezone identifier"
     };
   }
+
+  // Check if it's in our supported timezones list (optional warning)
+  if (!isSupportedTimezone(timezone)) {
+    return {
+      isValid: true,
+      message: "Timezone is valid but not in the recommended list"
+    };
+  }
+
+  return { isValid: true };
 }
 
 /**

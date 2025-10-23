@@ -5,6 +5,7 @@
 
 import { useState } from "preact/hooks";
 import type { Reminder } from "../discord-bot/types/reminder.ts";
+import { DEFAULT_TIMEZONE, getTimezonesByRegion } from "../discord-bot/lib/utils/timezone.ts";
 
 interface EditReminderFormProps {
   reminder: Reminder;
@@ -17,6 +18,7 @@ export interface EditReminderFormData {
   content: string;
   targetUserId: string;
   scheduledTime: string; // ISO string
+  timezone: string; // IANA timezone
   // Repeat settings
   enableRepeat: boolean;
   repeatFrequency: string;
@@ -41,6 +43,7 @@ export default function EditReminderForm({
     content: reminder.content,
     targetUserId: reminder.targetUserId,
     scheduledTime: new Date(reminder.scheduledTime).toISOString().slice(0, 16),
+    timezone: reminder.timezone || DEFAULT_TIMEZONE,
     enableRepeat: !!reminder.repeatRule,
     repeatFrequency: reminder.repeatRule?.frequency || "weekly",
     repeatInterval: reminder.repeatRule?.interval || 1,
@@ -199,6 +202,34 @@ export default function EditReminderForm({
           disabled={isLoading}
         />
         {errors.scheduledTime && <p class="mt-1 text-sm text-red-600">{errors.scheduledTime}</p>}
+      </div>
+
+      {/* Timezone */}
+      <div>
+        <label htmlFor="timezone" class="block text-sm font-medium text-gray-700 mb-2">
+          Timezone *
+        </label>
+        <select
+          id="timezone"
+          name="timezone"
+          value={formData.timezone}
+          onChange={(e) => handleChange("timezone", (e.target as HTMLSelectElement).value)}
+          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={isLoading}
+        >
+          {Object.entries(getTimezonesByRegion()).map(([region, timezones]) => (
+            <optgroup key={region} label={region}>
+              {timezones.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        <p class="mt-1 text-sm text-gray-500">
+          Timezone for the scheduled time (default: Europe/Berlin)
+        </p>
       </div>
 
       {/* Repeat Configuration */}

@@ -5,6 +5,7 @@ export interface Reminder {
   content: string;               // Message content to send
   targetUserId: string;          // Discord user ID (primary recipient)
   scheduledTime: Date;           // When to deliver the reminder
+  timezone: string;              // IANA timezone (default: Europe/Berlin)
   createdAt: Date;              // Reminder creation timestamp
   updatedAt: Date;              // Last modification timestamp
   status: ReminderStatus;        // Current delivery/response status

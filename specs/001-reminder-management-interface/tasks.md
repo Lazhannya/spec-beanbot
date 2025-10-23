@@ -30,6 +30,7 @@ description: "Task list for reminder management web interface implementation"
 - [x] T002 [P] Initialize deno.json with Fresh 1.6+ dependencies and configuration  
 - [x] T003 [P] Create main.ts entry point with Fresh server initialization
 - [x] T004 [P] Setup TypeScript interfaces in discord-bot/types/ from data model
+- [x] T004a [P] Add timezone field to Reminder interface with Europe/Berlin default in discord-bot/types/reminder.ts
 - [x] T005 [P] Create base directory structure for lib/, routes/, components/, islands/
 
 ---
@@ -48,6 +49,7 @@ description: "Task list for reminder management web interface implementation"
 - [x] T011 [P] Implement authentication middleware for Fresh routes in discord-bot/_fresh/middleware/auth.ts
 - [x] T012 [P] Create error handling utilities with Result<T, Error> types in discord-bot/lib/utils/result.ts
 - [x] T013 [P] Setup structured logging system in discord-bot/lib/utils/logger.ts
+- [x] T013a [P] Create timezone utility functions with Europe/Berlin default in discord-bot/lib/utils/timezone.ts
 - [x] T014 Create base Fresh layout component in discord-bot/_fresh/components/Layout.tsx
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
@@ -69,11 +71,15 @@ description: "Task list for reminder management web interface implementation"
 - [x] T019 [US1] Implement reminder scheduling logic in discord-bot/lib/reminder/scheduler.ts
 - [x] T020 [US1] Create Discord delivery service in discord-bot/lib/discord/delivery.ts
 - [x] T021 [P] [US1] Build create reminder form component in discord-bot/_fresh/components/ReminderForm.tsx
+- [x] T021a: Add timezone selector to reminder form Island component
 - [x] T022 [P] [US1] Create reminder list component in discord-bot/_fresh/components/ReminderList.tsx
 - [x] T023 [US1] Implement GET/POST /api/reminders endpoints in discord-bot/_fresh/routes/api/reminders/index.ts
 - [x] T024: Create new reminder page (`discord-bot/_fresh/routes/admin/reminders/new.tsx`) - Basic form layout and submission handling
+- [x] T024a: Add timezone conversion to POST /api/reminders endpoint
 - [x] T025: Create dashboard with reminder list (`discord-bot/_fresh/routes/index.tsx`) - Main interface with statistics and navigation
+- [x] T025a: Display times in user timezone on dashboard (routes/index.tsx)
 - [x] T026: Create form validation utilities (`discord-bot/lib/validation.ts`) - Reusable validation functions for reminder data
+- [x] T026a: Add timezone validation utilities (uses isSupportedTimezone, isValidTimezone)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -89,14 +95,18 @@ description: "Task list for reminder management web interface implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T027 [P] [US2] Create reminder detail component in discord-bot/_fresh/components/ReminderDetail.tsx
-- [ ] T028 [P] [US2] Build edit reminder form component in discord-bot/_fresh/components/EditReminderForm.tsx
-- [ ] T029 [US2] Implement GET/PUT/DELETE /api/reminders/{id} endpoints in discord-bot/_fresh/routes/api/reminders/[id]/index.ts
-- [ ] T030 [US2] Create reminder detail page in discord-bot/_fresh/routes/admin/reminders/[id]/index.tsx
-- [ ] T031 [US2] Create reminder edit page in discord-bot/_fresh/routes/admin/reminders/[id]/edit.tsx
-- [ ] T032 [US2] Add filtering and pagination to reminder list in discord-bot/_fresh/components/ReminderList.tsx
-- [ ] T033 [US2] Implement reminder update logic in discord-bot/lib/reminder/service.ts
-- [ ] T034 [US2] Add reminder deletion with schedule cleanup in discord-bot/lib/reminder/repository.ts
+- [x] T027 [P] [US2] Create reminder detail component in discord-bot/_fresh/components/ReminderDetail.tsx
+- [x] T028 [P] [US2] Build edit reminder form component in discord-bot/_fresh/components/EditReminderForm.tsx
+- [x] T028a: Add timezone selector to EditReminderForm Island
+- [x] T029 [US2] Implement GET/PUT/DELETE /api/reminders/{id} endpoints in discord-bot/_fresh/routes/api/reminders/[id]/index.ts
+- [x] T030 [US2] Create reminder detail page in discord-bot/_fresh/routes/admin/reminders/[id]/index.tsx
+- [x] T030a: Display times in user timezone on detail page (components/ReminderDetail.tsx)
+- [x] T031 [US2] Create reminder edit page in discord-bot/_fresh/routes/admin/reminders/[id]/edit.tsx
+- [x] T032 [US2] Add filtering and pagination to reminder list in discord-bot/_fresh/components/ReminderList.tsx
+- [x] T033 [US2] Implement reminder update logic in discord-bot/lib/reminder/service.ts
+- [x] T034 [US2] Add reminder deletion with schedule cleanup in discord-bot/lib/reminder/repository.ts
+
+**Checkpoint**: At this point, User Story 2 should be fully functional and testable independently
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -104,23 +114,25 @@ description: "Task list for reminder management web interface implementation"
 
 ## Phase 5: User Story 3 - Escalation Management (Priority: P3)
 
-**Goal**: Administrator can configure escalation rules that automatically escalate reminders
+**Goal**: Administrator can configure escalation rules with custom messages for timeout and decline scenarios
 
-**Independent Test**: Create reminder with escalation, simulate timeout/decline, verify secondary delivery
+**Independent Test**: Create reminder with escalation and custom messages, simulate timeout/decline, verify secondary user receives appropriate contextual message
 
 ### Implementation for User Story 3
 
-- [ ] T035 [P] [US3] Create EscalationRule interface in discord-bot/types/escalation.ts
+- [ ] T035 [P] [US3] Create EscalationRule interface with timeoutMessage and declineMessage fields in discord-bot/types/escalation.ts
 - [ ] T036 [P] [US3] Create ResponseLog interface in discord-bot/types/response.ts
-- [ ] T037 [US3] Implement escalation configuration in reminder form in discord-bot/_fresh/components/ReminderForm.tsx
-- [ ] T038 [US3] Create escalation processing service in discord-bot/lib/reminder/escalation.ts
+- [ ] T037 [US3] Implement escalation configuration with custom message inputs in reminder form in discord-bot/_fresh/components/ReminderForm.tsx
+- [ ] T038 [US3] Create escalation processing service with message selection logic in discord-bot/lib/reminder/escalation.ts
 - [ ] T039 [US3] Implement timeout monitoring in discord-bot/lib/reminder/scheduler.ts
 - [x] T040 [US3] Add Discord webhook endpoint for user responses in discord-bot/_fresh/routes/api/webhook/discord.ts
 - [ ] T041 [US3] Create response tracking in discord-bot/lib/reminder/response-tracker.ts
-- [ ] T042 [US3] Update reminder service with escalation logic in discord-bot/lib/reminder/service.ts
-- [ ] T043 [US3] Add escalation status display to reminder components in discord-bot/_fresh/components/ReminderDetail.tsx
+- [ ] T042 [US3] Update reminder service with escalation logic and custom message handling in discord-bot/lib/reminder/service.ts
+- [ ] T043 [US3] Add escalation status and custom message display to reminder components in discord-bot/_fresh/components/ReminderDetail.tsx
+- [ ] T091 [P] [US3] Add validation for escalation message length and format in discord-bot/lib/utils/validation.ts
+- [ ] T092 [US3] Implement default escalation message templates for undefined custom messages in discord-bot/lib/reminder/escalation.ts
 
-**Checkpoint**: All escalation functionality should work independently
+**Checkpoint**: All escalation functionality with customizable contextual messages should work independently
 
 ---
 
@@ -173,6 +185,8 @@ description: "Task list for reminder management web interface implementation"
 - [ ] T060 [P] Implement rate limiting for Discord API calls in discord-bot/lib/discord/client.ts
 - [ ] T061 [P] Add input sanitization and validation utilities in discord-bot/lib/utils/validation.ts
 - [ ] T062 [P] Create admin settings page in discord-bot/_fresh/routes/admin/settings.tsx
+- [ ] T062a [P] Add timezone preference setting to admin settings page with Europe/Berlin default in routes/admin/settings.tsx
+- [ ] T062b [P] Implement timezone preference storage in user session/KV in discord-bot/lib/auth/session.ts
 - [ ] T063 [P] Implement proper logout functionality in discord-bot/_fresh/routes/auth/logout.tsx
 - [ ] T064 [P] Add loading states and error boundaries to components
 - [ ] T065 Code review for modularity: Verify all modules under 200 lines
@@ -221,12 +235,8 @@ description: "Task list for reminder management web interface implementation"
 - [x] T088 [P] [INT] Create Discord interactions setup documentation in DISCORD_INTERACTIONS_SETUP.md
 - [x] T089 [P] [INT] Create debugging guide in DEBUGGING_INTERACTIONS.md
 - [x] T090 [P] [INT] Create implementation summary in DISCORD_BUTTONS_FIX.md
-- [x] T091 [INT] Implement decline button escalation in routes/api/webhook/discord.ts
-- [x] T092 [INT] Add includeButtons parameter to sendMessage in discord-bot/lib/discord/delivery.ts
-- [x] T093 [INT] Update sendEscalation to send notification-only messages
-- [x] T094 [P] [INT] Create decline escalation feature documentation in DECLINE_ESCALATION_FEATURE.md
 
-**Checkpoint**: Discord button interactions fully functional with automatic escalation on decline
+**Checkpoint**: Discord button interactions functional with comprehensive debugging
 
 **Deployment Requirements**:
 - PUBLIC_KEY environment variable must be set in production
@@ -339,6 +349,8 @@ With multiple developers:
 - All modules must stay under 200 lines per constitutional requirements
 - KV operations use atomic transactions for consistency
 - Discord integration uses native fetch for optimal performance
+- **Timezone Management**: Europe/Berlin is the mandatory default timezone for all time displays and scheduling
+- Timezone selector available in reminder forms and admin settings for user preference
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence

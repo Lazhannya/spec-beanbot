@@ -186,6 +186,29 @@ export default function DashboardPage({ url }: PageProps) {
             let currentFilter = 'all';
             let isLoading = false;
 
+            // Helper function to format dates in timezone
+            function formatDateInTimezone(dateString, timezone) {
+              try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                  return 'Invalid Date';
+                }
+                return new Intl.DateTimeFormat('en-US', {
+                  timeZone: timezone || 'Europe/Berlin',
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false
+                }).format(date);
+              } catch (error) {
+                console.error('Error formatting date:', error);
+                return new Date(dateString).toLocaleString();
+              }
+            }
+
             // Load reminders and statistics
             async function loadData() {
               if (isLoading) return;
@@ -285,8 +308,8 @@ export default function DashboardPage({ url }: PageProps) {
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-gray-500">
                               <div><span class="font-medium">Target:</span> \${reminder.targetUserId}</div>
-                              <div><span class="font-medium">Scheduled:</span> \${new Date(reminder.scheduledTime).toLocaleString()}</div>
-                              <div><span class="font-medium">Created:</span> \${new Date(reminder.createdAt).toLocaleString()}</div>
+                              <div><span class="font-medium">Scheduled:</span> \${formatDateInTimezone(reminder.scheduledTime, reminder.timezone)}</div>
+                              <div><span class="font-medium">Created:</span> \${formatDateInTimezone(reminder.createdAt, reminder.timezone)}</div>
                               <div><span class="font-medium">Attempts:</span> \${reminder.deliveryAttempts}</div>
                             </div>
                           </div>

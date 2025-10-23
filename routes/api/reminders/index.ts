@@ -191,6 +191,7 @@ async function handleCreateReminder(req: Request) {
       content: body.content,
       targetUserId: body.targetUserId,
       scheduledTime: new Date(body.scheduledTime),
+      timezone: body.timezone, // Pass timezone from form
       createdBy: body.createdBy || "admin", // TODO: Get from session
     };
 
@@ -222,6 +223,7 @@ async function handleCreateReminder(req: Request) {
       content: reminder.content,
       targetUserId: reminder.targetUserId,
       scheduledTime: reminder.scheduledTime.toISOString(),
+      timezone: reminder.timezone,
       createdAt: reminder.createdAt.toISOString(),
       updatedAt: reminder.updatedAt.toISOString(),
       status: reminder.status,
