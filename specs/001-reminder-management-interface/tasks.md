@@ -257,52 +257,63 @@ description: "Task list for reminder management web interface implementation"
 
 ---
 
-## Phase 11: Reply-Based Acknowledgement (Priority: P8) 🔄 ALTERNATIVE APPROACH
+## Phase 11: Link-Based Acknowledgement (Priority: P8) ✅ IMPLEMENTED
 
-**Goal**: Replace Discord webhook button interactions with DM reply-based acknowledgement
+**Goal**: Replace Discord webhook button interactions with clickable acknowledgement links
 
-**Why**: Discord webhook verification has been unreliable and causing deployment issues. This alternative approach eliminates the need for Interactions Endpoint URL configuration entirely.
+**Why**: Discord webhook verification unreliable. Reply-based approach requires Gateway forwarding. Link-based is simpler and works immediately.
 
-**Independent Test**: Send reminder, reply with "okay" or "decline" in Discord DM, verify status updates in web interface
+**Independent Test**: Send reminder, click [Acknowledge] or [Decline] link in Discord DM, verify status updates
 
-### Implementation for Reply-Based Acknowledgement
+### Implementation for Link-Based Acknowledgement
 
-- [x] T106 [P] [REPLY] Update delivery service to remove button components in discord-bot/lib/discord/delivery.ts
-- [x] T107 [P] [REPLY] Add reply instruction text to reminder messages in discord-bot/lib/discord/delivery.ts
-- [x] T108 [P] [REPLY] Create DMListenerService class in discord-bot/lib/discord/dm-listener.ts
-- [x] T109 [P] [REPLY] Define acknowledgement keywords (okay, ok, yes, etc.) in dm-listener.ts
-- [x] T110 [P] [REPLY] Define decline keywords (decline, no, skip, etc.) in dm-listener.ts
-- [x] T111 [REPLY] Add getLatestPendingReminderForUser method to ReminderService in discord-bot/lib/reminder/service.ts
-- [x] T112 [REPLY] Add acknowledgeReminder method to ReminderService in discord-bot/lib/reminder/service.ts
-- [x] T113 [REPLY] Add declineReminder method (with escalation trigger) to ReminderService in discord-bot/lib/reminder/service.ts
-- [x] T114 [P] [REPLY] Create Discord message gateway endpoint in routes/api/gateway/discord-messages.ts
-- [x] T115 [P] [REPLY] Add MESSAGE_CREATE event handling in gateway endpoint
-- [x] T116 [P] [REPLY] Add confirmation message sending after acknowledgement/decline
-- [x] T117 [P] [REPLY] Create setup guide documentation in REPLY_BASED_ACKNOWLEDGEMENT_SETUP.md
-- [ ] T118 [P] [REPLY] Add MESSAGE_CONTENT intent requirement to deployment docs
-- [ ] T119 [REPLY] Configure Discord Gateway webhook forwarding service
-- [ ] T120 [REPLY] Enable MESSAGE_CONTENT privileged intent in Discord Developer Portal
-- [ ] T121 [REPLY] Test full reply-based acknowledgement flow end-to-end
+- [x] T106 [P] [LINK] Create token generation utilities in discord-bot/lib/utils/ack-token.ts
+- [x] T107 [P] [LINK] Implement generateAcknowledgementToken with SHA-256 hashing
+- [x] T108 [P] [LINK] Implement verifyAcknowledgementToken for security
+- [x] T109 [P] [LINK] Create generateAcknowledgementUrl helper function
+- [x] T110 [LINK] Update delivery service to generate secure acknowledgement URLs in discord-bot/lib/discord/delivery.ts
+- [x] T111 [LINK] Replace reply instructions with clickable [Acknowledge] and [Decline] links
+- [x] T112 [P] [LINK] Create acknowledgement page route in routes/ack/[id].tsx
+- [x] T113 [P] [LINK] Add token verification in acknowledgement page handler
+- [x] T114 [P] [LINK] Implement acknowledgement processing (call ReminderService)
+- [x] T115 [P] [LINK] Implement decline processing with escalation trigger
+- [x] T116 [P] [LINK] Create success page UI with confirmation message
+- [x] T117 [P] [LINK] Create error page UI for invalid tokens/reminders
+- [x] T118 [P] [LINK] Add optional ACK_TOKEN_SECRET environment variable for production
+- [x] T119 [P] [LINK] Add BASE_URL environment variable for link generation
 
-**Checkpoint**: Reply-based acknowledgement system fully functional - no webhook verification needed
+**Checkpoint**: Link-based acknowledgement fully functional - works immediately, no extra services needed
 
 **Requirements**:
-- MESSAGE_CONTENT privileged intent enabled in Discord Developer Portal
-- DISCORD_BOT_TOKEN environment variable configured
-- Gateway event forwarding configured (separate service or bot instance)
+- DISCORD_BOT_TOKEN environment variable (already configured)
+- Optional: ACK_TOKEN_SECRET for custom token security (defaults to built-in)
+- Optional: BASE_URL for custom domain (defaults to spec-beanbot.lazhannya.deno.net)
 
-**Advantages**:
-- ✅ No Interactions Endpoint URL configuration needed
-- ✅ No PUBLIC_KEY or signature verification
-- ✅ Simpler deployment process
-- ✅ More reliable than webhook-based buttons
-- ✅ Easier to debug
+**Advantages** (Why This is Better):
+- ✅ **No Gateway needed** - works immediately without additional services
+- ✅ **No webhook verification** - eliminates "endpoint could not be verified" errors
+- ✅ **Mobile-friendly** - links work on all devices
+- ✅ **Simple deployment** - just push code, no configuration
+- ✅ **Better UX** - clear visual feedback on web page
+- ✅ **Secure** - SHA-256 token prevents unauthorized acknowledgements
 
-**Trade-offs**:
-- Requires MESSAGE_CONTENT privileged intent (needs approval for 100+ servers)
-- Users must type keywords instead of clicking buttons
-- Requires Gateway connection or event forwarding service
-- Slight latency compared to instant button interactions
+**User Experience**:
+```
+🔔 **Reminder**
+
+Complete the quarterly report
+
+📝 **To respond, click a link:**
+✅ [Acknowledge]
+❌ [Decline]
+```
+
+Click link → Opens web page → Shows confirmation → Done!
+
+**vs Previous Approaches**:
+- ❌ Buttons: Required webhook verification (broken)
+- ❌ Reply: Required Gateway forwarding service (complex)
+- ✅ Links: Works immediately (simple)
 
 ---
 
