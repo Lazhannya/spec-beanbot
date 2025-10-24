@@ -7,6 +7,9 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { verifyAcknowledgementToken } from "../../discord-bot/lib/utils/ack-token.ts";
 import { ReminderService } from "../../discord-bot/lib/reminder/service.ts";
 import { ReminderRepository } from "../../discord-bot/lib/reminder/repository.ts";
+import { DiscordDeliveryService } from "../../discord-bot/lib/discord/delivery.ts";
+import { EscalationProcessor } from "../../discord-bot/lib/reminder/escalation.ts";
+import { ReminderStatus } from "../../discord-bot/types/reminder.ts";
 
 interface AckPageData {
   success: boolean;
@@ -86,12 +89,37 @@ export const handler: Handlers<AckPageData> = {
           reminderContent: reminder.content
         });
       } else {
+        // Process decline
         const result = await service.declineReminder(reminderId, reminder.targetUserId);
         if (!result.success) {
           return ctx.render({
             success: false,
             error: result.error.message
           });
+        }
+
+        // Check if escalation was triggered - if so, send escalation message
+        const updatedReminder = await repository.getById(reminderId);
+        if (updatedReminder && updatedReminder.status === ReminderStatus.ESCALATED && updatedReminder.escalation) {
+          console.log(`Escalation triggered for reminder ${reminderId}, sending escalation message`);
+          
+          // Get bot token and initialize escalation processor
+          const botToken = Deno.env.get("DISCORD_BOT_TOKEN");
+          if (botToken) {
+            const deliveryService = new DiscordDeliveryService(botToken);
+            const escalationProcessor = new EscalationProcessor(deliveryService);
+            
+            // Send escalation message
+            const escalationResult = await escalationProcessor.processEscalation(updatedReminder, "decline");
+            
+            if (!escalationResult.success) {
+              console.error(`Failed to send escalation: ${escalationResult.error}`);
+            } else {
+              console.log(`Successfully sent escalation message for reminder ${reminderId}`);
+            }
+          } else {
+            console.error("DISCORD_BOT_TOKEN not configured, cannot send escalation");
+          }
         }
 
         return ctx.render({
