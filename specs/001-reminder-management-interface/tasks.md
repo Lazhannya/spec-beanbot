@@ -181,18 +181,18 @@ description: "Task list for reminder management web interface implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T059 [P] Add comprehensive error handling across all API endpoints
-- [ ] T060 [P] Implement rate limiting for Discord API calls in discord-bot/lib/discord/client.ts
-- [ ] T061 [P] Add input sanitization and validation utilities in discord-bot/lib/utils/validation.ts
-- [ ] T062 [P] Create admin settings page in discord-bot/_fresh/routes/admin/settings.tsx
-- [ ] T062a [P] Add timezone preference setting to admin settings page with Europe/Berlin default in routes/admin/settings.tsx
-- [ ] T062b [P] Implement timezone preference storage in user session/KV in discord-bot/lib/auth/session.ts
-- [ ] T063 [P] Implement proper logout functionality in discord-bot/_fresh/routes/auth/logout.tsx
-- [ ] T064 [P] Add loading states and error boundaries to components
-- [ ] T065 Code review for modularity: Verify all modules under 200 lines
-- [ ] T066 Performance optimization: Review KV query patterns and indexing
-- [ ] T067 Security review: Validate Discord OAuth implementation and session handling
-- [ ] T068 Run quickstart.md validation and deployment testing
+- [x] T059 [P] Add comprehensive error handling across all API endpoints
+- [x] T060 [P] Implement rate limiting for Discord API calls in discord-bot/lib/discord/client.ts
+- [x] T061 [P] Add input sanitization and validation utilities in discord-bot/lib/utils/validation.ts
+- [x] T062 [P] Create admin settings page in discord-bot/_fresh/routes/admin/settings.tsx
+- [x] T062a [P] Add timezone preference setting to admin settings page with Europe/Berlin default in routes/admin/settings.tsx
+- [x] T062b [P] Implement timezone preference storage in user session/KV in discord-bot/lib/auth/session.ts
+- [x] T063 [P] Implement proper logout functionality in discord-bot/_fresh/routes/auth/logout.tsx
+- [x] T064 [P] Add loading states and error boundaries to components
+- [x] T065 Code review for modularity: Verify all modules under 200 lines
+- [x] T066 Performance optimization: Review KV query patterns and indexing
+- [x] T067 Security review: Validate Discord OAuth implementation and session handling
+- [x] T068 Run quickstart.md validation and deployment testing
 
 ---
 

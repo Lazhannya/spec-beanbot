@@ -25,12 +25,14 @@ export default function StatusUpdate({
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [error, setError] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!isPolling) return;
 
     const pollStatus = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch(`/api/reminders/${reminderId}`);
         
         if (!response.ok) {
@@ -48,6 +50,8 @@ export default function StatusUpdate({
       } catch (err) {
         console.error("Error polling status:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -74,14 +78,21 @@ export default function StatusUpdate({
     <div class="bg-white border border-gray-200 rounded-lg p-4">
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-sm font-semibold text-gray-700">Current Status</h3>
-        <button
-          type="button"
-          onClick={() => setIsPolling(!isPolling)}
-          class="text-xs text-gray-500 hover:text-gray-700"
-          title={isPolling ? "Pause updates" : "Resume updates"}
-        >
-          {isPolling ? "⏸" : "▶"}
-        </button>
+        <div class="flex items-center gap-2">
+          {isLoading && (
+            <span class="text-xs text-gray-400" title="Updating...">
+              ⟳
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsPolling(!isPolling)}
+            class="text-xs text-gray-500 hover:text-gray-700"
+            title={isPolling ? "Pause updates" : "Resume updates"}
+          >
+            {isPolling ? "⏸" : "▶"}
+          </button>
+        </div>
       </div>
 
       <div class="flex items-center justify-between">

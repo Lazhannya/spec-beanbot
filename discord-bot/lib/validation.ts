@@ -1,10 +1,198 @@
 /**
- * Validation Utilities for Reminder Forms
- * Provides reusable validation functions and schemas
+ * Validation Utilities for Reminder Forms and API Security
+ * Provides reusable validation functions, schemas, and input sanitization
  */
 
 import { EscalationRule } from "../types/reminder.ts";
 import { isSupportedTimezone, isValidTimezone } from "./utils/timezone.ts";
+
+// XSS prevention patterns
+const XSS_PATTERNS = [
+  /<script[^>]*>.*?<\/script>/gi,
+  /javascript:/gi,
+  /on\w+\s*=/gi, // Event handlers like onclick=
+  /<iframe/gi,
+  /<object/gi,
+  /<embed/gi,
+];
+
+/**
+ * Sanitize string input to prevent XSS attacks
+ */
+export function sanitizeInput(input: string): string {
+  if (!input) return "";
+  
+  let sanitized = input;
+  
+  // Remove dangerous patterns
+  for (const pattern of XSS_PATTERNS) {
+    sanitized = sanitized.replace(pattern, "");
+  }
+  
+  // Encode HTML entities
+  sanitized = sanitized
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
+  
+  return sanitized.trim();
+}
+
+/**
+ * Validate Discord snowflake ID (user, channel, guild, etc.)
+ */
+export function validateDiscordId(id: string, type: "user" | "channel" | "guild" | "message" = "user"): FieldValidation {
+  if (!id || id.trim().length === 0) {
+    return {
+      isValid: false,
+      message: `${type.charAt(0).toUpperCase() + type.slice(1)} ID is required`
+    };
+  }
+
+  // Discord snowflakes are 17-19 digit numbers
+  const snowflakePattern = /^\d{17,19}$/;
+  if (!snowflakePattern.test(id.trim())) {
+    return {
+      isValid: false,
+      message: `Invalid Discord ${type} ID format (should be 17-19 digits)`
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate URL format
+ */
+export function validateUrl(url: string, allowedProtocols: string[] = ["http", "https"]): FieldValidation {
+  if (!url || url.trim().length === 0) {
+    return {
+      isValid: false,
+      message: "URL is required"
+    };
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    
+    if (!allowedProtocols.includes(parsedUrl.protocol.replace(":", ""))) {
+      return {
+        isValid: false,
+        message: `Protocol must be one of: ${allowedProtocols.join(", ")}`
+      };
+    }
+
+    return { isValid: true };
+  } catch (_error) {
+    return {
+      isValid: false,
+      message: "Invalid URL format"
+    };
+  }
+}
+
+/**
+ * Validate string length
+ */
+export function validateLength(
+  value: string,
+  min?: number,
+  max?: number,
+  fieldName: string = "Field"
+): FieldValidation {
+  if (!value) {
+    return {
+      isValid: false,
+      message: `${fieldName} is required`
+    };
+  }
+
+  const length = value.trim().length;
+
+  if (min !== undefined && length < min) {
+    return {
+      isValid: false,
+      message: `${fieldName} must be at least ${min} characters`
+    };
+  }
+
+  if (max !== undefined && length > max) {
+    return {
+      isValid: false,
+      message: `${fieldName} cannot exceed ${max} characters`
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate array length
+ */
+export function validateArrayLength<T>(
+  array: T[],
+  min?: number,
+  max?: number,
+  fieldName: string = "Array"
+): FieldValidation {
+  if (!array || !Array.isArray(array)) {
+    return {
+      isValid: false,
+      message: `${fieldName} must be an array`
+    };
+  }
+
+  const length = array.length;
+
+  if (min !== undefined && length < min) {
+    return {
+      isValid: false,
+      message: `${fieldName} must have at least ${min} item${min > 1 ? 's' : ''}`
+    };
+  }
+
+  if (max !== undefined && length > max) {
+    return {
+      isValid: false,
+      message: `${fieldName} cannot have more than ${max} item${max > 1 ? 's' : ''}`
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate ISO date string
+ */
+export function validateIsoDate(dateString: string): FieldValidation {
+  if (!dateString || dateString.trim().length === 0) {
+    return {
+      isValid: false,
+      message: "Date is required"
+    };
+  }
+
+  const isoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
+  if (!isoPattern.test(dateString)) {
+    return {
+      isValid: false,
+      message: "Date must be in ISO 8601 format"
+    };
+  }
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return {
+      isValid: false,
+      message: "Invalid date value"
+    };
+  }
+
+  return { isValid: true };
+}
 
 // Validation result type
 export interface ValidationResult {
@@ -67,32 +255,16 @@ export function validateContent(content: string): FieldValidation {
 }
 
 /**
- * Validate Discord user ID
+ * Validate Discord user ID (uses generic validateDiscordId)
  */
 export function validateTargetUserId(userId: string): FieldValidation {
-  if (!userId || userId.trim().length === 0) {
-    return {
-      isValid: false,
-      message: "Target user ID is required"
-    };
-  }
-
-  // Discord user IDs are 17-19 digit snowflakes
-  const snowflakePattern = /^\d{17,19}$/;
-  if (!snowflakePattern.test(userId.trim())) {
-    return {
-      isValid: false,
-      message: "Invalid Discord user ID format (should be 17-19 digits)"
-    };
-  }
-
-  return { isValid: true };
+  return validateDiscordId(userId, "user");
 }
 
 /**
  * Validate scheduled time
  */
-export function validateScheduledTime(scheduledTime: string, timezone?: string): FieldValidation {
+export function validateScheduledTime(scheduledTime: string, _timezone?: string): FieldValidation {
   if (!scheduledTime || scheduledTime.trim().length === 0) {
     return {
       isValid: false,
@@ -103,7 +275,7 @@ export function validateScheduledTime(scheduledTime: string, timezone?: string):
   let date: Date;
   try {
     date = new Date(scheduledTime);
-  } catch (error) {
+  } catch (_error) {
     return {
       isValid: false,
       message: "Invalid date format"
@@ -182,19 +354,20 @@ export function validateEscalationRules(rules: EscalationRule[]): FieldValidatio
 
   for (let i = 0; i < rules.length; i++) {
     const rule = rules[i];
+    if (!rule) continue;
     
-    // Validate delay
-    if (!Number.isInteger(rule.delayMinutes) || rule.delayMinutes < 5) {
+    // Validate timeout minutes
+    if (!Number.isInteger(rule.timeoutMinutes) || rule.timeoutMinutes < 5) {
       return {
         isValid: false,
-        message: `Escalation rule ${i + 1}: Delay must be at least 5 minutes`
+        message: `Escalation rule ${i + 1}: Timeout must be at least 5 minutes`
       };
     }
 
-    if (rule.delayMinutes > 10080) { // 7 days
+    if (rule.timeoutMinutes > 10080) { // 7 days
       return {
         isValid: false,
-        message: `Escalation rule ${i + 1}: Delay cannot exceed 7 days (10080 minutes)`
+        message: `Escalation rule ${i + 1}: Timeout cannot exceed 7 days (10080 minutes)`
       };
     }
 
@@ -206,45 +379,37 @@ export function validateEscalationRules(rules: EscalationRule[]): FieldValidatio
       };
     }
 
-    const validConditions = ['no_response', 'declined'];
-    for (const condition of rule.triggerConditions) {
-      if (!validConditions.includes(condition)) {
+    // Note: EscalationTrigger is an enum, validation happens at type level
+
+    // Validate secondary user
+    if (!rule.secondaryUserId || rule.secondaryUserId.trim().length === 0) {
+      return {
+        isValid: false,
+        message: `Escalation rule ${i + 1}: Secondary user ID is required`
+      };
+    }
+
+    const userValidation = validateTargetUserId(rule.secondaryUserId);
+    if (!userValidation.isValid) {
+      return {
+        isValid: false,
+        message: `Escalation rule ${i + 1}: ${userValidation.message}`
+      };
+    }
+
+    // Validate escalation messages if provided
+    if (rule.timeoutMessage) {
+      const messageValidation = validateLength(rule.timeoutMessage, 1, 2000, "Timeout message");
+      if (!messageValidation.isValid) {
         return {
           isValid: false,
-          message: `Escalation rule ${i + 1}: Invalid trigger condition '${condition}'`
+          message: `Escalation rule ${i + 1}: ${messageValidation.message}`
         };
       }
     }
 
-    // Validate target users
-    if (!rule.targetUserIds || rule.targetUserIds.length === 0) {
-      return {
-        isValid: false,
-        message: `Escalation rule ${i + 1}: At least one target user is required`
-      };
-    }
-
-    if (rule.targetUserIds.length > 10) {
-      return {
-        isValid: false,
-        message: `Escalation rule ${i + 1}: Maximum 10 target users allowed`
-      };
-    }
-
-    // Validate each target user ID
-    for (const userId of rule.targetUserIds) {
-      const userValidation = validateTargetUserId(userId);
-      if (!userValidation.isValid) {
-        return {
-          isValid: false,
-          message: `Escalation rule ${i + 1}: ${userValidation.message}`
-        };
-      }
-    }
-
-    // Validate escalation message
-    if (rule.escalationMessage) {
-      const messageValidation = validateContent(rule.escalationMessage);
+    if (rule.declineMessage) {
+      const messageValidation = validateLength(rule.declineMessage, 1, 2000, "Decline message");
       if (!messageValidation.isValid) {
         return {
           isValid: false,
@@ -254,13 +419,13 @@ export function validateEscalationRules(rules: EscalationRule[]): FieldValidatio
     }
   }
 
-  // Check for duplicate delays
-  const delays = rules.map(r => r.delayMinutes);
-  const uniqueDelays = new Set(delays);
-  if (delays.length !== uniqueDelays.size) {
+  // Check for duplicate timeouts
+  const timeouts = rules.map(r => r.timeoutMinutes);
+  const uniqueTimeouts = new Set(timeouts);
+  if (timeouts.length !== uniqueTimeouts.size) {
     return {
       isValid: false,
-      message: "Escalation rules cannot have duplicate delay times"
+      message: "Escalation rules cannot have duplicate timeout values"
     };
   }
 
@@ -350,7 +515,7 @@ export function formatValidationErrors(result: ValidationResult): string {
 
   if (result.warnings.length > 0) {
     message += "\nWarnings:\n";
-    result.warnings.forEach((warning, index) => {
+    result.warnings.forEach((warning) => {
       message += `• ${warning}\n`;
     });
   }
@@ -391,7 +556,7 @@ export const ValidationHelpers = {
   validateDateTimeLive(datetime: string): { isValid: boolean; message: string; timeFromNow?: string } {
     const validation = validateScheduledTime(datetime);
     
-    let timeFromNow: string | undefined;
+    let timeFromNow: string | undefined = undefined;
     if (validation.isValid) {
       const date = new Date(datetime);
       const now = new Date();
@@ -415,7 +580,7 @@ export const ValidationHelpers = {
     return {
       isValid: validation.isValid,
       message: validation.message || "",
-      timeFromNow
+      ...(timeFromNow !== undefined && { timeFromNow })
     };
   }
 };

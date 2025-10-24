@@ -128,21 +128,25 @@ export class ReminderRepository {
    */
   async getDueReminders(before: Date): Promise<Reminder[]> {
     try {
-      const reminders: Reminder[] = [];
+      const reminderIds: string[] = [];
       const entries = this.kv.list({
         prefix: ["schedule"],
         end: ["schedule", before.getTime()]
       });
 
       for await (const entry of entries) {
-        const reminderId = entry.key[2] as string;
-        const reminder = await this.getById(reminderId);
-        if (reminder && reminder.status === ReminderStatus.PENDING) {
-          reminders.push(reminder);
-        }
+        reminderIds.push(entry.key[2] as string);
       }
 
-      return reminders;
+      // Batch fetch all reminders using getMany
+      if (reminderIds.length === 0) return [];
+      
+      const keys = reminderIds.map(id => ["reminders", id]);
+      const results = await this.kv.getMany<Reminder[]>(keys);
+      
+      return results
+        .filter(r => r.value !== null && r.value.status === ReminderStatus.PENDING)
+        .map(r => r.value!);
     } catch (error) {
       console.error("Failed to get due reminders:", error);
       return [];
@@ -154,20 +158,24 @@ export class ReminderRepository {
    */
   async getByStatus(status: ReminderStatus, limit = 50): Promise<Reminder[]> {
     try {
-      const reminders: Reminder[] = [];
+      const reminderIds: string[] = [];
       const entries = this.kv.list({
         prefix: ["status", status]
       }, { limit });
 
       for await (const entry of entries) {
-        const reminderId = entry.key[2] as string;
-        const reminder = await this.getById(reminderId);
-        if (reminder) {
-          reminders.push(reminder);
-        }
+        reminderIds.push(entry.key[2] as string);
       }
 
-      return reminders;
+      // Batch fetch all reminders using getMany
+      if (reminderIds.length === 0) return [];
+      
+      const keys = reminderIds.map(id => ["reminders", id]);
+      const results = await this.kv.getMany<Reminder[]>(keys);
+      
+      return results
+        .filter(r => r.value !== null)
+        .map(r => r.value!);
     } catch (error) {
       console.error("Failed to get reminders by status:", error);
       return [];
@@ -179,20 +187,24 @@ export class ReminderRepository {
    */
   async getByUser(userId: string, limit = 50): Promise<Reminder[]> {
     try {
-      const reminders: Reminder[] = [];
+      const reminderIds: string[] = [];
       const entries = this.kv.list({
         prefix: ["user_reminders", userId]
       }, { limit });
 
       for await (const entry of entries) {
-        const reminderId = entry.key[2] as string;
-        const reminder = await this.getById(reminderId);
-        if (reminder) {
-          reminders.push(reminder);
-        }
+        reminderIds.push(entry.key[2] as string);
       }
 
-      return reminders;
+      // Batch fetch all reminders using getMany
+      if (reminderIds.length === 0) return [];
+      
+      const keys = reminderIds.map(id => ["reminders", id]);
+      const results = await this.kv.getMany<Reminder[]>(keys);
+      
+      return results
+        .filter(r => r.value !== null)
+        .map(r => r.value!);
     } catch (error) {
       console.error("Failed to get reminders by user:", error);
       return [];
@@ -204,20 +216,24 @@ export class ReminderRepository {
    */
   async getByCreator(creatorId: string, limit = 50): Promise<Reminder[]> {
     try {
-      const reminders: Reminder[] = [];
+      const reminderIds: string[] = [];
       const entries = this.kv.list({
         prefix: ["created_by", creatorId]
       }, { limit });
 
       for await (const entry of entries) {
-        const reminderId = entry.key[2] as string;
-        const reminder = await this.getById(reminderId);
-        if (reminder) {
-          reminders.push(reminder);
-        }
+        reminderIds.push(entry.key[2] as string);
       }
 
-      return reminders;
+      // Batch fetch all reminders using getMany
+      if (reminderIds.length === 0) return [];
+      
+      const keys = reminderIds.map(id => ["reminders", id]);
+      const results = await this.kv.getMany<Reminder[]>(keys);
+      
+      return results
+        .filter(r => r.value !== null)
+        .map(r => r.value!);
     } catch (error) {
       console.error("Failed to get reminders by creator:", error);
       return [];
@@ -259,7 +275,7 @@ export class ReminderRepository {
    * Update reminder status atomically
    */
   async updateStatus(id: string, newStatus: ReminderStatus): Promise<boolean> {
-    return this.update(id, { status: newStatus });
+    return await this.update(id, { status: newStatus });
   }
 
   /**
