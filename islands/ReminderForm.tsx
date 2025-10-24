@@ -187,8 +187,9 @@ export default function ReminderForm({
     <div class="max-w-2xl mx-auto">
       <form onSubmit={handleSubmit} class="space-y-6">
         {/* Reminder Content */}
+        {/* Content */}
         <div>
-          <label htmlFor="content" class="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Reminder Content *
           </label>
           <textarea
@@ -196,8 +197,8 @@ export default function ReminderForm({
             name="content"
             value={formData.content}
             onInput={(e) => handleInputChange('content', (e.target as HTMLTextAreaElement).value)}
-            class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.content ? 'border-red-500' : 'border-gray-300'
+            class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+              errors.content ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
             }`}
             rows={4}
             placeholder="Enter the reminder message..."
@@ -205,16 +206,14 @@ export default function ReminderForm({
             maxLength={2000}
           />
           {errors.content && (
-            <p class="mt-1 text-sm text-red-600">{errors.content}</p>
+            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{errors.content}</p>
           )}
-          <p class="mt-1 text-sm text-gray-500">
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {formData.content.length}/2000 characters
           </p>
-        </div>
-
-        {/* Target User ID */}
+        </div>        {/* Target User ID */}
         <div>
-          <label htmlFor="targetUserId" class="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="targetUserId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Target User ID *
           </label>
           <input
@@ -223,23 +222,23 @@ export default function ReminderForm({
             name="targetUserId"
             value={formData.targetUserId}
             onInput={(e) => handleInputChange('targetUserId', (e.target as HTMLInputElement).value)}
-            class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.targetUserId ? 'border-red-500' : 'border-gray-300'
+            class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+              errors.targetUserId ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
             }`}
             placeholder="Discord user ID (17-19 digits)"
             disabled={isLoading}
           />
           {errors.targetUserId && (
-            <p class="mt-1 text-sm text-red-600">{errors.targetUserId}</p>
+            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{errors.targetUserId}</p>
           )}
-          <p class="mt-1 text-sm text-gray-500">
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Enter the Discord user ID of the person to remind
           </p>
         </div>
 
         {/* Scheduled Time */}
         <div>
-          <label htmlFor="scheduledTime" class="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="scheduledTime" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Scheduled Time *
           </label>
           <input
@@ -248,23 +247,23 @@ export default function ReminderForm({
             name="scheduledTime"
             value={formData.scheduledTime}
             onInput={(e) => handleInputChange('scheduledTime', (e.target as HTMLInputElement).value)}
-            class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.scheduledTime ? 'border-red-500' : 'border-gray-300'
+            class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+              errors.scheduledTime ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
             }`}
             min={getCurrentDateTime()}
             disabled={isLoading}
           />
           {errors.scheduledTime && (
-            <p class="mt-1 text-sm text-red-600">{errors.scheduledTime}</p>
+            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{errors.scheduledTime}</p>
           )}
-          <p class="mt-1 text-sm text-gray-500">
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             When should this reminder be sent?
           </p>
         </div>
 
         {/* Timezone */}
         <div>
-          <label htmlFor="timezone" class="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="timezone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Timezone *
           </label>
           <select
@@ -272,7 +271,7 @@ export default function ReminderForm({
             name="timezone"
             value={formData.timezone}
             onChange={(e) => handleInputChange('timezone', (e.target as HTMLSelectElement).value)}
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             disabled={isLoading}
           >
             {Object.entries(getTimezonesByRegion()).map(([region, timezones]) => (
@@ -285,7 +284,7 @@ export default function ReminderForm({
               </optgroup>
             ))}
           </select>
-          <p class="mt-1 text-sm text-gray-500">
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Timezone for the scheduled time (default: Europe/Berlin)
           </p>
         </div>

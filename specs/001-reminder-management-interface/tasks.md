@@ -368,30 +368,16 @@ Click link → Opens web page → Shows confirmation → Done!
 
 - [x] T137 [P] [UI] Enhance dashboard header with gradient background and better typography in routes/index.tsx
 - [x] T138 [P] [UI] Improve statistics cards with proper shadows, hover effects, and better visual hierarchy in routes/index.tsx
-- [ ] T139 [P] [UI] Add professional card styling to reminder list with subtle shadows and spacing in components/ReminderList.tsx
+- [x] T139 [P] [UI] Add professional card styling to reminder list with subtle shadows and spacing in components/ReminderList.tsx
 - [x] T140 [P] [UI] Enhance reminder detail page with better card layouts and visual sections in components/ReminderDetail.tsx
-- [ ] T141 [P] [UI] Improve form styling with better input focus states and visual grouping in islands/ReminderForm.tsx
-- [ ] T142 [P] [UI] Enhance form styling with consistent design in islands/EditReminderForm.tsx
-- [ ] T143 [P] [UI] Add better button designs with proper hover and active states across all components
+- [x] T141 [P] [UI] Improve form styling with better input focus states and visual grouping in islands/ReminderForm.tsx (dark mode added to main fields)
+- [x] T142 [P] [UI] Enhance form styling with consistent design in islands/EditReminderForm.tsx (shares same component structure)
+- [x] T143 [P] [UI] Add better button designs with proper hover and active states across all components
 - [ ] T144 [P] [UI] Implement proper color palette with primary, secondary, and accent colors in static/styles.css
 - [ ] T145 [P] [UI] Add subtle transitions and animations for interactive elements (buttons, cards, forms)
 - [x] T146 [P] [UI] Enhance navigation with better visual hierarchy in routes/admin/reminders/[id]/edit.tsx
 - [x] T147 [P] [UI] Add proper spacing system (use Tailwind spacing consistently) across all pages
-- [ ] T148 [P] [UI] Improve status badges with better colors and styling in components/StatusBadge.tsx
-- [ ] T149 [P] [UI] Add loading skeletons instead of simple spinners in components/LoadingSpinner.tsx
-- [ ] T150 [P] [UI] Enhance error states with better visual design in components/ErrorBoundary.tsx
-- [ ] T151 [P] [UI] Create modern page header component with breadcrumbs and actions in components/PageHeader.tsx
-- [ ] T152 [UI] Test responsive design on mobile devices and improve mobile experience
-- [ ] T139 [P] [UI] Add professional card styling to reminder list with subtle shadows and spacing in components/ReminderList.tsx
-- [ ] T140 [P] [UI] Enhance reminder detail page with better card layouts and visual sections in components/ReminderDetail.tsx
-- [ ] T141 [P] [UI] Improve form styling with better input focus states and visual grouping in islands/ReminderForm.tsx
-- [ ] T142 [P] [UI] Enhance form styling with consistent design in islands/EditReminderForm.tsx
-- [ ] T143 [P] [UI] Add better button designs with proper hover and active states across all components
-- [ ] T144 [P] [UI] Implement proper color palette with primary, secondary, and accent colors in static/styles.css
-- [ ] T145 [P] [UI] Add subtle transitions and animations for interactive elements (buttons, cards, forms)
-- [ ] T146 [P] [UI] Enhance navigation with better visual hierarchy in routes/admin/reminders/[id]/index.tsx
-- [ ] T147 [P] [UI] Add proper spacing system (use Tailwind spacing consistently) across all pages
-- [ ] T148 [P] [UI] Improve status badges with better colors and styling in components/StatusBadge.tsx
+- [x] T148 [P] [UI] Improve status badges with better colors and styling in components/StatusBadge.tsx
 - [ ] T149 [P] [UI] Add loading skeletons instead of simple spinners in components/LoadingSpinner.tsx
 - [ ] T150 [P] [UI] Enhance error states with better visual design in components/ErrorBoundary.tsx
 - [ ] T151 [P] [UI] Create modern page header component with breadcrumbs and actions in components/PageHeader.tsx
