@@ -304,13 +304,13 @@ export default function DashboardPage(_props: PageProps) {
 
               // Create reminder list HTML (simplified version)
               const html = \`
-                <div class="bg-white shadow rounded-lg">
-                  <div class="px-6 py-4 border-b border-gray-200">
+                <div class="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex justify-between items-center">
-                      <h2 class="text-lg font-medium text-gray-900">
+                      <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Reminders (\${filteredReminders.length})
                       </h2>
-                      <select id="status-filter" class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                      <select id="status-filter" class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                         <option value="all">All Reminders</option>
                         <option value="pending">Pending</option>
                         <option value="sent">Sent</option>
@@ -320,17 +320,17 @@ export default function DashboardPage(_props: PageProps) {
                       </select>
                     </div>
                   </div>
-                  <div class="divide-y divide-gray-200">
+                  <div class="divide-y divide-gray-200 dark:divide-gray-700">
                     \${filteredReminders.length === 0 ? \`
                       <div class="px-6 py-8 text-center">
-                        <p class="text-gray-500">No reminders found</p>
+                        <p class="text-gray-500 dark:text-gray-400">No reminders found</p>
                       </div>
                     \` : filteredReminders.map(reminder => \`
-                      <div class="px-6 py-4 hover:bg-gray-50">
+                      <div class="px-6 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <div class="flex items-start justify-between">
                           <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between mb-2">
-                              <p class="text-sm text-gray-900 font-medium">
+                              <p class="text-sm text-gray-900 dark:text-gray-100 font-medium">
                                 \${reminder.content.length > 100 ? reminder.content.substring(0, 100) + '...' : reminder.content}
                               </p>
                               <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
@@ -338,7 +338,7 @@ export default function DashboardPage(_props: PageProps) {
                                 \${formatStatus(reminder.status)}
                               </span>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-gray-500">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-gray-500 dark:text-gray-400">
                               <div><span class="font-medium">Target:</span> \${reminder.targetUserId}</div>
                               <div><span class="font-medium">Scheduled:</span> \${formatDateInTimezone(reminder.scheduledTime, reminder.timezone)}</div>
                               <div><span class="font-medium">Created:</span> \${formatDateInTimezone(reminder.createdAt, reminder.timezone)}</div>
@@ -347,11 +347,11 @@ export default function DashboardPage(_props: PageProps) {
                           </div>
                           <div class="ml-4 flex flex-col space-y-1">
                             \${reminder.status === 'pending' ? \`
-                              <button onclick="editReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-500">Edit</button>
+                              <button onclick="editReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Edit</button>
                             \` : ''}
-                            <button onclick="testReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-green-600 hover:text-green-500">Test</button>
+                            <button onclick="testReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300">Test</button>
                             \${reminder.status === 'pending' ? \`
-                              <button onclick="deleteReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-red-600 hover:text-red-500">Delete</button>
+                              <button onclick="deleteReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300">Delete</button>
                             \` : ''}
                           </div>
                         </div>
@@ -377,13 +377,13 @@ export default function DashboardPage(_props: PageProps) {
             // Helper functions
             function getStatusColor(status) {
               switch (status) {
-                case 'pending': return 'bg-yellow-100 text-yellow-800';
-                case 'sent': return 'bg-blue-100 text-blue-800';
-                case 'acknowledged': return 'bg-green-100 text-green-800';
-                case 'declined': return 'bg-red-100 text-red-800';
-                case 'escalated': return 'bg-purple-100 text-purple-800';
-                case 'failed': return 'bg-red-100 text-red-800';
-                default: return 'bg-gray-100 text-gray-800';
+                case 'pending': return 'bg-yellow-100 dark:bg-yellow-900 dark:bg-opacity-30 text-yellow-800 dark:text-yellow-300';
+                case 'sent': return 'bg-blue-100 dark:bg-blue-900 dark:bg-opacity-30 text-blue-800 dark:text-blue-300';
+                case 'acknowledged': return 'bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-green-800 dark:text-green-300';
+                case 'declined': return 'bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300';
+                case 'escalated': return 'bg-purple-100 dark:bg-purple-900 dark:bg-opacity-30 text-purple-800 dark:text-purple-300';
+                case 'failed': return 'bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300';
+                default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
               }
             }
 
@@ -397,10 +397,10 @@ export default function DashboardPage(_props: PageProps) {
               const container = document.getElementById('reminder-list-container');
               if (container) {
                 container.innerHTML = \`
-                  <div class="bg-white shadow rounded-lg">
+                  <div class="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="px-6 py-8 text-center">
-                      <p class="text-red-500">\${message}</p>
-                      <button onclick="loadData()" class="mt-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                      <p class="text-red-500 dark:text-red-400">\${message}</p>
+                      <button onclick="loadData()" class="mt-2 px-4 py-2 text-sm bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600">
                         Retry
                       </button>
                     </div>
