@@ -53,19 +53,19 @@ export const handler: Handlers<ReminderDetailPageData> = {
 export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPageData>) {
   if (data.error) {
     return (
-      <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+      <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
         <div class="max-w-4xl mx-auto">
-          <div class="bg-white shadow-lg rounded-xl border-l-4 border-red-500 p-6 md:p-8">
+          <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl border-l-4 border-red-500 dark:border-red-600 p-6 md:p-8">
             <div class="flex items-start space-x-4">
               <div class="flex-shrink-0">
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <div class="w-12 h-12 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 rounded-lg flex items-center justify-center">
                   <span class="text-2xl">⚠️</span>
                 </div>
               </div>
               <div class="flex-1">
-                <h2 class="text-2xl font-bold text-gray-900 mb-3">Error Loading Reminder</h2>
-                <p class="text-gray-700 mb-6 leading-relaxed">{data.error}</p>
-                <a href="/" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">Error Loading Reminder</h2>
+                <p class="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">{data.error}</p>
+                <a href="/" class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors">
                   <span class="mr-2">←</span>
                   Back to Dashboard
                 </a>
@@ -79,19 +79,19 @@ export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPag
 
   if (!data.reminder) {
     return (
-      <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+      <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
         <div class="max-w-4xl mx-auto">
-          <div class="bg-white shadow-lg rounded-xl border-l-4 border-yellow-500 p-6 md:p-8">
+          <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl border-l-4 border-yellow-500 dark:border-yellow-600 p-6 md:p-8">
             <div class="flex items-start space-x-4">
               <div class="flex-shrink-0">
-                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 dark:bg-opacity-30 rounded-lg flex items-center justify-center">
                   <span class="text-2xl">⚠️</span>
                 </div>
               </div>
               <div class="flex-1">
-                <h2 class="text-2xl font-bold text-gray-900 mb-3">Reminder Not Found</h2>
-                <p class="text-gray-700 mb-6">The requested reminder could not be found.</p>
-                <a href="/" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">Reminder Not Found</h2>
+                <p class="text-gray-700 dark:text-gray-300 mb-6">The requested reminder could not be found.</p>
+                <a href="/" class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors">
                   <span class="mr-2">←</span>
                   Back to Dashboard
                 </a>
@@ -104,15 +104,15 @@ export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPag
   }
 
   return (
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
       <div class="max-w-4xl mx-auto">
         {/* Header with navigation */}
         <div class="mb-6">
-          <a href="/" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4 transition-colors group">
+          <a href="/" class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium mb-4 transition-colors group">
             <span class="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
             Back to Dashboard
           </a>
-          <h1 class="text-4xl font-bold text-gray-900">Reminder Details</h1>
+          <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">Reminder Details</h1>
         </div>
 
         {/* Real-time Status Updates */}
@@ -125,15 +125,15 @@ export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPag
         </div>
 
         {/* Test Trigger Section */}
-        <div class="mb-6 bg-white shadow-lg rounded-xl p-6 md:p-8">
-          <h2 class="text-xl font-bold text-gray-900 mb-4">Test Reminder Delivery</h2>
+        <div class="mb-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 md:p-8 border border-gray-200 dark:border-gray-700">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Test Reminder Delivery</h2>
           <TestTrigger 
             reminderId={data.reminder.id}
             isDisabled={data.reminder.status !== "pending"}
           />
           {data.reminder.status !== "pending" && (
-            <div class="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-              <p class="text-sm text-gray-700 flex items-start">
+            <div class="mt-4 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-30 border-l-4 border-blue-500 dark:border-blue-600 p-4 rounded">
+              <p class="text-sm text-gray-700 dark:text-gray-300 flex items-start">
                 <span class="mr-2 text-lg">ℹ️</span>
                 <span>Testing is only available for pending reminders</span>
               </p>
@@ -146,7 +146,7 @@ export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPag
 
         {/* Detailed Response History */}
         {data.reminder.responses && data.reminder.responses.length > 0 && (
-          <div class="mt-6 bg-white shadow-lg rounded-xl p-6 md:p-8">
+          <div class="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 md:p-8 border border-gray-200 dark:border-gray-700">
             <ResponseLog responses={data.reminder.responses} />
           </div>
         )}

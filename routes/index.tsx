@@ -8,24 +8,24 @@ import { PageProps } from "$fresh/server.ts";
 export default function DashboardPage(_props: PageProps) {
   
   return (
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <div class="bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg">
+      <div class="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-900 dark:to-blue-800 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between items-center py-8">
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+              <div class="w-10 h-10 bg-white bg-opacity-20 dark:bg-opacity-30 rounded-lg flex items-center justify-center">
                 <span class="text-2xl">🔔</span>
               </div>
               <div>
                 <h1 class="text-3xl font-bold text-white">Reminder Dashboard</h1>
-                <p class="text-blue-100 text-sm mt-1">Manage and monitor your Discord reminders</p>
+                <p class="text-blue-100 dark:text-blue-200 text-sm mt-1">Manage and monitor your Discord reminders</p>
               </div>
             </div>
             <nav class="flex space-x-4">
               <a
                 href="/admin/reminders/new"
-                class="bg-white text-blue-600 px-6 py-3 rounded-lg text-sm font-semibold hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 transition-all duration-200 shadow-md hover:shadow-lg"
+                class="bg-white text-blue-600 dark:bg-blue-700 dark:text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 dark:focus:ring-offset-blue-800 transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 ➕ Create Reminder
               </a>
@@ -39,7 +39,7 @@ export default function DashboardPage(_props: PageProps) {
         <div class="px-4 sm:px-0">
           {/* Statistics Cards */}
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <div id="stats-pending" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+            <div id="stats-pending" class="bg-white dark:bg-gray-800 overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200 border border-gray-200 dark:border-gray-700">
               <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
@@ -49,15 +49,15 @@ export default function DashboardPage(_props: PageProps) {
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-semibold text-gray-600 truncate">Pending</dt>
-                      <dd class="text-2xl font-bold text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 dark:text-gray-300 truncate">Pending</dt>
+                      <dd class="text-2xl font-bold text-gray-900 dark:text-gray-100">-</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div id="stats-sent" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+            <div id="stats-sent" class="bg-white dark:bg-gray-800 overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200 border border-gray-200 dark:border-gray-700">
               <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
@@ -67,15 +67,15 @@ export default function DashboardPage(_props: PageProps) {
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-semibold text-gray-600 truncate">Sent</dt>
-                      <dd class="text-2xl font-bold text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 dark:text-gray-300 truncate">Sent</dt>
+                      <dd class="text-2xl font-bold text-gray-900 dark:text-gray-100">-</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div id="stats-acknowledged" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+            <div id="stats-acknowledged" class="bg-white dark:bg-gray-800 overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200 border border-gray-200 dark:border-gray-700">
               <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
@@ -85,15 +85,15 @@ export default function DashboardPage(_props: PageProps) {
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-semibold text-gray-600 truncate">Acknowledged</dt>
-                      <dd class="text-2xl font-bold text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 dark:text-gray-300 truncate">Acknowledged</dt>
+                      <dd class="text-2xl font-bold text-gray-900 dark:text-gray-100">-</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div id="stats-responses" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+            <div id="stats-responses" class="bg-white dark:bg-gray-800 overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200 border border-gray-200 dark:border-gray-700">
               <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
@@ -103,15 +103,15 @@ export default function DashboardPage(_props: PageProps) {
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-semibold text-gray-600 truncate">Responses</dt>
-                      <dd class="text-2xl font-bold text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 dark:text-gray-300 truncate">Responses</dt>
+                      <dd class="text-2xl font-bold text-gray-900 dark:text-gray-100">-</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div id="stats-total" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+            <div id="stats-total" class="bg-white dark:bg-gray-800 overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200 border border-gray-200 dark:border-gray-700">
               <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
@@ -121,8 +121,8 @@ export default function DashboardPage(_props: PageProps) {
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-semibold text-gray-600 truncate">Total</dt>
-                      <dd class="text-2xl font-bold text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 dark:text-gray-300 truncate">Total</dt>
+                      <dd class="text-2xl font-bold text-gray-900 dark:text-gray-100">-</dd>
                     </dl>
                   </div>
                 </div>
@@ -132,27 +132,27 @@ export default function DashboardPage(_props: PageProps) {
 
           {/* Reminder List */}
           <div id="reminder-list-container">
-            <div class="bg-white shadow-lg rounded-xl">
-              <div class="px-6 py-5 border-b border-gray-200">
-                <h2 class="text-xl font-bold text-gray-900">Loading reminders...</h2>
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700">
+              <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Loading reminders...</h2>
               </div>
               <div class="px-6 py-12 text-center">
-                <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-                <p class="mt-3 text-sm text-gray-600">Please wait...</p>
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">Please wait...</p>
               </div>
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div class="mt-8 bg-white shadow-lg rounded-xl">
-            <div class="px-6 py-5 border-b border-gray-200">
-              <h3 class="text-xl font-bold text-gray-900">Quick Actions</h3>
+          <div class="mt-8 bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">Quick Actions</h3>
             </div>
             <div class="px-6 py-6">
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <a
                   href="/admin/reminders/new"
-                  class="flex items-center p-5 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
+                  class="flex items-center p-5 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-30 transition-all duration-200 group"
                 >
                   <div class="flex-shrink-0">
                     <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
@@ -160,15 +160,15 @@ export default function DashboardPage(_props: PageProps) {
                     </div>
                   </div>
                   <div class="ml-4">
-                    <p class="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Create Reminder</p>
-                    <p class="text-sm text-gray-600 mt-1">Schedule a new Discord reminder</p>
+                    <p class="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Create Reminder</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Schedule a new Discord reminder</p>
                   </div>
                 </a>
 
                 <button
                   type="button"
                   id="refresh-all"
-                  class="flex items-center p-5 border-2 border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 group"
+                  class="flex items-center p-5 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-green-300 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900 dark:hover:bg-opacity-30 transition-all duration-200 group"
                 >
                   <div class="flex-shrink-0">
                     <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
@@ -176,14 +176,14 @@ export default function DashboardPage(_props: PageProps) {
                     </div>
                   </div>
                   <div class="ml-4">
-                    <p class="text-base font-semibold text-gray-900 group-hover:text-green-600 transition-colors">Refresh Data</p>
-                    <p class="text-sm text-gray-600 mt-1">Update all reminder information</p>
+                    <p class="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Refresh Data</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Update all reminder information</p>
                   </div>
                 </button>
 
                 <a
                   href="/admin/settings"
-                  class="flex items-center p-5 border-2 border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 group"
+                  class="flex items-center p-5 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group"
                 >
                   <div class="flex-shrink-0">
                     <div class="w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
@@ -191,8 +191,8 @@ export default function DashboardPage(_props: PageProps) {
                     </div>
                   </div>
                   <div class="ml-4">
-                    <p class="text-base font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">Settings</p>
-                    <p class="text-sm text-gray-600 mt-1">Configure admin preferences</p>
+                    <p class="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">Settings</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Configure admin preferences</p>
                   </div>
                 </a>
               </div>
