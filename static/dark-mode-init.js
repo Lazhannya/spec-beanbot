@@ -1,14 +1,8 @@
-// Initialize dark mode before page renders to prevent flash
+// Browser script - Initialize dark mode before page renders to prevent flash
+// This runs before Tailwind loads to avoid flash of unstyled content
 if (localStorage.getItem('theme') === 'light') {
   document.documentElement.classList.remove('dark');
 } else {
   // Default to dark mode
   document.documentElement.classList.add('dark');
-}
-
-// Configure Tailwind dark mode
-if (typeof tailwind !== 'undefined') {
-  tailwind.config = {
-    darkMode: 'class'
-  };
 }

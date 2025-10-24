@@ -10,6 +10,9 @@ export default function App({ Component }: PageProps) {
         <title>spec-beanbot</title>
         <script src="/dark-mode-init.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+          {`tailwind.config = { darkMode: 'class' }`}
+        </script>
       </head>
       <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <Component />

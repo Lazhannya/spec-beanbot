@@ -98,8 +98,8 @@ export default function TestTrigger({
         disabled={isLoading || isDisabled}
         class={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
           isLoading || isDisabled
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
+            ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+            : 'bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:ring-blue-500'
         }`}
         title="Send this reminder immediately for testing (preserves original schedule)"
       >
@@ -125,17 +125,17 @@ export default function TestTrigger({
       {lastTestResult && (
         <div class={`mt-2 p-2 rounded-md text-xs ${
           lastTestResult.success 
-            ? 'bg-green-50 text-green-700 border border-green-200' 
-            : 'bg-red-50 text-red-700 border border-red-200'
+            ? 'bg-green-50 dark:bg-green-900 dark:bg-opacity-30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800' 
+            : 'bg-red-50 dark:bg-red-900 dark:bg-opacity-30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
         }`}>
           <div class="flex items-start">
             <div class="flex-shrink-0 mr-2">
               {lastTestResult.success ? (
-                <svg class="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               ) : (
-                <svg class="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
               )}
@@ -154,7 +154,7 @@ export default function TestTrigger({
       )}
 
       {/* Help Text */}
-      <p class="mt-1 text-xs text-gray-500">
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
         This will send the reminder immediately for testing purposes without affecting the original scheduled time.
       </p>
     </div>
