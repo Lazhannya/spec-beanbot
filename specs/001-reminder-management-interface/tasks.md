@@ -398,7 +398,7 @@ Click link → Opens web page → Shows confirmation → Done!
 - [ ] T152 [UI] Test responsive design on mobile devices and improve mobile experience
 - [x] T153 [P] [UI] Implement dark mode as default with light mode toggle in routes/_app.tsx and all pages
 - [x] T154 [P] [UI] Add theme persistence using localStorage in islands/ThemeToggle.tsx
-- [x] T155 [P] [UI] Update all components to support dark mode color schemes
+- [x] T155 [P] [UI] Update all components to support dark mode color schemes (ReminderList, ResponseLog, TestTrigger, dashboard)
 
 **Checkpoint**: UI has modern, professional appearance with depth, proper spacing, and visual hierarchy
 
