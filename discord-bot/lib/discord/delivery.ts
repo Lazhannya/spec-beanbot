@@ -142,8 +142,8 @@ export class DiscordDeliveryService {
   }
 
   /**
-   * Send message to a Discord channel with reply-based acknowledgement instructions
-   * No buttons - user replies with text to acknowledge or decline
+   * Send message to a Discord channel with clickable acknowledgement links
+   * No buttons or replies needed - user clicks URL to acknowledge/decline
    */
   private async sendMessage(
     channelId: string, 
@@ -151,11 +151,18 @@ export class DiscordDeliveryService {
     reminderId?: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      // Build message with reply instructions
+      // Build message with clickable links
       let messageContent = `🔔 **Reminder**\n\n${content}`;
       
       if (reminderId) {
-        messageContent += `\n\n📝 **To respond:**\nReply with \`okay\` to acknowledge or \`decline\` to decline this reminder.`;
+        // Generate secure tokens for acknowledgement links
+        const { generateAcknowledgementUrl } = await import("../utils/ack-token.ts");
+        const baseUrl = Deno.env.get("BASE_URL") || "https://spec-beanbot.lazhannya.deno.net";
+        
+        const ackUrl = await generateAcknowledgementUrl(reminderId, "acknowledge", baseUrl);
+        const declineUrl = await generateAcknowledgementUrl(reminderId, "decline", baseUrl);
+        
+        messageContent += `\n\n📝 **To respond, click a link:**\n✅ [Acknowledge](${ackUrl})\n❌ [Decline](${declineUrl})`;
       }
 
       const response = await fetch(`${this.baseUrl}/channels/${channelId}/messages`, {

@@ -32,8 +32,8 @@ Instead of buttons, send a clickable link that opens a web page.
 User replies to the bot's DM with specific text.
 
 **How it works**:
-1. Bot sends reminder: "Reply with 'ACK' to acknowledge or 'DECLINE' to decline"
-2. User replies in DM: `ACK` or `DECLINE`
+1. Bot sends reminder: "Reply with 'okay' to acknowledge or 'decline' to decline"
+2. User replies in DM: `okay` or `decline`
 3. Bot listens for DM messages (requires MESSAGE_CONTENT intent)
 4. Bot updates reminder status
 5. Bot confirms: "✅ Reminder acknowledged!"
