@@ -60,23 +60,17 @@ export const handler: Handlers<EditReminderPageData> = {
 export default function EditReminderPage({ data }: PageProps<EditReminderPageData>) {
   if (data.error) {
     return (
-      <div class="min-h-screen bg-gray-50 p-8">
+      <div class="min-h-screen bg-gray-50 p-4 md:p-8">
         <div class="max-w-4xl mx-auto">
-          <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h2 class="text-xl font-semibold text-red-800 mb-2">Cannot Edit Reminder</h2>
-            <p class="text-red-600">{data.error}</p>
-            <div class="mt-4 space-x-4">
-              <a
-                href="/"
-                class="text-blue-600 hover:text-blue-800 underline"
-              >
+          <div class="bg-white border-l-4 border-red-500 p-4 md:p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">⚠️ Cannot Edit Reminder</h2>
+            <p class="text-gray-700 mb-4">{data.error}</p>
+            <div class="space-x-4">
+              <a href="/" class="text-blue-600 hover:underline">
                 ← Back to Dashboard
               </a>
               {data.reminder && (
-                <a
-                  href={`/admin/reminders/${data.reminder.id}`}
-                  class="text-blue-600 hover:text-blue-800 underline"
-                >
+                <a href={`/admin/reminders/${data.reminder.id}`} class="text-blue-600 hover:underline">
                   View Reminder Details
                 </a>
               )}
@@ -89,19 +83,14 @@ export default function EditReminderPage({ data }: PageProps<EditReminderPageDat
 
   if (!data.reminder) {
     return (
-      <div class="min-h-screen bg-gray-50 p-8">
+      <div class="min-h-screen bg-gray-50 p-4 md:p-8">
         <div class="max-w-4xl mx-auto">
-          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-            <h2 class="text-xl font-semibold text-yellow-800 mb-2">Reminder Not Found</h2>
-            <p class="text-yellow-600">The requested reminder could not be found.</p>
-            <div class="mt-4">
-              <a
-                href="/"
-                class="text-blue-600 hover:text-blue-800 underline"
-              >
-                ← Back to Dashboard
-              </a>
-            </div>
+          <div class="bg-white border-l-4 border-yellow-500 p-4 md:p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">⚠️ Reminder Not Found</h2>
+            <p class="text-gray-700 mb-4">The requested reminder could not be found.</p>
+            <a href="/" class="text-blue-600 hover:underline">
+              ← Back to Dashboard
+            </a>
           </div>
         </div>
       </div>
@@ -109,22 +98,15 @@ export default function EditReminderPage({ data }: PageProps<EditReminderPageDat
   }
 
   return (
-    <div class="min-h-screen bg-gray-50 p-8">
+    <div class="min-h-screen bg-gray-50 p-4 md:p-8">
       <div class="max-w-4xl mx-auto">
         {/* Header with navigation */}
         <div class="mb-6">
           <div class="flex items-center justify-between mb-4">
-            <a
-              href={`/admin/reminders/${data.reminder.id}`}
-              class="text-blue-600 hover:text-blue-800 underline inline-flex items-center"
-            >
-              <span class="mr-2">←</span>
-              Back to Reminder Details
+            <a href={`/admin/reminders/${data.reminder.id}`} class="text-blue-600 hover:underline">
+              ← Back to Reminder Details
             </a>
-            <a
-              href="/"
-              class="text-gray-600 hover:text-gray-800 underline"
-            >
+            <a href="/" class="text-gray-600 hover:underline">
               Dashboard
             </a>
           </div>
@@ -135,14 +117,14 @@ export default function EditReminderPage({ data }: PageProps<EditReminderPageDat
         </div>
 
         {/* Edit form component */}
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white border border-gray-200 p-4 md:p-6">
           <EditReminderForm reminder={data.reminder} />
         </div>
 
         {/* Additional info */}
-        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 class="font-semibold text-blue-900 mb-2">📝 Editing Tips</h3>
-          <ul class="text-sm text-blue-800 space-y-1">
+        <div class="mt-6 bg-white border-l-4 border-blue-500 p-4">
+          <h3 class="font-bold text-gray-900 mb-2">📝 Editing Tips</h3>
+          <ul class="text-sm text-gray-700 space-y-1">
             <li>• Only pending reminders can be edited</li>
             <li>• Changes to the schedule will update the delivery time</li>
             <li>• Escalation settings can be added or removed</li>

@@ -277,6 +277,7 @@ description: "Task list for reminder management web interface implementation"
 - [x] T113 [P] [LINK] Add token verification in acknowledgement page handler
 - [x] T114 [P] [LINK] Implement acknowledgement processing (call ReminderService)
 - [x] T115 [P] [LINK] Implement decline processing with escalation trigger
+- [x] T115a [LINK] Fix escalation message delivery - send escalation DM when reminder declined (routes/ack/[id].tsx)
 - [x] T116 [P] [LINK] Create success page UI with confirmation message
 - [x] T117 [P] [LINK] Create error page UI for invalid tokens/reminders
 - [x] T118 [P] [LINK] Add optional ACK_TOKEN_SECRET environment variable for production
@@ -325,21 +326,21 @@ Click link → Opens web page → Shows confirmation → Done!
 
 ### Implementation for UI Improvements
 
-- [ ] T122 [P] [UI] Audit all UI components for simplicity - replace complex elements with Unicode/CSS in routes/admin/reminders/[id]/index.tsx
-- [ ] T123 [P] [UI] Review and simplify navigation arrows - ensure Unicode characters used consistently in routes/admin/reminders/[id]/edit.tsx
-- [ ] T124 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/ReminderForm.tsx
-- [ ] T125 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/EditReminderForm.tsx
-- [ ] T126 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/ReminderForm.tsx
-- [ ] T127 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/EditReminderForm.tsx
-- [ ] T128 [P] [UI] Enhance loading states - add clear loading indicators for all async operations in routes/index.tsx
-- [ ] T129 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderList.tsx
-- [ ] T130 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderDetail.tsx
-- [ ] T131 [P] [UI] Simplify dashboard - remove unnecessary visual elements in routes/index.tsx
-- [ ] T132 [P] [UI] Optimize button styles - use simple, proven button patterns in components/ReminderDetail.tsx
-- [ ] T133 [P] [UI] Clean up table layouts - ensure readable, accessible data tables in components/ReminderList.tsx
-- [ ] T134 [P] [UI] Remove complex SVG icons - replace with Unicode where appropriate across all routes and components
-- [ ] T135 [P] [UI] Test cross-browser compatibility - verify consistent rendering in Chrome, Firefox, Safari
-- [ ] T136 [UI] Create UI style guide - document minimal design patterns in docs/ui-guidelines.md
+- [x] T122 [P] [UI] Audit all UI components for simplicity - replace complex elements with Unicode/CSS in routes/admin/reminders/[id]/index.tsx
+- [x] T123 [P] [UI] Review and simplify navigation arrows - ensure Unicode characters used consistently in routes/admin/reminders/[id]/edit.tsx
+- [x] T124 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/ReminderForm.tsx
+- [x] T125 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/EditReminderForm.tsx
+- [x] T126 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/ReminderForm.tsx
+- [x] T127 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/EditReminderForm.tsx
+- [x] T128 [P] [UI] Enhance loading states - add clear loading indicators for all async operations in routes/index.tsx
+- [x] T129 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderList.tsx
+- [x] T130 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderDetail.tsx
+- [x] T131 [P] [UI] Simplify dashboard - remove unnecessary visual elements in routes/index.tsx
+- [x] T132 [P] [UI] Optimize button styles - use simple, proven button patterns in components/ReminderDetail.tsx
+- [x] T133 [P] [UI] Clean up table layouts - ensure readable, accessible data tables in components/ReminderList.tsx
+- [x] T134 [P] [UI] Remove complex SVG icons - replace with Unicode where appropriate across all routes and components
+- [x] T135 [P] [UI] Test cross-browser compatibility - verify consistent rendering in Chrome, Firefox, Safari
+- [x] T136 [UI] Create UI style guide - document minimal design patterns in docs/ui-guidelines.md
 
 **Checkpoint**: UI meets clean minimal design requirements (UI-001 through UI-010)
 
