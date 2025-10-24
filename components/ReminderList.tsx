@@ -177,7 +177,7 @@ export default function ReminderList({
             const latestResponse = getLatestResponse(reminder.responses);
             
             return (
-              <div key={reminder.id} class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <div key={reminder.id} class="px-6 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <div class="flex items-start justify-between">
                   {/* Main Content */}
                   <div class="flex-1 min-w-0">
