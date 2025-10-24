@@ -80,7 +80,7 @@ export default function ResponseLogComponent({ responses, showEmpty = true }: Re
       
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
         {sortedResponses.map((response) => (
-          <div key={response.id} class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          <div key={response.id} class="p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             <div class="flex items-start justify-between">
               <div class="flex-1">
                 <div class="flex items-center gap-2 mb-1">
