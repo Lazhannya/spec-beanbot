@@ -60,20 +60,30 @@ export const handler: Handlers<EditReminderPageData> = {
 export default function EditReminderPage({ data }: PageProps<EditReminderPageData>) {
   if (data.error) {
     return (
-      <div class="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
         <div class="max-w-4xl mx-auto">
-          <div class="bg-white border-l-4 border-red-500 p-4 md:p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-2">⚠️ Cannot Edit Reminder</h2>
-            <p class="text-gray-700 mb-4">{data.error}</p>
-            <div class="space-x-4">
-              <a href="/" class="text-blue-600 hover:underline">
-                ← Back to Dashboard
-              </a>
-              {data.reminder && (
-                <a href={`/admin/reminders/${data.reminder.id}`} class="text-blue-600 hover:underline">
-                  View Reminder Details
-                </a>
-              )}
+          <div class="bg-white shadow-lg rounded-xl border-l-4 border-red-500 p-6 md:p-8">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <span class="text-2xl">⚠️</span>
+                </div>
+              </div>
+              <div class="flex-1">
+                <h2 class="text-2xl font-bold text-gray-900 mb-3">Cannot Edit Reminder</h2>
+                <p class="text-gray-700 mb-6 leading-relaxed">{data.error}</p>
+                <div class="flex flex-wrap gap-3">
+                  <a href="/" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                    <span class="mr-2">←</span>
+                    Back to Dashboard
+                  </a>
+                  {data.reminder && (
+                    <a href={`/admin/reminders/${data.reminder.id}`} class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                      View Reminder Details
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -83,14 +93,24 @@ export default function EditReminderPage({ data }: PageProps<EditReminderPageDat
 
   if (!data.reminder) {
     return (
-      <div class="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
         <div class="max-w-4xl mx-auto">
-          <div class="bg-white border-l-4 border-yellow-500 p-4 md:p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-2">⚠️ Reminder Not Found</h2>
-            <p class="text-gray-700 mb-4">The requested reminder could not be found.</p>
-            <a href="/" class="text-blue-600 hover:underline">
-              ← Back to Dashboard
-            </a>
+          <div class="bg-white shadow-lg rounded-xl border-l-4 border-yellow-500 p-6 md:p-8">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <span class="text-2xl">⚠️</span>
+                </div>
+              </div>
+              <div class="flex-1">
+                <h2 class="text-2xl font-bold text-gray-900 mb-3">Reminder Not Found</h2>
+                <p class="text-gray-700 mb-6">The requested reminder could not be found.</p>
+                <a href="/" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                  <span class="mr-2">←</span>
+                  Back to Dashboard
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -98,38 +118,58 @@ export default function EditReminderPage({ data }: PageProps<EditReminderPageDat
   }
 
   return (
-    <div class="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
       <div class="max-w-4xl mx-auto">
         {/* Header with navigation */}
         <div class="mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <a href={`/admin/reminders/${data.reminder.id}`} class="text-blue-600 hover:underline">
-              ← Back to Reminder Details
+          <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <a href={`/admin/reminders/${data.reminder.id}`} class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors group">
+              <span class="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
+              Back to Reminder Details
             </a>
-            <a href="/" class="text-gray-600 hover:underline">
+            <a href="/" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
               Dashboard
             </a>
           </div>
-          <h1 class="text-3xl font-bold text-gray-900">Edit Reminder</h1>
-          <p class="text-gray-600 mt-2">
+          <h1 class="text-4xl font-bold text-gray-900 mb-3">Edit Reminder</h1>
+          <p class="text-gray-600 text-lg">
             Modify the reminder details below. Changes will be saved when you click "Save Changes".
           </p>
         </div>
 
         {/* Edit form component */}
-        <div class="bg-white border border-gray-200 p-4 md:p-6">
+        <div class="bg-white shadow-lg rounded-xl p-6 md:p-8">
           <EditReminderForm reminder={data.reminder} />
         </div>
 
         {/* Additional info */}
-        <div class="mt-6 bg-white border-l-4 border-blue-500 p-4">
-          <h3 class="font-bold text-gray-900 mb-2">📝 Editing Tips</h3>
-          <ul class="text-sm text-gray-700 space-y-1">
-            <li>• Only pending reminders can be edited</li>
-            <li>• Changes to the schedule will update the delivery time</li>
-            <li>• Escalation settings can be added or removed</li>
-            <li>• All fields are validated before saving</li>
-          </ul>
+        <div class="mt-6 bg-white shadow-md rounded-xl border-l-4 border-blue-500 p-6">
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">📝</span>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-bold text-gray-900 mb-3 text-lg">Editing Tips</h3>
+              <ul class="text-sm text-gray-700 space-y-2">
+                <li class="flex items-start">
+                  <span class="mr-2 text-blue-500">•</span>
+                  <span>Only pending reminders can be edited</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2 text-blue-500">•</span>
+                  <span>Changes to the schedule will update the delivery time</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2 text-blue-500">•</span>
+                  <span>Escalation settings can be added or removed</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2 text-blue-500">•</span>
+                  <span>All fields are validated before saving</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -4,25 +4,30 @@
  */
 
 import { PageProps } from "$fresh/server.ts";
-import ReminderList from "../components/ReminderList.tsx";
 
-export default function DashboardPage({ url }: PageProps) {
+export default function DashboardPage(_props: PageProps) {
   
   return (
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <div class="bg-white shadow">
+      <div class="bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between items-center py-6">
-            <div class="flex items-center">
-              <h1 class="text-2xl font-bold text-gray-900">Reminder Dashboard</h1>
+          <div class="flex justify-between items-center py-8">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <span class="text-2xl">🔔</span>
+              </div>
+              <div>
+                <h1 class="text-3xl font-bold text-white">Reminder Dashboard</h1>
+                <p class="text-blue-100 text-sm mt-1">Manage and monitor your Discord reminders</p>
+              </div>
             </div>
             <nav class="flex space-x-4">
               <a
                 href="/admin/reminders/new"
-                class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="bg-white text-blue-600 px-6 py-3 rounded-lg text-sm font-semibold hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                Create Reminder
+                ➕ Create Reminder
               </a>
             </nav>
           </div>
@@ -30,94 +35,94 @@ export default function DashboardPage({ url }: PageProps) {
       </div>
 
       {/* Stats Section */}
-      <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div class="px-4 sm:px-0">
           {/* Statistics Cards */}
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <div id="stats-pending" class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
+            <div id="stats-pending" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+              <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">⏳</span>
+                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center shadow-sm">
+                      <span class="text-white text-xl font-bold">⏳</span>
                     </div>
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">Pending</dt>
-                      <dd class="text-lg font-medium text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 truncate">Pending</dt>
+                      <dd class="text-2xl font-bold text-gray-900">-</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div id="stats-sent" class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
+            <div id="stats-sent" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+              <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">📤</span>
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl flex items-center justify-center shadow-sm">
+                      <span class="text-white text-xl font-bold">📤</span>
                     </div>
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">Sent</dt>
-                      <dd class="text-lg font-medium text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 truncate">Sent</dt>
+                      <dd class="text-2xl font-bold text-gray-900">-</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div id="stats-acknowledged" class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
+            <div id="stats-acknowledged" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+              <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">✅</span>
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-500 rounded-xl flex items-center justify-center shadow-sm">
+                      <span class="text-white text-xl font-bold">✅</span>
                     </div>
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">Acknowledged</dt>
-                      <dd class="text-lg font-medium text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 truncate">Acknowledged</dt>
+                      <dd class="text-2xl font-bold text-gray-900">-</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div id="stats-responses" class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
+            <div id="stats-responses" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+              <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">💬</span>
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl flex items-center justify-center shadow-sm">
+                      <span class="text-white text-xl font-bold">💬</span>
                     </div>
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">Responses</dt>
-                      <dd class="text-lg font-medium text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 truncate">Responses</dt>
+                      <dd class="text-2xl font-bold text-gray-900">-</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div id="stats-total" class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
+            <div id="stats-total" class="bg-white overflow-hidden shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
+              <div class="p-6">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-gray-500 rounded-md flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">📊</span>
+                    <div class="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-sm">
+                      <span class="text-white text-xl font-bold">📊</span>
                     </div>
                   </div>
                   <div class="ml-5 w-0 flex-1">
                     <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">Total</dt>
-                      <dd class="text-lg font-medium text-gray-900">-</dd>
+                      <dt class="text-sm font-semibold text-gray-600 truncate">Total</dt>
+                      <dd class="text-2xl font-bold text-gray-900">-</dd>
                     </dl>
                   </div>
                 </div>
@@ -127,66 +132,67 @@ export default function DashboardPage({ url }: PageProps) {
 
           {/* Reminder List */}
           <div id="reminder-list-container">
-            <div class="bg-white shadow rounded-lg">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-medium text-gray-900">Loading reminders...</h2>
+            <div class="bg-white shadow-lg rounded-xl">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Loading reminders...</h2>
               </div>
-              <div class="px-6 py-8 text-center">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p class="mt-2 text-sm text-gray-500">Please wait...</p>
+              <div class="px-6 py-12 text-center">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                <p class="mt-3 text-sm text-gray-600">Please wait...</p>
               </div>
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div class="mt-8 bg-white shadow rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-lg font-medium text-gray-900">Quick Actions</h3>
+          <div class="mt-8 bg-white shadow-lg rounded-xl">
+            <div class="px-6 py-5 border-b border-gray-200">
+              <h3 class="text-xl font-bold text-gray-900">Quick Actions</h3>
             </div>
-            <div class="px-6 py-4">
+            <div class="px-6 py-6">
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <a
                   href="/admin/reminders/new"
-                  class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  class="flex items-center p-5 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
                 >
                   <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">+</span>
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                      <span class="text-white text-xl font-bold">➕</span>
                     </div>
                   </div>
-                  <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-900">Create Reminder</p>
-                    <p class="text-xs text-gray-500">Schedule a new Discord reminder</p>
+                  <div class="ml-4">
+                    <p class="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Create Reminder</p>
+                    <p class="text-sm text-gray-600 mt-1">Schedule a new Discord reminder</p>
                   </div>
                 </a>
 
                 <button
+                  type="button"
                   id="refresh-all"
-                  class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  class="flex items-center p-5 border-2 border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 group"
                 >
                   <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">🔄</span>
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                      <span class="text-white text-xl font-bold">🔄</span>
                     </div>
                   </div>
-                  <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-900">Refresh Data</p>
-                    <p class="text-xs text-gray-500">Update all reminder information</p>
+                  <div class="ml-4">
+                    <p class="text-base font-semibold text-gray-900 group-hover:text-green-600 transition-colors">Refresh Data</p>
+                    <p class="text-sm text-gray-600 mt-1">Update all reminder information</p>
                   </div>
                 </button>
 
                 <a
                   href="/admin/settings"
-                  class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  class="flex items-center p-5 border-2 border-gray-200 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 group"
                 >
                   <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-gray-500 rounded-md flex items-center justify-center">
-                      <span class="text-white text-sm font-bold">⚙️</span>
+                    <div class="w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                      <span class="text-white text-xl font-bold">⚙️</span>
                     </div>
                   </div>
-                  <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-900">Settings</p>
-                    <p class="text-xs text-gray-500">Configure admin preferences</p>
+                  <div class="ml-4">
+                    <p class="text-base font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">Settings</p>
+                    <p class="text-sm text-gray-600 mt-1">Configure admin preferences</p>
                   </div>
                 </a>
               </div>
