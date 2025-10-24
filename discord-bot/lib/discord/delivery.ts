@@ -43,10 +43,9 @@ export class DiscordDeliveryService {
 
       console.log(`Successfully sent reminder ${reminder.id}, message ID: ${message.messageId}`);
       
-      return {
-        success: true,
-        messageId: message.messageId
-      };
+      return message.messageId 
+        ? { success: true, messageId: message.messageId }
+        : { success: true };
 
     } catch (error) {
       console.error(`Error sending reminder ${reminder.id}:`, error);
@@ -91,10 +90,9 @@ export class DiscordDeliveryService {
 
       console.log(`Successfully sent escalation for reminder ${reminder.id}, message ID: ${message.messageId}`);
       
-      return {
-        success: true,
-        messageId: message.messageId
-      };
+      return message.messageId
+        ? { success: true, messageId: message.messageId }
+        : { success: true };
 
     } catch (error) {
       console.error(`Error sending escalation for reminder ${reminder.id}:`, error);
@@ -208,7 +206,7 @@ export class DiscordDeliveryService {
   /**
    * Get user information from Discord
    */
-  async getUserInfo(userId: string): Promise<{ success: boolean; user?: any; error?: string }> {
+  async getUserInfo(userId: string): Promise<{ success: boolean; user?: Record<string, unknown>; error?: string }> {
     try {
       const response = await fetch(`${this.baseUrl}/users/${userId}`, {
         headers: {
@@ -223,7 +221,7 @@ export class DiscordDeliveryService {
         };
       }
 
-      const userData = await response.json();
+      const userData = await response.json() as Record<string, unknown>;
       return {
         success: true,
         user: userData
