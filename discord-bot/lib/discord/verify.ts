@@ -2,6 +2,7 @@
  * Discord Signature Verification
  * Verifies webhook signatures using Ed25519 via TweetNaCl
  * Based on official Deno Deploy Discord example
+ * Last verified: 2025-10-24 09:52 UTC
  */
 
 import nacl from "https://cdn.skypack.dev/tweetnacl@v1.0.3";
