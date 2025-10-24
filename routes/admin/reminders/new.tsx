@@ -46,24 +46,24 @@ export default function NewReminderPage({ url }: PageProps) {
   };
 
   return (
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div class="bg-white shadow">
+      <div class="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between items-center py-6">
             <div class="flex items-center">
-              <h1 class="text-2xl font-bold text-gray-900">Create New Reminder</h1>
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Create New Reminder</h1>
             </div>
             <nav class="flex space-x-4">
               <a
                 href="/"
-                class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Dashboard
               </a>
               <a
                 href="/admin/reminders"
-                class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium"
               >
                 All Reminders
               </a>
@@ -75,11 +75,11 @@ export default function NewReminderPage({ url }: PageProps) {
       {/* Main Content */}
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="px-4 py-6 sm:px-0">
-          <div class="bg-white shadow rounded-lg">
+          <div class="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
             <div class="px-6 py-6">
               <div class="mb-6">
-                <h2 class="text-lg font-medium text-gray-900">Reminder Details</h2>
-                <p class="mt-1 text-sm text-gray-600">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Reminder Details</h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                   Create a new reminder to be delivered to a Discord user at a specified time.
                 </p>
               </div>
@@ -93,10 +93,10 @@ export default function NewReminderPage({ url }: PageProps) {
           </div>
 
           {/* Help Section */}
-          <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg">
+          <div class="mt-8 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-30 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div class="px-6 py-4">
-              <h3 class="text-sm font-medium text-blue-900 mb-2">💡 Tips</h3>
-              <ul class="text-sm text-blue-800 space-y-1">
+              <h3 class="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">💡 Tips</h3>
+              <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1">
                 <li>• Discord user IDs are 17-19 digit numbers (e.g., 123456789012345678)</li>
                 <li>• You can find user IDs by enabling Developer Mode in Discord and right-clicking users</li>
                 <li>• Escalation will automatically send the reminder to a secondary user if no response is received</li>
@@ -106,21 +106,21 @@ export default function NewReminderPage({ url }: PageProps) {
           </div>
 
           {/* Recent Reminders Preview */}
-          <div class="mt-8 bg-white shadow rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-lg font-medium text-gray-900">Recent Reminders</h3>
-              <p class="mt-1 text-sm text-gray-600">
+          <div class="mt-8 bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Recent Reminders</h3>
+              <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Your most recently created reminders
               </p>
             </div>
             <div class="px-6 py-4">
               <div id="recent-reminders" class="space-y-3">
-                <p class="text-sm text-gray-500">Loading recent reminders...</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Loading recent reminders...</p>
               </div>
               <div class="mt-4">
                 <a
                   href="/"
-                  class="text-sm font-medium text-blue-600 hover:text-blue-500"
+                  class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
                 >
                   View all reminders →
                 </a>

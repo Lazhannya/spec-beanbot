@@ -62,15 +62,15 @@ export default function ReminderList({
   // Status styling
   const getStatusColor = (status: string): string => {
     switch (status) {
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      case "sent": return "bg-blue-100 text-blue-800";
-      case "acknowledged": return "bg-green-100 text-green-800";
-      case "declined": return "bg-red-100 text-red-800";
-      case "escalated": return "bg-purple-100 text-purple-800";
-      case "escalated_acknowledged": return "bg-green-100 text-green-800";
-      case "failed": return "bg-red-100 text-red-800";
-      case "cancelled": return "bg-gray-100 text-gray-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "pending": return "bg-yellow-100 dark:bg-yellow-900 dark:bg-opacity-30 text-yellow-800 dark:text-yellow-300";
+      case "sent": return "bg-blue-100 dark:bg-blue-900 dark:bg-opacity-30 text-blue-800 dark:text-blue-300";
+      case "acknowledged": return "bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-green-800 dark:text-green-300";
+      case "declined": return "bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300";
+      case "escalated": return "bg-purple-100 dark:bg-purple-900 dark:bg-opacity-30 text-purple-800 dark:text-purple-300";
+      case "escalated_acknowledged": return "bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-green-800 dark:text-green-300";
+      case "failed": return "bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300";
+      case "cancelled": return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300";
+      default: return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300";
     }
   };
 
@@ -121,11 +121,11 @@ export default function ReminderList({
   ];
 
   return (
-    <div class="bg-white shadow rounded-lg">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
       {/* Header */}
-      <div class="px-6 py-4 border-b border-gray-200">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div class="flex justify-between items-center">
-          <h2 class="text-lg font-medium text-gray-900">
+          <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
             Reminders ({reminders.length})
           </h2>
           <div class="flex items-center space-x-3">
@@ -134,7 +134,7 @@ export default function ReminderList({
               <select
                 value={statusFilter}
                 onChange={(e) => onStatusFilterChange((e.target as HTMLSelectElement).value)}
-                class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 {statusOptions.map(option => (
                   <option key={option.value} value={option.value}>
@@ -150,7 +150,7 @@ export default function ReminderList({
                 type="button"
                 onClick={onRefresh}
                 disabled={loading}
-                class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                class="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 {loading ? 'Loading...' : 'Refresh'}
               </button>
@@ -160,15 +160,15 @@ export default function ReminderList({
       </div>
 
       {/* Content */}
-      <div class="divide-y divide-gray-200">
+      <div class="divide-y divide-gray-200 dark:divide-gray-700">
         {loading && reminders.length === 0 ? (
           <div class="px-6 py-8 text-center">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p class="mt-2 text-sm text-gray-500">Loading reminders...</p>
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading reminders...</p>
           </div>
         ) : reminders.length === 0 ? (
           <div class="px-6 py-8 text-center">
-            <p class="text-gray-500">
+            <p class="text-gray-500 dark:text-gray-400">
               {statusFilter === "all" ? "No reminders found" : `No ${statusFilter} reminders found`}
             </p>
           </div>
@@ -177,13 +177,13 @@ export default function ReminderList({
             const latestResponse = getLatestResponse(reminder.responses);
             
             return (
-              <div key={reminder.id} class="px-6 py-4 hover:bg-gray-50">
+              <div key={reminder.id} class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700">
                 <div class="flex items-start justify-between">
                   {/* Main Content */}
                   <div class="flex-1 min-w-0">
                     {/* Content and Status */}
                     <div class="flex items-start justify-between mb-2">
-                      <p class="text-sm text-gray-900 font-medium">
+                      <p class="text-sm text-gray-900 dark:text-gray-100 font-medium">
                         {truncateContent(reminder.content)}
                       </p>
                       <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reminder.status)}`}>
@@ -192,7 +192,7 @@ export default function ReminderList({
                     </div>
 
                     {/* Details Grid */}
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-gray-500">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-gray-500 dark:text-gray-400">
                       <div>
                         <span class="font-medium">Target:</span> {reminder.targetUserId}
                       </div>
@@ -209,7 +209,7 @@ export default function ReminderList({
 
                     {/* Escalation Info */}
                     {reminder.escalation && (
-                      <div class="mt-2 text-xs text-purple-600">
+                      <div class="mt-2 text-xs text-purple-600 dark:text-purple-400">
                         <span class="font-medium">Escalation:</span> {reminder.escalation.secondaryUserId} 
                         (timeout: {reminder.escalation.timeoutMinutes}m)
                       </div>
@@ -217,7 +217,7 @@ export default function ReminderList({
 
                     {/* Latest Response */}
                     {latestResponse && (
-                      <div class="mt-2 text-xs text-gray-500">
+                      <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                         <span class="font-medium">Latest Response:</span> {formatStatus(latestResponse.action)} 
                         by {latestResponse.userId} at {formatDate(latestResponse.timestamp)}
                       </div>
@@ -230,7 +230,7 @@ export default function ReminderList({
                       <button
                         type="button"
                         onClick={() => onEdit(reminder.id)}
-                        class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-500"
+                        class="px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
                       >
                         Edit
                       </button>
@@ -240,7 +240,7 @@ export default function ReminderList({
                       <button
                         type="button"
                         onClick={() => onTest(reminder.id)}
-                        class="px-2 py-1 text-xs font-medium text-green-600 hover:text-green-500"
+                        class="px-2 py-1 text-xs font-medium text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300"
                       >
                         Test
                       </button>
@@ -250,7 +250,7 @@ export default function ReminderList({
                       <button
                         type="button"
                         onClick={() => onDelete(reminder.id)}
-                        class="px-2 py-1 text-xs font-medium text-red-600 hover:text-red-500"
+                        class="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
                       >
                         Delete
                       </button>
@@ -265,10 +265,10 @@ export default function ReminderList({
 
       {/* Footer with Pagination */}
       {(reminders.length > 0 || totalCount) && (
-        <div class="px-6 py-3 bg-gray-50 border-t border-gray-200">
+        <div class="px-6 py-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             {/* Count Information */}
-            <div class="text-xs text-gray-500">
+            <div class="text-xs text-gray-500 dark:text-gray-400">
               {totalCount !== undefined ? (
                 <>
                   Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} reminder{totalCount !== 1 ? 's' : ''}
@@ -288,11 +288,11 @@ export default function ReminderList({
                 {/* Page Size Selector */}
                 {onPageSizeChange && (
                   <div class="flex items-center space-x-2">
-                    <label class="text-xs text-gray-500">Per page:</label>
+                    <label class="text-xs text-gray-500 dark:text-gray-400">Per page:</label>
                     <select
                       value={pageSize}
                       onChange={(e) => onPageSizeChange(parseInt((e.target as HTMLSelectElement).value))}
-                      class="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     >
                       {pageSizeOptions.map(size => (
                         <option key={size} value={size}>{size}</option>
@@ -308,7 +308,7 @@ export default function ReminderList({
                     type="button"
                     onClick={() => onPageChange(currentPage - 1)}
                     disabled={currentPage <= 1 || loading}
-                    class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    class="px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     Previous
                   </button>
@@ -322,11 +322,11 @@ export default function ReminderList({
                           type="button"
                           onClick={() => onPageChange(1)}
                           disabled={loading}
-                          class="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          class="px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                           1
                         </button>
-                        {currentPage > 4 && <span class="text-gray-500">...</span>}
+                        {currentPage > 4 && <span class="text-gray-500 dark:text-gray-400">...</span>}
                       </>
                     )}
 
@@ -353,8 +353,8 @@ export default function ReminderList({
                           disabled={loading}
                           class={`px-2 py-1 text-xs font-medium rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                             currentPage === pageNum
-                              ? 'bg-blue-600 text-white border border-blue-600'
-                              : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50'
+                              ? 'bg-blue-600 dark:bg-blue-700 text-white border border-blue-600 dark:border-blue-700'
+                              : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50'
                           }`}
                         >
                           {pageNum}
@@ -365,12 +365,12 @@ export default function ReminderList({
                     {/* Last page */}
                     {currentPage < totalPages - 2 && (
                       <>
-                        {currentPage < totalPages - 3 && <span class="text-gray-500">...</span>}
+                        {currentPage < totalPages - 3 && <span class="text-gray-500 dark:text-gray-400">...</span>}
                         <button
                           type="button"
                           onClick={() => onPageChange(totalPages)}
                           disabled={loading}
-                          class="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          class="px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                           {totalPages}
                         </button>
@@ -383,7 +383,7 @@ export default function ReminderList({
                     type="button"
                     onClick={() => onPageChange(currentPage + 1)}
                     disabled={currentPage >= totalPages || loading}
-                    class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    class="px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     Next
                   </button>
