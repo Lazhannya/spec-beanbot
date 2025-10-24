@@ -782,4 +782,139 @@ export class ReminderService {
       };
     }
   }
+
+  /**
+   * Get the latest pending reminder for a user (for DM reply matching)
+   */
+  async getLatestPendingReminderForUser(userId: string): Promise<Reminder | null> {
+    try {
+      // Get all pending reminders
+      const result = await this.repository.getByStatus(ReminderStatus.PENDING);
+      
+      // Filter for this user and sort by most recent scheduled time
+      const userReminders = result
+        .filter(r => r.targetUserId === userId)
+        .sort((a, b) => b.scheduledTime.getTime() - a.scheduledTime.getTime());
+
+      return userReminders[0] ?? null;
+    } catch (error) {
+      console.error(`Error getting latest pending reminder for user ${userId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Acknowledge a reminder (user confirmed receipt via DM reply)
+   */
+  async acknowledgeReminder(reminderId: string, userId: string): Promise<Result<void>> {
+    try {
+      const reminder = await this.repository.getById(reminderId);
+      if (!reminder) {
+        return {
+          success: false,
+          error: new Error("Reminder not found")
+        };
+      }
+
+      // Add response log
+      const responseLog: ResponseLog = {
+        id: crypto.randomUUID(),
+        reminderId,
+        userId,
+        responseType: ResponseType.ACKNOWLEDGED,
+        timestamp: new Date()
+      };
+
+      const updatedReminder = {
+        ...reminder,
+        status: ReminderStatus.ACKNOWLEDGED,
+        responses: [...reminder.responses, responseLog],
+        updatedAt: new Date()
+      };
+
+      const success = await this.repository.update(reminderId, {
+        status: updatedReminder.status,
+        responses: updatedReminder.responses,
+        updatedAt: updatedReminder.updatedAt
+      });
+
+      if (!success) {
+        return {
+          success: false,
+          error: new Error("Failed to update reminder")
+        };
+      }
+
+      return { success: true, data: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error("Unknown error occurred")
+      };
+    }
+  }
+
+  /**
+   * Decline a reminder (user declined via DM reply, may trigger escalation)
+   */
+  async declineReminder(reminderId: string, userId: string): Promise<Result<void>> {
+    try {
+      const reminder = await this.repository.getById(reminderId);
+      if (!reminder) {
+        return {
+          success: false,
+          error: new Error("Reminder not found")
+        };
+      }
+
+      // Add response log
+      const responseLog: ResponseLog = {
+        id: crypto.randomUUID(),
+        reminderId,
+        userId,
+        responseType: ResponseType.DECLINED,
+        timestamp: new Date()
+      };
+
+      let newStatus = ReminderStatus.DECLINED;
+      let updatedEscalation = reminder.escalation;
+      
+      // Check if escalation should be triggered
+      if (reminder.escalation?.isActive) {
+        newStatus = ReminderStatus.ESCALATED;
+        updatedEscalation = {
+          ...reminder.escalation,
+          triggeredAt: new Date(),
+          triggerReason: "decline"
+        };
+      }
+
+      const updateData: Partial<Reminder> = {
+        status: newStatus,
+        responses: [...reminder.responses, responseLog],
+        updatedAt: new Date()
+      };
+
+      // Only include escalation if it exists
+      if (updatedEscalation) {
+        updateData.escalation = updatedEscalation;
+      }
+
+      const success = await this.repository.update(reminderId, updateData);
+
+      if (!success) {
+        return {
+          success: false,
+          error: new Error("Failed to update reminder")
+        };
+      }
+
+      return { success: true, data: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error("Unknown error occurred")
+      };
+    }
+  }
 }

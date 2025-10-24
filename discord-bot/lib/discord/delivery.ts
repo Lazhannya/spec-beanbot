@@ -144,7 +144,8 @@ export class DiscordDeliveryService {
   }
 
   /**
-   * Send message to a Discord channel
+   * Send message to a Discord channel with reply-based acknowledgement instructions
+   * No buttons - user replies with text to acknowledge or decline
    */
   private async sendMessage(
     channelId: string, 
@@ -152,6 +153,13 @@ export class DiscordDeliveryService {
     reminderId?: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
+      // Build message with reply instructions
+      let messageContent = `🔔 **Reminder**\n\n${content}`;
+      
+      if (reminderId) {
+        messageContent += `\n\n📝 **To respond:**\nReply with \`okay\` to acknowledge or \`decline\` to decline this reminder.`;
+      }
+
       const response = await fetch(`${this.baseUrl}/channels/${channelId}/messages`, {
         method: "POST",
         headers: {
@@ -159,26 +167,7 @@ export class DiscordDeliveryService {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          content: content,
-          components: [
-            {
-              type: 1, // Action Row
-              components: [
-                {
-                  type: 2, // Button
-                  style: 3, // Success/Green
-                  label: "Acknowledge",
-                  custom_id: reminderId ? `acknowledge_reminder_${reminderId}` : "acknowledge_reminder"
-                },
-                {
-                  type: 2, // Button
-                  style: 4, // Danger/Red
-                  label: "Decline",
-                  custom_id: reminderId ? `decline_reminder_${reminderId}` : "decline_reminder"
-                }
-              ]
-            }
-          ]
+          content: messageContent
         })
       });
 

@@ -257,7 +257,56 @@ description: "Task list for reminder management web interface implementation"
 
 ---
 
-## Phase 11: UI Polish - Clean Minimal Design (Priority: P8)
+## Phase 11: Reply-Based Acknowledgement (Priority: P8) 🔄 ALTERNATIVE APPROACH
+
+**Goal**: Replace Discord webhook button interactions with DM reply-based acknowledgement
+
+**Why**: Discord webhook verification has been unreliable and causing deployment issues. This alternative approach eliminates the need for Interactions Endpoint URL configuration entirely.
+
+**Independent Test**: Send reminder, reply with "okay" or "decline" in Discord DM, verify status updates in web interface
+
+### Implementation for Reply-Based Acknowledgement
+
+- [x] T106 [P] [REPLY] Update delivery service to remove button components in discord-bot/lib/discord/delivery.ts
+- [x] T107 [P] [REPLY] Add reply instruction text to reminder messages in discord-bot/lib/discord/delivery.ts
+- [x] T108 [P] [REPLY] Create DMListenerService class in discord-bot/lib/discord/dm-listener.ts
+- [x] T109 [P] [REPLY] Define acknowledgement keywords (okay, ok, yes, etc.) in dm-listener.ts
+- [x] T110 [P] [REPLY] Define decline keywords (decline, no, skip, etc.) in dm-listener.ts
+- [x] T111 [REPLY] Add getLatestPendingReminderForUser method to ReminderService in discord-bot/lib/reminder/service.ts
+- [x] T112 [REPLY] Add acknowledgeReminder method to ReminderService in discord-bot/lib/reminder/service.ts
+- [x] T113 [REPLY] Add declineReminder method (with escalation trigger) to ReminderService in discord-bot/lib/reminder/service.ts
+- [x] T114 [P] [REPLY] Create Discord message gateway endpoint in routes/api/gateway/discord-messages.ts
+- [x] T115 [P] [REPLY] Add MESSAGE_CREATE event handling in gateway endpoint
+- [x] T116 [P] [REPLY] Add confirmation message sending after acknowledgement/decline
+- [x] T117 [P] [REPLY] Create setup guide documentation in REPLY_BASED_ACKNOWLEDGEMENT_SETUP.md
+- [ ] T118 [P] [REPLY] Add MESSAGE_CONTENT intent requirement to deployment docs
+- [ ] T119 [REPLY] Configure Discord Gateway webhook forwarding service
+- [ ] T120 [REPLY] Enable MESSAGE_CONTENT privileged intent in Discord Developer Portal
+- [ ] T121 [REPLY] Test full reply-based acknowledgement flow end-to-end
+
+**Checkpoint**: Reply-based acknowledgement system fully functional - no webhook verification needed
+
+**Requirements**:
+- MESSAGE_CONTENT privileged intent enabled in Discord Developer Portal
+- DISCORD_BOT_TOKEN environment variable configured
+- Gateway event forwarding configured (separate service or bot instance)
+
+**Advantages**:
+- ✅ No Interactions Endpoint URL configuration needed
+- ✅ No PUBLIC_KEY or signature verification
+- ✅ Simpler deployment process
+- ✅ More reliable than webhook-based buttons
+- ✅ Easier to debug
+
+**Trade-offs**:
+- Requires MESSAGE_CONTENT privileged intent (needs approval for 100+ servers)
+- Users must type keywords instead of clicking buttons
+- Requires Gateway connection or event forwarding service
+- Slight latency compared to instant button interactions
+
+---
+
+## Phase 12: UI Polish - Clean Minimal Design (Priority: P9)
 
 **Goal**: Enhance user interface with clean, minimal design following constitutional principle VI
 
@@ -265,21 +314,21 @@ description: "Task list for reminder management web interface implementation"
 
 ### Implementation for UI Improvements
 
-- [ ] T091 [P] [UI] Audit all UI components for simplicity - replace complex elements with Unicode/CSS in routes/admin/reminders/[id]/index.tsx
-- [ ] T092 [P] [UI] Review and simplify navigation arrows - ensure Unicode characters used consistently in routes/admin/reminders/[id]/edit.tsx
-- [ ] T093 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/ReminderForm.tsx
-- [ ] T094 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/EditReminderForm.tsx
-- [ ] T095 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/ReminderForm.tsx
-- [ ] T096 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/EditReminderForm.tsx
-- [ ] T097 [P] [UI] Enhance loading states - add clear loading indicators for all async operations in routes/index.tsx
-- [ ] T098 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderList.tsx
-- [ ] T099 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderDetail.tsx
-- [ ] T100 [P] [UI] Simplify dashboard - remove unnecessary visual elements in routes/index.tsx
-- [ ] T101 [P] [UI] Optimize button styles - use simple, proven button patterns in components/ReminderDetail.tsx
-- [ ] T102 [P] [UI] Clean up table layouts - ensure readable, accessible data tables in components/ReminderList.tsx
-- [ ] T103 [P] [UI] Remove complex SVG icons - replace with Unicode where appropriate across all routes and components
-- [ ] T104 [P] [UI] Test cross-browser compatibility - verify consistent rendering in Chrome, Firefox, Safari
-- [ ] T105 [UI] Create UI style guide - document minimal design patterns in docs/ui-guidelines.md
+- [ ] T122 [P] [UI] Audit all UI components for simplicity - replace complex elements with Unicode/CSS in routes/admin/reminders/[id]/index.tsx
+- [ ] T123 [P] [UI] Review and simplify navigation arrows - ensure Unicode characters used consistently in routes/admin/reminders/[id]/edit.tsx
+- [ ] T124 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/ReminderForm.tsx
+- [ ] T125 [P] [UI] Standardize form layouts - ensure consistent spacing and alignment in islands/EditReminderForm.tsx
+- [ ] T126 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/ReminderForm.tsx
+- [ ] T127 [P] [UI] Improve validation feedback - add clear, immediate error messages in islands/EditReminderForm.tsx
+- [ ] T128 [P] [UI] Enhance loading states - add clear loading indicators for all async operations in routes/index.tsx
+- [ ] T129 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderList.tsx
+- [ ] T130 [P] [UI] Review color scheme - ensure clean, accessible color palette in components/ReminderDetail.tsx
+- [ ] T131 [P] [UI] Simplify dashboard - remove unnecessary visual elements in routes/index.tsx
+- [ ] T132 [P] [UI] Optimize button styles - use simple, proven button patterns in components/ReminderDetail.tsx
+- [ ] T133 [P] [UI] Clean up table layouts - ensure readable, accessible data tables in components/ReminderList.tsx
+- [ ] T134 [P] [UI] Remove complex SVG icons - replace with Unicode where appropriate across all routes and components
+- [ ] T135 [P] [UI] Test cross-browser compatibility - verify consistent rendering in Chrome, Firefox, Safari
+- [ ] T136 [UI] Create UI style guide - document minimal design patterns in docs/ui-guidelines.md
 
 **Checkpoint**: UI meets clean minimal design requirements (UI-001 through UI-010)
 
