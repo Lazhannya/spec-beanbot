@@ -75,19 +75,19 @@ export default function StatusUpdate({
   };
 
   return (
-    <div class="bg-white border border-gray-200 rounded-lg p-4">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm font-semibold text-gray-700">Current Status</h3>
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Current Status</h3>
         <div class="flex items-center gap-2">
           {isLoading && (
-            <span class="text-xs text-gray-400" title="Updating...">
+            <span class="text-xs text-gray-400 dark:text-gray-500" title="Updating...">
               ⟳
             </span>
           )}
           <button
             type="button"
             onClick={() => setIsPolling(!isPolling)}
-            class="text-xs text-gray-500 hover:text-gray-700"
+            class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             title={isPolling ? "Pause updates" : "Resume updates"}
           >
             {isPolling ? "⏸" : "▶"}
@@ -99,11 +99,11 @@ export default function StatusUpdate({
         <StatusBadge status={status} size="lg" />
         
         <div class="text-right">
-          <p class="text-xs text-gray-500">
+          <p class="text-xs text-gray-500 dark:text-gray-400">
             Updated {formatLastUpdated()}
           </p>
           {isPolling && (
-            <p class="text-xs text-gray-400">
+            <p class="text-xs text-gray-400 dark:text-gray-500">
               Checking every {pollInterval / 1000}s
             </p>
           )}
@@ -111,7 +111,7 @@ export default function StatusUpdate({
       </div>
 
       {error && (
-        <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+        <div class="mt-2 p-2 bg-red-50 dark:bg-red-900 dark:bg-opacity-20 border border-red-200 dark:border-red-700 rounded text-xs text-red-700 dark:text-red-200">
           {error}
         </div>
       )}
