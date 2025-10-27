@@ -520,8 +520,10 @@ Deno.cron("Check due reminders", "* * * * *", async () => {
 - [x] T174 [P] [MGMT] Add viewReminder function to dashboard and fix globalThis references in routes/index.tsx
 - [x] T175 [P] [MGMT] Create flush all reminders API endpoint in routes/api/reminders/flush.ts
 - [x] T176 [MGMT] Add Flush All button to dashboard with double confirmation in routes/index.tsx
+- [x] T177 [P] [SETTINGS] Create admin settings page with timezone preference in routes/admin/settings.tsx
+- [x] T178 [P] [SETTINGS] Add dark mode support to settings page matching dashboard design in routes/admin/settings.tsx
 
-**Checkpoint**: Reminders fully manageable from dashboard list AND detail page, with database flush capability
+**Checkpoint**: Reminders fully manageable from dashboard list AND detail page, with database flush capability and settings page
 
 **Changes Made**:
 
@@ -677,6 +679,101 @@ When viewing reminders on the **dashboard list**:
 - **Case Handling**: All comparisons use `.toLowerCase()` for reliability
 
 **Phase 15 Status**: ✅ **COMPLETE** - Full reminder management with case-insensitive status checks
+
+---
+
+## Phase 16: Admin Settings Page (T177-T178)
+
+**Goal**: Implement settings page for admin preferences (timezone, future notifications, etc.)
+
+**Context**: Dashboard has a settings button (`/admin/settings`) that was leading nowhere. Need functional settings page with timezone preference support and dark mode styling matching the dashboard.
+
+### Tasks
+
+- [x] T177 [P] [SETTINGS] Create admin settings page with timezone preference in routes/admin/settings.tsx
+- [x] T178 [P] [SETTINGS] Add dark mode support to settings page matching dashboard design in routes/admin/settings.tsx
+
+**Checkpoint**: Admin can configure timezone preferences via working settings page
+
+**Implementation Details**:
+
+1. **Settings Page Route** (`routes/admin/settings.tsx`):
+   - **GET Handler**:
+     ```typescript
+     const settingsKey = ["admin_settings", "default"];
+     const settingsEntry = await kv.get<UserSettings>(settingsKey);
+     const settings: UserSettings = settingsEntry.value || {
+       timezone: DEFAULT_TIMEZONE, // Europe/Berlin
+     };
+     ```
+   - **POST Handler**:
+     - Validates timezone against `SUPPORTED_TIMEZONES` list
+     - Saves to Deno KV: `["admin_settings", "default"]`
+     - Returns success/error feedback
+   - **Storage**: Uses Deno KV for persistent settings storage
+
+2. **UI Design** (matching dashboard style):
+   - **Header**: Gradient blue header with icon, navigation links
+   - **Dark Mode**: Full dark mode support with `dark:` Tailwind classes
+   - **Success/Error Messages**: Green/red alert boxes with icons
+   - **Timezone Selector**: Grouped dropdown by region (Europe, Americas, Asia, etc.)
+   - **Current Time Display**: Shows current timezone and local time in blue info box
+   - **Save Button**: Gradient blue button with emoji icon
+
+3. **Timezone Management**:
+   - **Default**: `Europe/Berlin` (as per project requirements)
+   - **Supported Timezones**: Comprehensive IANA timezone list
+   - **Grouped by Region**:
+     - Europe (Berlin, London, Paris, Rome, etc.)
+     - Americas (New York, Chicago, Los Angeles, etc.)
+     - Asia (Tokyo, Shanghai, Singapore, etc.)
+     - Australia/Pacific (Sydney, Auckland, etc.)
+     - UTC
+   - **Display Format**: `{timezone} ({offset})` using `getTimezoneFriendlyName()`
+   - **Validation**: Server-side validation against whitelist
+
+4. **Future Features Section**:
+   - **Coming Soon** card with planned features:
+     - 🔔 Notification preferences
+     - ⏰ Default reminder duration
+     - 👥 Team management
+     - 🎨 UI customization
+     - 📊 Analytics & reports
+   - Uses same card design as dashboard for consistency
+
+**User Experience**:
+
+When admin clicks "Settings" from dashboard:
+1. Loads current timezone preference (or default: Europe/Berlin)
+2. Shows timezone selector with friendly names and offsets
+3. Displays current local time in selected timezone
+4. Admin selects new timezone → clicks "Save Settings"
+5. Success message appears, settings saved to KV
+6. All reminder timestamps will now display in selected timezone
+
+**Navigation Flow**:
+```
+Dashboard → Settings Button → /admin/settings
+Settings Page → Dashboard Button → /
+Settings Page → New Reminder Button → /admin/reminders/new
+```
+
+**Benefits**:
+- ✅ **Functional settings link** - No more dead link from dashboard
+- ✅ **Timezone customization** - Admins can set preferred timezone for all displays
+- ✅ **Persistent storage** - Settings saved to Deno KV, survives restarts
+- ✅ **Consistent UI** - Matches dashboard design with dark mode support
+- ✅ **User feedback** - Clear success/error messages with visual feedback
+- ✅ **Future-ready** - "Coming Soon" section prepared for additional settings
+- ✅ **Validation** - Server-side timezone validation prevents invalid values
+
+**Technical Stack**:
+- **Storage**: Deno KV (`["admin_settings", "default"]` key)
+- **Timezone Utils**: `discord-bot/lib/utils/timezone.ts` (already exists)
+- **Styling**: Tailwind CSS with dark mode support
+- **Form Handling**: Native HTML forms with POST handler
+
+**Phase 16 Status**: ✅ **COMPLETE** - Settings page fully functional with timezone preferences
 
 ---
 
