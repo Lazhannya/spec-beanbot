@@ -55,7 +55,8 @@ export default function ReminderDetail({ reminder, onEdit, onDelete, onTest }: R
         
         {/* Action Buttons */}
         <div class="flex gap-2">
-          {reminder.status === "pending" && onEdit && (
+          {/* Edit button - allow for any status except acknowledged/declined */}
+          {onEdit && reminder.status !== "acknowledged" && reminder.status !== "declined" && (
             <button
               type="button"
               onClick={onEdit}
@@ -73,7 +74,8 @@ export default function ReminderDetail({ reminder, onEdit, onDelete, onTest }: R
               Test
             </button>
           )}
-          {reminder.status === "pending" && onDelete && (
+          {/* Delete button - allow for any status */}
+          {onDelete && (
             <button
               type="button"
               onClick={onDelete}

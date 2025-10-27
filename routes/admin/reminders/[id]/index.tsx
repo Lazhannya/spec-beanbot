@@ -154,8 +154,33 @@ export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPag
           )}
         </div>
 
-        {/* Reminder detail component */}
-        <ReminderDetail reminder={data.reminder} />
+        {/* Reminder detail component with action buttons */}
+        <ReminderDetail 
+          reminder={data.reminder}
+          onEdit={() => {
+            globalThis.location.href = `/admin/reminders/${data.reminder!.id}/edit`;
+          }}
+          onDelete={async () => {
+            if (confirm(`Are you sure you want to delete this reminder?\n\nThis action cannot be undone.`)) {
+              try {
+                const response = await fetch(`/api/reminders/${data.reminder!.id}`, {
+                  method: "DELETE",
+                });
+                
+                if (response.ok) {
+                  // Redirect to dashboard after successful deletion
+                  globalThis.location.href = "/";
+                } else {
+                  const error = await response.text();
+                  alert(`Failed to delete reminder: ${error}`);
+                }
+              } catch (error) {
+                console.error("Error deleting reminder:", error);
+                alert("Failed to delete reminder. Please try again.");
+              }
+            }
+          }}
+        />
 
         {/* Detailed Response History */}
         {data.reminder.responses && data.reminder.responses.length > 0 && (

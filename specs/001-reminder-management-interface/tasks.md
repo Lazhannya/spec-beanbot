@@ -486,17 +486,22 @@ Deno.cron("Check due reminders", "* * * * *", async () => {
 **Goal**: Fix issue where reminders become uneditable/unmanageable after test triggers or status changes
 
 **Problem Identified**: 
-- Test trigger was available but reminders with non-pending status couldn't be edited or deleted
-- Once a reminder's status changed (e.g., delivered, sent), it became permanently locked
-- No way to reset a reminder back to pending for re-testing or corrections
-- Overly restrictive status checks prevented legitimate management operations
+- Edit and Delete buttons were only shown when `reminder.status === "pending"` in ReminderDetail component
+- Detail page didn't pass `onEdit` or `onDelete` callback handlers to ReminderDetail component
+- Result: Even though backend allowed editing/deleting, UI buttons were hidden or non-functional
+- Reminders became permanently locked after any status change (testing, delivery, etc.)
+
+**Root Cause Analysis**:
+1. **ReminderDetail Component**: Had hardcoded `status === "pending"` checks on Edit/Delete buttons
+2. **Detail Page**: Didn't wire up the `onEdit`/`onDelete` props, making buttons non-functional even when visible
+3. **User Impact**: After testing a reminder (which can change status), Edit and Delete buttons disappeared
 
 **Independent Test**: 
-1. Create reminder and fire test trigger
-2. Verify "Reset to Pending" button appears for non-pending reminders
-3. Reset reminder to pending
-4. Verify reminder can now be edited and re-tested
-5. Verify reminders can be deleted in any status
+1. Create reminder and fire test trigger (status may change to "sent")
+2. Verify Edit and Delete buttons still appear on detail page
+3. Click Edit button → redirects to edit page and allows editing
+4. Return to detail, click Delete button → shows confirmation, deletes successfully
+5. Create reminder, use Reset to Pending → verify buttons work after reset
 
 ### Implementation for Management Improvements
 
@@ -505,46 +510,81 @@ Deno.cron("Check due reminders", "* * * * *", async () => {
 - [x] T164 [MGMT] Add ResetToPending component to reminder detail page in routes/admin/reminders/[id]/index.tsx
 - [x] T165 [P] [MGMT] Update edit page to allow editing reminders in any status except acknowledged/declined in routes/admin/reminders/[id]/edit.tsx
 - [x] T166 [P] [MGMT] Remove status restriction from DELETE endpoint - allow deletion in any status in routes/api/reminders/[id]/index.ts
+- [x] T167 [P] [MGMT] Fix ReminderDetail component Edit button - show for any status except acknowledged/declined in components/ReminderDetail.tsx
+- [x] T168 [P] [MGMT] Fix ReminderDetail component Delete button - show for any status in components/ReminderDetail.tsx
+- [x] T169 [MGMT] Wire up onEdit and onDelete callbacks in detail page in routes/admin/reminders/[id]/index.tsx
 
-**Checkpoint**: Reminders are fully manageable regardless of status - can be reset, edited, and deleted as needed
+**Checkpoint**: Reminders are fully manageable regardless of status - Edit and Delete buttons work correctly
 
 **Changes Made**:
 
-1. **Reset to Pending Feature**:
-   - New API endpoint: `POST /api/reminders/[id]/reset`
-   - Resets reminder status to "pending"
-   - Prevents resetting acknowledged/declined reminders (preserves data integrity)
-   - Island component with confirmation dialog and auto-reload after success
+1. **ReminderDetail Component** (`components/ReminderDetail.tsx`):
+   - **Edit Button**:
+     - **Before**: `{reminder.status === "pending" && onEdit && (...)`
+     - **After**: `{onEdit && reminder.status !== "acknowledged" && reminder.status !== "declined" && (...)`
+     - Now shows for sent, delivered, escalated reminders
+   - **Delete Button**:
+     - **Before**: `{reminder.status === "pending" && onDelete && (...)`
+     - **After**: `{onDelete && (...)}`
+     - Now shows for all statuses
 
-2. **Relaxed Edit Restrictions**:
-   - **Before**: Only "pending" reminders could be edited
-   - **After**: Any reminder except "acknowledged" or "declined" can be edited
-   - Allows corrections to sent/delivered reminders
-   - Maintains data integrity for completed interactions
+2. **Detail Page** (`routes/admin/reminders/[id]/index.tsx`):
+   - Added `onEdit` callback: Redirects to edit page using `globalThis.location.href`
+   - Added `onDelete` callback: Shows confirmation dialog, calls DELETE API, redirects to dashboard
+   - Fixed: Used `globalThis` instead of `window` for Deno compatibility
 
-3. **Removed Delete Restrictions**:
-   - **Before**: Only "pending" reminders could be deleted
-   - **After**: Reminders in any status can be deleted
-   - Useful for cleanup and testing
-   - Provides full administrative control
+3. **Reset to Pending Feature** (Already Implemented):
+   - API endpoint: `POST /api/reminders/[id]/reset`
+   - Island component with confirmation dialog
+   - Prevents resetting acknowledged/declined reminders
+   - Auto-reloads page after successful reset
+
+4. **Backend Already Correct**:
+   - Edit page: Already allows editing non-acknowledged/declined reminders
+   - DELETE endpoint: Already allows deletion in any status
 
 **User Experience**:
 
-When viewing a non-pending reminder:
-1. See warning box explaining current status
-2. Click "Reset to Pending" button
-3. Confirm action in dialog
-4. Page auto-reloads with reminder now in pending status
-5. Test trigger and edit buttons now functional
+When viewing any reminder (regardless of status):
+1. **Edit Button** appears for all reminders except acknowledged/declined
+2. **Delete Button** appears for all reminders
+3. **Reset to Pending** button appears for non-pending reminders (additional option)
+4. Click Edit → goes to edit page → can modify reminder → saves successfully
+5. Click Delete → confirms → deletes → returns to dashboard
 
 **Benefits**:
-- ✅ **No more locked reminders** - always manageable
-- ✅ **Test-friendly** - can test repeatedly without issues
-- ✅ **Correction-friendly** - can edit reminders after testing
-- ✅ **Full control** - delete any reminder regardless of status
-- ✅ **Data integrity** - still protects acknowledged/declined reminders from accidental resets
+- ✅ **No more hidden buttons** - Edit/Delete always visible when appropriate
+- ✅ **Functional buttons** - All callbacks properly wired up
+- ✅ **Test-friendly** - Can edit and delete reminders after testing
+- ✅ **Correction-friendly** - Can fix mistakes in sent/delivered reminders
+- ✅ **Full administrative control** - Delete any reminder regardless of status
+- ✅ **Data integrity maintained** - Still protects acknowledged/declined from accidental edits
 
-**Phase 15 Status**: ✅ **COMPLETE** - Full reminder management regardless of status
+**Technical Details**:
+
+```tsx
+// ReminderDetail.tsx - Before (BROKEN)
+{reminder.status === "pending" && onEdit && (
+  <button onClick={onEdit}>Edit</button>
+)}
+
+// ReminderDetail.tsx - After (FIXED)
+{onEdit && reminder.status !== "acknowledged" && reminder.status !== "declined" && (
+  <button onClick={onEdit}>Edit</button>
+)}
+
+// Detail page - Before (BROKEN)
+<ReminderDetail reminder={data.reminder} />
+
+// Detail page - After (FIXED)
+<ReminderDetail 
+  reminder={data.reminder}
+  onEdit={() => globalThis.location.href = `/admin/reminders/${data.reminder!.id}/edit`}
+  onDelete={async () => { /* confirmation + API call */ }}
+/>
+```
+
+**Phase 15 Status**: ✅ **COMPLETE** - Full reminder management with visible, functional Edit/Delete buttons
 
 ---
 
