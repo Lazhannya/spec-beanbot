@@ -23,6 +23,13 @@ export default function DashboardPage(_props: PageProps) {
               </div>
             </div>
             <nav class="flex space-x-4">
+              <button
+                type="button"
+                id="flush-all-btn"
+                class="bg-red-600 text-white dark:bg-red-700 px-6 py-3 rounded-lg text-sm font-semibold hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-red-600 dark:focus:ring-offset-red-700 transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                🗑️ Flush All
+              </button>
               <a
                 href="/admin/reminders/new"
                 class="bg-white text-blue-600 dark:bg-blue-700 dark:text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 dark:focus:ring-offset-blue-800 transition-all duration-200 shadow-md hover:shadow-lg"
@@ -346,13 +353,19 @@ export default function DashboardPage(_props: PageProps) {
                             </div>
                           </div>
                           <div class="ml-4 flex flex-col space-y-1">
-                            \${reminder.status === 'pending' ? \`
-                              <button onclick="editReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Edit</button>
-                            \` : ''}
-                            <button onclick="testReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300">Test</button>
-                            \${reminder.status === 'pending' ? \`
-                              <button onclick="deleteReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300">Delete</button>
-                            \` : ''}
+                            \${(() => {
+                              const status = reminder.status.toLowerCase();
+                              const blockedStatuses = ['acknowledged', 'declined', 'escalated_acknowledged', 'escalated_declined'];
+                              const isEditable = !blockedStatuses.includes(status);
+                              
+                              return \`
+                                \${isEditable ? \`
+                                  <button onclick="editReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Edit</button>
+                                \` : ''}
+                                <button onclick="viewReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">View</button>
+                                <button onclick="deleteReminder('\${reminder.id}')" class="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300">Delete</button>
+                              \`;
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -411,7 +424,11 @@ export default function DashboardPage(_props: PageProps) {
 
             // Action handlers
             function editReminder(id) {
-              window.location.href = \`/admin/reminders/\${id}/edit\`;
+              globalThis.location.href = \`/admin/reminders/\${id}/edit\`;
+            }
+
+            function viewReminder(id) {
+              globalThis.location.href = \`/admin/reminders/\${id}\`;
             }
 
             function testReminder(id) {
@@ -468,12 +485,63 @@ export default function DashboardPage(_props: PageProps) {
               }
             }
 
+            async function flushAllReminders() {
+              const confirmed = confirm(
+                '⚠️ WARNING: This will permanently delete ALL reminders from the database!\\n\\n' +
+                'This action CANNOT be undone.\\n\\n' +
+                'Are you absolutely sure you want to continue?'
+              );
+              
+              if (!confirmed) return;
+
+              // Double confirmation
+              const doubleConfirmed = confirm(
+                'Last chance! Type DELETE in the next prompt to confirm.\\n\\n' +
+                'Click OK to continue, Cancel to abort.'
+              );
+
+              if (!doubleConfirmed) return;
+
+              const flushBtn = document.getElementById('flush-all-btn');
+              const originalText = flushBtn ? flushBtn.textContent : '';
+              
+              try {
+                if (flushBtn) {
+                  flushBtn.textContent = 'Flushing...';
+                  flushBtn.disabled = true;
+                }
+
+                const response = await fetch('/api/reminders/flush', { method: 'DELETE' });
+                const data = await response.json();
+
+                if (response.ok) {
+                  alert(\`✅ Success: \${data.message}\\n\\nDeleted: \${data.details.deleted}\\nFailed: \${data.details.failed}\`);
+                  await loadData(); // Refresh data
+                } else {
+                  alert(\`❌ Failed to flush reminders: \${data.error}\\n\${data.details || ''}\`);
+                }
+              } catch (error) {
+                console.error('Error flushing reminders:', error);
+                alert('❌ Failed to flush reminders: Network error');
+              } finally {
+                if (flushBtn) {
+                  flushBtn.textContent = originalText;
+                  flushBtn.disabled = false;
+                }
+              }
+            }
+
             // Event listeners
             document.addEventListener('DOMContentLoaded', loadData);
             
             const refreshButton = document.getElementById('refresh-all');
             if (refreshButton) {
               refreshButton.addEventListener('click', loadData);
+            }
+
+            const flushButton = document.getElementById('flush-all-btn');
+            if (flushButton) {
+              flushButton.addEventListener('click', flushAllReminders);
             }
           `,
         }}

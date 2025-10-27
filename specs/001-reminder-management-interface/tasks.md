@@ -516,8 +516,12 @@ Deno.cron("Check due reminders", "* * * * *", async () => {
 - [x] T170 [P] [MGMT] Add case-insensitive status comparison to handle any status value format in components/ReminderDetail.tsx
 - [x] T171 [P] [MGMT] Block all completed interaction statuses (acknowledged, declined, escalated_acknowledged, escalated_declined) in components/ReminderDetail.tsx
 - [x] T172 [P] [MGMT] Update edit page backend with case-insensitive status blocking logic in routes/admin/reminders/[id]/edit.tsx
+- [x] T173 [P] [MGMT] Fix dashboard reminder list to show Edit/Delete buttons with case-insensitive logic in routes/index.tsx
+- [x] T174 [P] [MGMT] Add viewReminder function to dashboard and fix globalThis references in routes/index.tsx
+- [x] T175 [P] [MGMT] Create flush all reminders API endpoint in routes/api/reminders/flush.ts
+- [x] T176 [MGMT] Add Flush All button to dashboard with double confirmation in routes/index.tsx
 
-**Checkpoint**: Reminders are fully manageable regardless of status - Edit and Delete buttons work correctly with case-insensitive checks
+**Checkpoint**: Reminders fully manageable from dashboard list AND detail page, with database flush capability
 
 **Changes Made**:
 
@@ -566,24 +570,70 @@ Deno.cron("Check due reminders", "* * * * *", async () => {
 5. **Backend Already Correct**:
    - DELETE endpoint: Already allows deletion in any status
 
+6. **Dashboard Reminder List** (`routes/index.tsx`):
+   - **Button Logic (Updated to match detail page)**:
+     ```tsx
+     ${(() => {
+       const status = reminder.status.toLowerCase();
+       const blockedStatuses = ['acknowledged', 'declined', 'escalated_acknowledged', 'escalated_declined'];
+       const isEditable = !blockedStatuses.includes(status);
+       return `${isEditable ? `<button onclick="editReminder('${reminder.id}')">Edit</button>` : ''}
+               <button onclick="viewReminder('${reminder.id}')">View</button>
+               <button onclick="deleteReminder('${reminder.id}')">Delete</button>`;
+     })()}
+     ```
+   - **Before**: Only showed buttons when `status === 'pending'`
+   - **After**: Shows Edit/Delete/View buttons using same logic as detail page
+   - **Added**: `viewReminder()` function to navigate to detail page
+   - **Fixed**: Changed `window.location.href` to `globalThis.location.href` throughout
+
+7. **Flush All Reminders Feature**:
+   - **API Endpoint** (`routes/api/reminders/flush.ts`):
+     ```typescript
+     // DELETE /api/reminders/flush
+     const reminders = await repository.getAll(0, 10000);
+     for (const reminder of reminders) {
+       const deleteResult = await service.deleteReminder(reminder.id);
+       // Track success/failure counts
+     }
+     return { success: true, message: "...", details: { total, deleted, failed, errors } };
+     ```
+   - **Dashboard UI** (Lines 26-33, Lines 489-552):
+     - Red "⚠️ Flush All" button in dashboard header
+     - `flushAllReminders()` function with double confirmation:
+       - First prompt: "⚠️ WARNING: This will permanently delete ALL reminders..."
+       - Second prompt: "Last chance! Are you absolutely sure?"
+       - Shows loading state during operation
+       - Displays detailed success/failure counts in alert
+       - Auto-refreshes dashboard after completion
+   - **Safety**: Two confirmation dialogs, detailed logging, success/failure tracking
+
 **User Experience**:
 
-When viewing any reminder (regardless of status):
-1. **Edit Button** appears for all reminders except acknowledged/declined
+When viewing any reminder on the **detail page** (regardless of status):
+1. **Edit Button** appears for all reminders except acknowledged/declined/escalated_acknowledged/escalated_declined
 2. **Delete Button** appears for all reminders
 3. **Reset to Pending** button appears for non-pending reminders (additional option)
 4. Click Edit → goes to edit page → can modify reminder → saves successfully
 5. Click Delete → confirms → deletes → returns to dashboard
 
+When viewing reminders on the **dashboard list**:
+1. **Edit Button** appears using same logic as detail page (case-insensitive, blocks completed statuses)
+2. **View Button** appears for all reminders → navigates to detail page
+3. **Delete Button** appears for all reminders
+4. **Flush All Button** (red, in header) → double confirmation → deletes ALL reminders from database
+
 **Benefits**:
-- ✅ **No more hidden buttons** - Edit/Delete always visible when appropriate
+- ✅ **No more hidden buttons** - Edit/Delete always visible when appropriate (detail page AND dashboard)
 - ✅ **Functional buttons** - All callbacks properly wired up
 - ✅ **Case-insensitive** - Works with any status format (Escalated, escalated, ESCALATED)
 - ✅ **Comprehensive blocking** - All completed statuses properly handled (acknowledged, declined, escalated_acknowledged, escalated_declined)
 - ✅ **Test-friendly** - Can edit and delete reminders after testing
 - ✅ **Correction-friendly** - Can fix mistakes in sent/delivered/escalated reminders
-- ✅ **Full administrative control** - Delete any reminder regardless of status
+- ✅ **Full administrative control** - Delete any reminder regardless of status (including flush all)
 - ✅ **Data integrity maintained** - Protects completed interactions from accidental edits
+- ✅ **Dashboard efficiency** - Manage reminders directly from list view without navigating to detail page
+- ✅ **Database cleanup** - Flush all reminders for testing/maintenance with safe double confirmation
 
 **Technical Details**:
 
