@@ -854,30 +854,37 @@ After Fix:
 
 **Status Badge Fix** (T180):
 
-**Problem**: Status badges in ReminderDetail component had bright white/light backgrounds that looked jarring in dark mode.
+**Problem**: Status badges in ReminderDetail component had bright white/light backgrounds in dark mode. Initial fix used semi-transparent backgrounds (`bg-opacity-30`) which still allowed the underlying white background to show through, creating a jarring appearance.
 
-**Solution**: Added comprehensive dark mode color variants for all status types:
+**Solution v3**: Removed transparency and added solid dark backgrounds with matching borders:
 
 ```typescript
 const colors: Record<string, string> = {
-  pending: "bg-yellow-100 dark:bg-yellow-900 dark:bg-opacity-30 text-yellow-800 dark:text-yellow-300",
-  sent: "bg-blue-100 dark:bg-blue-900 dark:bg-opacity-30 text-blue-800 dark:text-blue-300",
-  acknowledged: "bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-green-800 dark:text-green-300",
-  declined: "bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300",
-  escalated: "bg-purple-100 dark:bg-purple-900 dark:bg-opacity-30 text-purple-800 dark:text-purple-300",
-  escalated_acknowledged: "bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-green-800 dark:text-green-300",
-  failed: "bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300",
-  cancelled: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300",
+  pending: "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-700",
+  sent: "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700",
+  acknowledged: "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-700",
+  // ... all status types updated with solid backgrounds and borders
 };
 ```
 
-**Dark Mode Pattern**:
-- Background: `dark:bg-{color}-900 dark:bg-opacity-30` (semi-transparent for subtlety)
-- Text: `dark:text-{color}-300` (lighter shade for contrast)
-- Result: Status badges blend naturally with dark theme while maintaining color distinction
+**Evolution**:
+- **v1**: Light backgrounds only - harsh white in dark mode ❌
+- **v2**: Added `dark:bg-{color}-900 dark:bg-opacity-30` - still showed white underneath ❌
+- **v3**: Solid `dark:bg-{color}-900` + borders - proper dark integration ✅
 
-**Before**: Bright white/yellow/blue/green backgrounds stood out harshly in dark mode
-**After**: Subtle dark backgrounds with properly contrasted text that fits the dark theme
+**Dark Mode Pattern v3**:
+- Background: `dark:bg-{color}-900` (solid, no transparency)
+- Text: `dark:text-{color}-200` (lighter for better contrast on solid backgrounds)
+- Border: `border border-{color}-200 dark:border-{color}-700` (adds definition)
+- Result: Clear, opaque colored badges that integrate naturally with dark theme
+
+**Key Improvements**:
+1. **Removed `bg-opacity-30`** - Prevents white showing through
+2. **Added borders** - Provides clear definition in both modes
+3. **Adjusted text** - Changed from `300` to `200` for better readability
+
+**Before**: Bright white/colored backgrounds, then semi-transparent showing white
+**After**: Solid dark colored backgrounds with proper contrast and borders
 
 **Phase 17 Status**: ✅ **COMPLETE** - ReminderForm and ReminderDetail fully dark mode compatible
 
