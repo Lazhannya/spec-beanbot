@@ -481,6 +481,73 @@ Deno.cron("Check due reminders", "* * * * *", async () => {
 
 ---
 
+## Phase 15: Reminder Management Improvements (Priority: P12) ✅ COMPLETE
+
+**Goal**: Fix issue where reminders become uneditable/unmanageable after test triggers or status changes
+
+**Problem Identified**: 
+- Test trigger was available but reminders with non-pending status couldn't be edited or deleted
+- Once a reminder's status changed (e.g., delivered, sent), it became permanently locked
+- No way to reset a reminder back to pending for re-testing or corrections
+- Overly restrictive status checks prevented legitimate management operations
+
+**Independent Test**: 
+1. Create reminder and fire test trigger
+2. Verify "Reset to Pending" button appears for non-pending reminders
+3. Reset reminder to pending
+4. Verify reminder can now be edited and re-tested
+5. Verify reminders can be deleted in any status
+
+### Implementation for Management Improvements
+
+- [x] T162 [P] [MGMT] Create POST /api/reminders/[id]/reset endpoint in routes/api/reminders/[id]/reset.ts
+- [x] T163 [P] [MGMT] Implement ResetToPending Island component with confirmation and auto-reload in islands/ResetToPending.tsx
+- [x] T164 [MGMT] Add ResetToPending component to reminder detail page in routes/admin/reminders/[id]/index.tsx
+- [x] T165 [P] [MGMT] Update edit page to allow editing reminders in any status except acknowledged/declined in routes/admin/reminders/[id]/edit.tsx
+- [x] T166 [P] [MGMT] Remove status restriction from DELETE endpoint - allow deletion in any status in routes/api/reminders/[id]/index.ts
+
+**Checkpoint**: Reminders are fully manageable regardless of status - can be reset, edited, and deleted as needed
+
+**Changes Made**:
+
+1. **Reset to Pending Feature**:
+   - New API endpoint: `POST /api/reminders/[id]/reset`
+   - Resets reminder status to "pending"
+   - Prevents resetting acknowledged/declined reminders (preserves data integrity)
+   - Island component with confirmation dialog and auto-reload after success
+
+2. **Relaxed Edit Restrictions**:
+   - **Before**: Only "pending" reminders could be edited
+   - **After**: Any reminder except "acknowledged" or "declined" can be edited
+   - Allows corrections to sent/delivered reminders
+   - Maintains data integrity for completed interactions
+
+3. **Removed Delete Restrictions**:
+   - **Before**: Only "pending" reminders could be deleted
+   - **After**: Reminders in any status can be deleted
+   - Useful for cleanup and testing
+   - Provides full administrative control
+
+**User Experience**:
+
+When viewing a non-pending reminder:
+1. See warning box explaining current status
+2. Click "Reset to Pending" button
+3. Confirm action in dialog
+4. Page auto-reloads with reminder now in pending status
+5. Test trigger and edit buttons now functional
+
+**Benefits**:
+- ✅ **No more locked reminders** - always manageable
+- ✅ **Test-friendly** - can test repeatedly without issues
+- ✅ **Correction-friendly** - can edit reminders after testing
+- ✅ **Full control** - delete any reminder regardless of status
+- ✅ **Data integrity** - still protects acknowledged/declined reminders from accidental resets
+
+**Phase 15 Status**: ✅ **COMPLETE** - Full reminder management regardless of status
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

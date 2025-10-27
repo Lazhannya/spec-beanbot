@@ -284,16 +284,9 @@ export const handler: Handlers = {
 
       const existingReminder = reminderResult.data;
 
-      // Only allow deleting pending reminders
-      if (existingReminder.status !== "pending") {
-        return new Response(
-          JSON.stringify({ 
-            error: "Cannot delete reminder", 
-            message: `Only pending reminders can be deleted. Current status: ${existingReminder.status}` 
-          }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
-        );
-      }
+      // Allow deleting reminders in any status
+      // Note: Acknowledged/declined reminders can be deleted if needed for cleanup
+      console.log(`Deleting reminder ${id} with status: ${existingReminder.status}`);
 
       // Delete the reminder (permanently removes it)
       const deleteResult = await service.deleteReminder(id);

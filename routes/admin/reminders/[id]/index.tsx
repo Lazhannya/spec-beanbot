@@ -14,6 +14,7 @@ import ReminderDetail from "../../../../components/ReminderDetail.tsx";
 import ResponseLog from "../../../../components/ResponseLog.tsx";
 import StatusUpdate from "../../../../islands/StatusUpdate.tsx";
 import TestTrigger from "../../../../islands/TestTrigger.tsx";
+import ResetToPending from "../../../../islands/ResetToPending.tsx";
 
 interface ReminderDetailPageData {
   reminder?: Reminder;
@@ -127,6 +128,18 @@ export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPag
         {/* Test Trigger Section */}
         <div class="mb-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 md:p-8 border border-gray-200 dark:border-gray-700">
           <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Test Reminder Delivery</h2>
+          
+          {/* Show reset button if not pending */}
+          {data.reminder.status !== "pending" && (
+            <div class="mb-6">
+              <ResetToPending 
+                reminderId={data.reminder.id}
+                currentStatus={data.reminder.status}
+              />
+            </div>
+          )}
+          
+          {/* Test trigger (only enabled for pending reminders) */}
           <TestTrigger 
             reminderId={data.reminder.id}
             isDisabled={data.reminder.status !== "pending"}
@@ -135,7 +148,7 @@ export default function ReminderDetailPage({ data }: PageProps<ReminderDetailPag
             <div class="mt-4 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-30 border-l-4 border-blue-500 dark:border-blue-600 p-4 rounded">
               <p class="text-sm text-gray-700 dark:text-gray-300 flex items-start">
                 <span class="mr-2 text-lg">ℹ️</span>
-                <span>Testing is only available for pending reminders</span>
+                <span>Testing is only available for pending reminders. Use the "Reset to Pending" button above to enable testing again.</span>
               </p>
             </div>
           )}

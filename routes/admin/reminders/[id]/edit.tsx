@@ -40,10 +40,11 @@ export const handler: Handlers<EditReminderPageData> = {
 
       const reminder = result.data;
 
-      // Only allow editing pending reminders
-      if (reminder.status !== "pending") {
+      // Don't allow editing reminders that have been acknowledged or declined
+      // (but allow editing sent/delivered reminders for corrections)
+      if (reminder.status === "acknowledged" || reminder.status === "declined") {
         return ctx.render({ 
-          error: `Cannot edit reminder with status "${reminder.status}". Only pending reminders can be edited.`,
+          error: `Cannot edit ${reminder.status} reminder. Acknowledged or declined reminders should not be modified.`,
           reminder 
         });
       }
