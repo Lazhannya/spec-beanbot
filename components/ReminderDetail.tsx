@@ -22,17 +22,17 @@ export default function ReminderDetail({ reminder, onEdit, onDelete, onTest }: R
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
-      pending: "bg-yellow-100 text-yellow-800",
-      sent: "bg-blue-100 text-blue-800",
-      acknowledged: "bg-green-100 text-green-800",
-      declined: "bg-red-100 text-red-800",
-      escalated: "bg-purple-100 text-purple-800",
-      escalated_acknowledged: "bg-green-100 text-green-800",
-      failed: "bg-red-100 text-red-800",
-      cancelled: "bg-gray-100 text-gray-800",
+      pending: "bg-yellow-100 dark:bg-yellow-900 dark:bg-opacity-30 text-yellow-800 dark:text-yellow-300",
+      sent: "bg-blue-100 dark:bg-blue-900 dark:bg-opacity-30 text-blue-800 dark:text-blue-300",
+      acknowledged: "bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-green-800 dark:text-green-300",
+      declined: "bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300",
+      escalated: "bg-purple-100 dark:bg-purple-900 dark:bg-opacity-30 text-purple-800 dark:text-purple-300",
+      escalated_acknowledged: "bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-green-800 dark:text-green-300",
+      failed: "bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300",
+      cancelled: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300",
     };
 
-    const bgColor = colors[status] || "bg-gray-100 text-gray-800";
+    const bgColor = colors[status] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300";
 
     return (
       <span class={`px-3 py-1 rounded-full text-sm font-medium ${bgColor}`}>

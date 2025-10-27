@@ -693,8 +693,9 @@ When viewing reminders on the **dashboard list**:
 - [x] T177 [P] [SETTINGS] Create admin settings page with timezone preference in routes/admin/settings.tsx
 - [x] T178 [P] [SETTINGS] Add dark mode support to settings page matching dashboard design in routes/admin/settings.tsx
 - [x] T179 [P] [UI] Fix dark mode styling for ReminderForm escalation and repeat sections in islands/ReminderForm.tsx
+- [x] T180 [P] [UI] Fix status badge dark mode colors in ReminderDetail component in components/ReminderDetail.tsx
 
-**Checkpoint**: Admin can configure timezone preferences via working settings page, and reminder forms are fully dark mode compatible
+**Checkpoint**: Admin can configure timezone preferences via working settings page, and all UI components are fully dark mode compatible
 
 **Implementation Details**:
 
@@ -787,8 +788,9 @@ Settings Page → New Reminder Button → /admin/reminders/new
 ### Tasks
 
 - [x] T179 [P] [UI] Fix dark mode styling for ReminderForm escalation and repeat sections in islands/ReminderForm.tsx
+- [x] T180 [P] [UI] Fix status badge dark mode colors in ReminderDetail component in components/ReminderDetail.tsx
 
-**Checkpoint**: All form elements properly styled for both light and dark modes
+**Checkpoint**: All form elements and status indicators properly styled for both light and dark modes
 
 **Implementation Details**:
 
@@ -850,7 +852,34 @@ After Fix:
 - ✅ **Professional appearance** - No jarring white boxes in dark mode
 - ✅ **Complete coverage** - All labels, inputs, buttons, and help text styled
 
-**Phase 17 Status**: ✅ **COMPLETE** - ReminderForm fully dark mode compatible
+**Status Badge Fix** (T180):
+
+**Problem**: Status badges in ReminderDetail component had bright white/light backgrounds that looked jarring in dark mode.
+
+**Solution**: Added comprehensive dark mode color variants for all status types:
+
+```typescript
+const colors: Record<string, string> = {
+  pending: "bg-yellow-100 dark:bg-yellow-900 dark:bg-opacity-30 text-yellow-800 dark:text-yellow-300",
+  sent: "bg-blue-100 dark:bg-blue-900 dark:bg-opacity-30 text-blue-800 dark:text-blue-300",
+  acknowledged: "bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-green-800 dark:text-green-300",
+  declined: "bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300",
+  escalated: "bg-purple-100 dark:bg-purple-900 dark:bg-opacity-30 text-purple-800 dark:text-purple-300",
+  escalated_acknowledged: "bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-green-800 dark:text-green-300",
+  failed: "bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-red-800 dark:text-red-300",
+  cancelled: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300",
+};
+```
+
+**Dark Mode Pattern**:
+- Background: `dark:bg-{color}-900 dark:bg-opacity-30` (semi-transparent for subtlety)
+- Text: `dark:text-{color}-300` (lighter shade for contrast)
+- Result: Status badges blend naturally with dark theme while maintaining color distinction
+
+**Before**: Bright white/yellow/blue/green backgrounds stood out harshly in dark mode
+**After**: Subtle dark backgrounds with properly contrasted text that fits the dark theme
+
+**Phase 17 Status**: ✅ **COMPLETE** - ReminderForm and ReminderDetail fully dark mode compatible
 
 ---
 
