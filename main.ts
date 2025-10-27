@@ -32,9 +32,10 @@ try {
 import { start } from "$fresh/server.ts";
 import manifest from "./fresh.gen.ts";
 import config from "./fresh.config.ts";
-import { initializeScheduler } from "./init-scheduler.ts";
+import { initializeCronScheduler } from "./init-cron-scheduler.ts";
 
-// Initialize the reminder scheduler for automatic delivery
-await initializeScheduler();
+// Initialize the Deno.cron reminder scheduler for automatic delivery
+// This works on Deno Deploy without requiring user traffic to keep isolate alive
+await initializeCronScheduler();
 
 await start(manifest, config);

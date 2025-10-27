@@ -26,8 +26,8 @@ try {
   console.log("No .env file found, using environment variables from platform");
 }
 
-// Initialize the reminder scheduler for automatic delivery
-import { initializeScheduler } from "./init-scheduler.ts";
-await initializeScheduler();
+// Initialize the Deno.cron reminder scheduler for automatic delivery
+import { initializeCronScheduler } from "./init-cron-scheduler.ts";
+await initializeCronScheduler();
 
 await dev(import.meta.url, "./main.ts", config);

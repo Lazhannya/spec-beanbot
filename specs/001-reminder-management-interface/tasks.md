@@ -405,6 +405,82 @@ Click link → Opens web page → Shows confirmation → Done!
 
 ---
 
+## Phase 14: Deno.cron Automatic Delivery (Priority: P11) ✅ COMPLETE
+
+**Goal**: Replace setInterval-based scheduler with Deno.cron for automatic reminder delivery without requiring user traffic
+
+**Why This Was Needed**: The original scheduler used `setInterval()` which only runs when:
+- A user is actively accessing the website (keeping the isolate alive)
+- HTTP requests are being processed
+
+This meant reminders were NOT being sent automatically at their scheduled times if no one was using the website.
+
+**The Solution**: Deno.cron is a built-in feature that:
+- Runs automatically on Deno Deploy **without any user traffic**
+- Is automatically detected and managed by Deno Deploy's global scheduler service
+- Spins up isolates on-demand to run scheduled tasks
+- Has zero configuration required
+- Prevents overlapping executions (won't run twice if previous job still running)
+- Appears in Deno Deploy dashboard "Cron" tab
+
+**Independent Test**: Deploy to Deno Deploy, create reminder with future time, close browser/stop accessing website, wait for scheduled time, verify reminder is delivered automatically
+
+### Implementation for Deno.cron Migration
+
+- [x] T156 [P] [CRON] Create CronReminderScheduler class using Deno.cron() API in discord-bot/lib/reminder/cron-scheduler.ts
+- [x] T157 [P] [CRON] Register "Check due reminders" cron job running every minute ("* * * * *")
+- [x] T158 [P] [CRON] Register "Check timeout escalations" cron job running every 2 minutes ("*/2 * * * *")
+- [x] T159 [P] [CRON] Create init-cron-scheduler.ts with initializeCronScheduler() function
+- [x] T160 [CRON] Update main.ts to import and call initializeCronScheduler() instead of initializeScheduler()
+- [x] T161 [CRON] Update dev.ts to use initializeCronScheduler() for local development
+
+**Checkpoint**: Reminders are delivered automatically at scheduled times without requiring user traffic
+
+**Technical Details**:
+
+```typescript
+// Deno.cron() usage - automatically detected by Deno Deploy
+Deno.cron("Check due reminders", "* * * * *", async () => {
+  console.log("[CRON] Checking for due reminders...");
+  await this.checkDueReminders();
+});
+```
+
+**How It Works on Deno Deploy**:
+1. When you deploy, Deno Deploy evaluates your code's top-level scope
+2. It discovers all `Deno.cron()` definitions
+3. A global cron scheduler is updated with your cron jobs
+4. At scheduled times, Deno Deploy spins up an on-demand isolate to run the handler
+5. **No web server or incoming requests needed** - it just works!
+
+**Benefits**:
+- ✅ **Automatic execution** - reminders sent at scheduled times regardless of traffic
+- ✅ **Zero configuration** - no external services or complex setup
+- ✅ **Reliable** - managed by Deno Deploy's infrastructure
+- ✅ **Visible** - shows up in Deno Deploy dashboard Cron tab
+- ✅ **Non-overlapping** - prevents race conditions if job takes longer than interval
+- ✅ **Production-ready** - enterprise-grade scheduling built into the platform
+
+**Migration Notes**:
+- Old scheduler (`scheduler.ts`) with `setInterval()` is now obsolete
+- Old initialization (`init-scheduler.ts`) is replaced by `init-cron-scheduler.ts`
+- Cron jobs check every minute (vs 30 seconds before) - acceptable tradeoff for reliability
+- Can adjust cron frequency if needed (e.g., "*/30 * * * * *" for every 30 seconds requires custom cron syntax)
+
+**Deployment Requirements**:
+- DISCORD_TOKEN environment variable (already configured)
+- Deno KV database (automatically available on Deno Deploy)
+- Deno runtime 1.38+ (for Deno.cron support)
+
+**Monitoring**:
+- Check Deno Deploy dashboard → Your Project → Cron tab
+- View logs showing "[CRON]" prefix for all cron job executions
+- See last execution time and schedule for each job
+
+**Phase 14 Status**: ✅ **COMPLETE** - Automatic reminder delivery now fully functional
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
