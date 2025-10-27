@@ -55,8 +55,13 @@ export default function ReminderDetail({ reminder, onEdit, onDelete, onTest }: R
         
         {/* Action Buttons */}
         <div class="flex gap-2">
-          {/* Edit button - allow for any status except acknowledged/declined */}
-          {onEdit && reminder.status !== "acknowledged" && reminder.status !== "declined" && (
+          {/* Edit button - block completed interaction statuses (case-insensitive) */}
+          {onEdit && (() => {
+            const status = reminder.status.toLowerCase();
+            // Block statuses that represent completed user interactions
+            const blockedStatuses = ['acknowledged', 'declined', 'escalated_acknowledged', 'escalated_declined'];
+            return !blockedStatuses.includes(status);
+          })() && (
             <button
               type="button"
               onClick={onEdit}

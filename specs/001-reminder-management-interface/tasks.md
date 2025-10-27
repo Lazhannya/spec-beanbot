@@ -513,34 +513,57 @@ Deno.cron("Check due reminders", "* * * * *", async () => {
 - [x] T167 [P] [MGMT] Fix ReminderDetail component Edit button - show for any status except acknowledged/declined in components/ReminderDetail.tsx
 - [x] T168 [P] [MGMT] Fix ReminderDetail component Delete button - show for any status in components/ReminderDetail.tsx
 - [x] T169 [MGMT] Wire up onEdit and onDelete callbacks in detail page in routes/admin/reminders/[id]/index.tsx
+- [x] T170 [P] [MGMT] Add case-insensitive status comparison to handle any status value format in components/ReminderDetail.tsx
+- [x] T171 [P] [MGMT] Block all completed interaction statuses (acknowledged, declined, escalated_acknowledged, escalated_declined) in components/ReminderDetail.tsx
+- [x] T172 [P] [MGMT] Update edit page backend with case-insensitive status blocking logic in routes/admin/reminders/[id]/edit.tsx
 
-**Checkpoint**: Reminders are fully manageable regardless of status - Edit and Delete buttons work correctly
+**Checkpoint**: Reminders are fully manageable regardless of status - Edit and Delete buttons work correctly with case-insensitive checks
 
 **Changes Made**:
 
 1. **ReminderDetail Component** (`components/ReminderDetail.tsx`):
-   - **Edit Button**:
+   - **Edit Button (Final Version)**:
      - **Before**: `{reminder.status === "pending" && onEdit && (...)`
-     - **After**: `{onEdit && reminder.status !== "acknowledged" && reminder.status !== "declined" && (...)`
-     - Now shows for sent, delivered, escalated reminders
+     - **v2**: `{onEdit && reminder.status !== "acknowledged" && reminder.status !== "declined" && (...)}`
+     - **v3 (Current)**: Case-insensitive check with comprehensive blocked status list
+     ```tsx
+     {onEdit && (() => {
+       const status = reminder.status.toLowerCase();
+       const blockedStatuses = ['acknowledged', 'declined', 'escalated_acknowledged', 'escalated_declined'];
+       return !blockedStatuses.includes(status);
+     })() && (...)}
+     ```
+     - **Now handles**: All status formats (capitalized, lowercase, with underscores)
+     - **Blocks**: All completed interaction statuses (acknowledged, declined, escalated_acknowledged, escalated_declined)
+     - **Allows**: pending, sent, delivered, escalated, failed, cancelled
+   
    - **Delete Button**:
      - **Before**: `{reminder.status === "pending" && onDelete && (...)`
      - **After**: `{onDelete && (...)}`
      - Now shows for all statuses
 
-2. **Detail Page** (`routes/admin/reminders/[id]/index.tsx`):
+2. **Edit Page Backend** (`routes/admin/reminders/[id]/edit.tsx`):
+   - **Status Check (Updated)**:
+     ```tsx
+     const status = reminder.status.toLowerCase();
+     const blockedStatuses = ['acknowledged', 'declined', 'escalated_acknowledged', 'escalated_declined'];
+     if (blockedStatuses.includes(status)) { /* block */ }
+     ```
+   - **Case-insensitive**: Handles "Escalated", "escalated", "ESCALATED" all the same
+   - **Comprehensive**: Blocks all completed interaction statuses
+
+3. **Detail Page** (`routes/admin/reminders/[id]/index.tsx`):
    - Added `onEdit` callback: Redirects to edit page using `globalThis.location.href`
    - Added `onDelete` callback: Shows confirmation dialog, calls DELETE API, redirects to dashboard
    - Fixed: Used `globalThis` instead of `window` for Deno compatibility
 
-3. **Reset to Pending Feature** (Already Implemented):
+4. **Reset to Pending Feature** (Already Implemented):
    - API endpoint: `POST /api/reminders/[id]/reset`
    - Island component with confirmation dialog
    - Prevents resetting acknowledged/declined reminders
    - Auto-reloads page after successful reset
 
-4. **Backend Already Correct**:
-   - Edit page: Already allows editing non-acknowledged/declined reminders
+5. **Backend Already Correct**:
    - DELETE endpoint: Already allows deletion in any status
 
 **User Experience**:
@@ -555,21 +578,34 @@ When viewing any reminder (regardless of status):
 **Benefits**:
 - ✅ **No more hidden buttons** - Edit/Delete always visible when appropriate
 - ✅ **Functional buttons** - All callbacks properly wired up
+- ✅ **Case-insensitive** - Works with any status format (Escalated, escalated, ESCALATED)
+- ✅ **Comprehensive blocking** - All completed statuses properly handled (acknowledged, declined, escalated_acknowledged, escalated_declined)
 - ✅ **Test-friendly** - Can edit and delete reminders after testing
-- ✅ **Correction-friendly** - Can fix mistakes in sent/delivered reminders
+- ✅ **Correction-friendly** - Can fix mistakes in sent/delivered/escalated reminders
 - ✅ **Full administrative control** - Delete any reminder regardless of status
-- ✅ **Data integrity maintained** - Still protects acknowledged/declined from accidental edits
+- ✅ **Data integrity maintained** - Protects completed interactions from accidental edits
 
 **Technical Details**:
 
 ```tsx
-// ReminderDetail.tsx - Before (BROKEN)
+// ReminderDetail.tsx - Evolution of the fix
+
+// v1 (BROKEN - only worked for pending)
 {reminder.status === "pending" && onEdit && (
   <button onClick={onEdit}>Edit</button>
 )}
 
-// ReminderDetail.tsx - After (FIXED)
+// v2 (BETTER - but case-sensitive and incomplete)
 {onEdit && reminder.status !== "acknowledged" && reminder.status !== "declined" && (
+  <button onClick={onEdit}>Edit</button>
+)}
+
+// v3 (CURRENT - case-insensitive and comprehensive)
+{onEdit && (() => {
+  const status = reminder.status.toLowerCase();
+  const blockedStatuses = ['acknowledged', 'declined', 'escalated_acknowledged', 'escalated_declined'];
+  return !blockedStatuses.includes(status);
+})() && (
   <button onClick={onEdit}>Edit</button>
 )}
 
@@ -584,7 +620,13 @@ When viewing any reminder (regardless of status):
 />
 ```
 
-**Phase 15 Status**: ✅ **COMPLETE** - Full reminder management with visible, functional Edit/Delete buttons
+**Status Handling Summary**:
+- **Editable**: pending, sent, delivered, escalated, failed, cancelled, expired
+- **Not Editable** (completed interactions): acknowledged, declined, escalated_acknowledged, escalated_declined
+- **Deletable**: ALL statuses (full admin control)
+- **Case Handling**: All comparisons use `.toLowerCase()` for reliability
+
+**Phase 15 Status**: ✅ **COMPLETE** - Full reminder management with case-insensitive status checks
 
 ---
 

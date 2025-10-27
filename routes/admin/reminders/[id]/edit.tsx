@@ -40,11 +40,14 @@ export const handler: Handlers<EditReminderPageData> = {
 
       const reminder = result.data;
 
-      // Don't allow editing reminders that have been acknowledged or declined
-      // (but allow editing sent/delivered reminders for corrections)
-      if (reminder.status === "acknowledged" || reminder.status === "declined") {
+      // Don't allow editing reminders that represent completed user interactions
+      // (but allow editing sent/delivered/escalated reminders for corrections)
+      const status = reminder.status.toLowerCase();
+      const blockedStatuses = ['acknowledged', 'declined', 'escalated_acknowledged', 'escalated_declined'];
+      
+      if (blockedStatuses.includes(status)) {
         return ctx.render({ 
-          error: `Cannot edit ${reminder.status} reminder. Acknowledged or declined reminders should not be modified.`,
+          error: `Cannot edit ${reminder.status} reminder. Completed interaction reminders should not be modified to preserve data integrity.`,
           reminder 
         });
       }
