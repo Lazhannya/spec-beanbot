@@ -290,7 +290,7 @@ export default function ReminderForm({
         </div>
 
         {/* Escalation Settings */}
-        <div class="border border-gray-200 rounded-md p-4">
+        <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 bg-white dark:bg-gray-800">
           <div class="flex items-center mb-4">
             <input
               type="checkbox"
@@ -298,10 +298,10 @@ export default function ReminderForm({
               name="enableEscalation"
               checked={formData.enableEscalation}
               onChange={(e) => handleInputChange('enableEscalation', (e.target as HTMLInputElement).checked)}
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
               disabled={isLoading}
             />
-            <label htmlFor="enableEscalation" class="ml-2 block text-sm font-medium text-gray-700">
+            <label htmlFor="enableEscalation" class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Enable Escalation
             </label>
           </div>
@@ -310,7 +310,7 @@ export default function ReminderForm({
             <div class="space-y-4">
               {/* Escalation User ID */}
               <div>
-                <label htmlFor="escalationUserId" class="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="escalationUserId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Escalation User ID *
                 </label>
                 <input
@@ -319,20 +319,20 @@ export default function ReminderForm({
                   name="escalationUserId"
                   value={formData.escalationUserId}
                   onInput={(e) => handleInputChange('escalationUserId', (e.target as HTMLInputElement).value)}
-                  class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.escalationUserId ? 'border-red-500' : 'border-gray-300'
+                  class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                    errors.escalationUserId ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="Discord user ID for escalation"
                   disabled={isLoading}
                 />
                 {errors.escalationUserId && (
-                  <p class="mt-1 text-sm text-red-600">{errors.escalationUserId}</p>
+                  <p class="mt-1 text-sm text-red-600 dark:text-red-400">{errors.escalationUserId}</p>
                 )}
               </div>
 
               {/* Escalation Timeout */}
               <div>
-                <label htmlFor="escalationTimeoutMinutes" class="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="escalationTimeoutMinutes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Escalation Timeout (minutes) *
                 </label>
                 <input
@@ -341,24 +341,24 @@ export default function ReminderForm({
                   name="escalationTimeoutMinutes"
                   value={formData.escalationTimeoutMinutes}
                   onInput={(e) => handleInputChange('escalationTimeoutMinutes', parseInt((e.target as HTMLInputElement).value) || 0)}
-                  class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.escalationTimeoutMinutes ? 'border-red-500' : 'border-gray-300'
+                  class={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                    errors.escalationTimeoutMinutes ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   min="5"
                   max="1440"
                   disabled={isLoading}
                 />
                 {errors.escalationTimeoutMinutes && (
-                  <p class="mt-1 text-sm text-red-600">{errors.escalationTimeoutMinutes}</p>
+                  <p class="mt-1 text-sm text-red-600 dark:text-red-400">{errors.escalationTimeoutMinutes}</p>
                 )}
-                <p class="mt-1 text-sm text-gray-500">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   How long to wait before escalating if no response (5-1440 minutes)
                 </p>
               </div>
 
               {/* Timeout Message */}
               <div>
-                <label htmlFor="timeoutMessage" class="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="timeoutMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Timeout Message (optional)
                 </label>
                 <textarea
@@ -366,19 +366,19 @@ export default function ReminderForm({
                   name="timeoutMessage"
                   value={formData.timeoutMessage}
                   onInput={(e) => handleInputChange('timeoutMessage', (e.target as HTMLTextAreaElement).value)}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   rows={3}
                   placeholder="Custom message when user doesn't respond in time (defaults provided if empty)"
                   disabled={isLoading}
                 />
-                <p class="mt-1 text-sm text-gray-500">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Custom message sent to escalation user when timeout occurs
                 </p>
               </div>
 
               {/* Decline Message */}
               <div>
-                <label htmlFor="declineMessage" class="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="declineMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Decline Message (optional)
                 </label>
                 <textarea
@@ -386,12 +386,12 @@ export default function ReminderForm({
                   name="declineMessage"
                   value={formData.declineMessage}
                   onInput={(e) => handleInputChange('declineMessage', (e.target as HTMLTextAreaElement).value)}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   rows={3}
                   placeholder="Custom message when user declines reminder (defaults provided if empty)"
                   disabled={isLoading}
                 />
-                <p class="mt-1 text-sm text-gray-500">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Custom message sent to escalation user when reminder is declined
                 </p>
               </div>
@@ -400,7 +400,7 @@ export default function ReminderForm({
         </div>
 
         {/* Repeat Settings */}
-        <div class="border border-gray-200 rounded-md p-4">
+        <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 bg-white dark:bg-gray-800">
           <div class="flex items-center mb-4">
             <input
               type="checkbox"
@@ -408,10 +408,10 @@ export default function ReminderForm({
               name="enableRepeat"
               checked={formData.enableRepeat}
               onChange={(e) => handleInputChange('enableRepeat', (e.target as HTMLInputElement).checked)}
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
               disabled={isLoading}
             />
-            <label htmlFor="enableRepeat" class="ml-2 block text-sm font-medium text-gray-700">
+            <label htmlFor="enableRepeat" class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Make this a Recurring Reminder
             </label>
           </div>
@@ -421,7 +421,7 @@ export default function ReminderForm({
               {/* Repeat Frequency and Interval */}
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="repeatFrequency" class="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="repeatFrequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Frequency *
                   </label>
                   <select
@@ -429,7 +429,7 @@ export default function ReminderForm({
                     name="repeatFrequency"
                     value={formData.repeatFrequency}
                     onChange={(e) => handleInputChange('repeatFrequency', (e.target as HTMLSelectElement).value)}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     disabled={isLoading}
                   >
                     <option value="daily">Daily</option>
@@ -440,7 +440,7 @@ export default function ReminderForm({
                 </div>
 
                 <div>
-                  <label htmlFor="repeatInterval" class="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="repeatInterval" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Every * (number)
                   </label>
                   <input
@@ -449,7 +449,7 @@ export default function ReminderForm({
                     name="repeatInterval"
                     value={formData.repeatInterval}
                     onInput={(e) => handleInputChange('repeatInterval', parseInt((e.target as HTMLInputElement).value) || 1)}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     min="1"
                     max="365"
                     disabled={isLoading}
@@ -457,13 +457,13 @@ export default function ReminderForm({
                 </div>
               </div>
 
-              <p class="text-sm text-gray-500">
+              <p class="text-sm text-gray-500 dark:text-gray-400">
                 This reminder will repeat every {formData.repeatInterval} {formData.repeatFrequency === 'daily' ? 'day(s)' : formData.repeatFrequency === 'weekly' ? 'week(s)' : formData.repeatFrequency === 'monthly' ? 'month(s)' : 'year(s)'}
               </p>
 
               {/* End Condition */}
               <div>
-                <label htmlFor="repeatEndCondition" class="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="repeatEndCondition" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   End Condition *
                 </label>
                 <select
@@ -471,7 +471,7 @@ export default function ReminderForm({
                   name="repeatEndCondition"
                   value={formData.repeatEndCondition}
                   onChange={(e) => handleInputChange('repeatEndCondition', (e.target as HTMLSelectElement).value)}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   disabled={isLoading}
                 >
                   <option value="never">Never (continue indefinitely)</option>
@@ -483,7 +483,7 @@ export default function ReminderForm({
               {/* Conditional End Fields */}
               {formData.repeatEndCondition === 'date_based' && (
                 <div>
-                  <label htmlFor="repeatEndDate" class="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="repeatEndDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     End Date *
                   </label>
                   <input
@@ -492,7 +492,7 @@ export default function ReminderForm({
                     name="repeatEndDate"
                     value={formData.repeatEndDate}
                     onInput={(e) => handleInputChange('repeatEndDate', (e.target as HTMLInputElement).value)}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     min={new Date().toISOString().split('T')[0]}
                     disabled={isLoading}
                   />
@@ -501,7 +501,7 @@ export default function ReminderForm({
 
               {formData.repeatEndCondition === 'count_based' && (
                 <div>
-                  <label htmlFor="repeatMaxOccurrences" class="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="repeatMaxOccurrences" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Maximum Occurrences *
                   </label>
                   <input
@@ -510,12 +510,12 @@ export default function ReminderForm({
                     name="repeatMaxOccurrences"
                     value={formData.repeatMaxOccurrences}
                     onInput={(e) => handleInputChange('repeatMaxOccurrences', parseInt((e.target as HTMLInputElement).value) || 1)}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     min="1"
                     max="1000"
                     disabled={isLoading}
                   />
-                  <p class="mt-1 text-sm text-gray-500">
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Total number of times this reminder will be sent (including the first one)
                   </p>
                 </div>
@@ -530,7 +530,7 @@ export default function ReminderForm({
             <button
               type="button"
               onClick={onCancel}
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isLoading}
             >
               Cancel
@@ -538,7 +538,7 @@ export default function ReminderForm({
           )}
           <button
             type="submit"
-            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             {isLoading ? 'Creating...' : 'Create Reminder'}

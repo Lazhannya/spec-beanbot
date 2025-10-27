@@ -692,8 +692,9 @@ When viewing reminders on the **dashboard list**:
 
 - [x] T177 [P] [SETTINGS] Create admin settings page with timezone preference in routes/admin/settings.tsx
 - [x] T178 [P] [SETTINGS] Add dark mode support to settings page matching dashboard design in routes/admin/settings.tsx
+- [x] T179 [P] [UI] Fix dark mode styling for ReminderForm escalation and repeat sections in islands/ReminderForm.tsx
 
-**Checkpoint**: Admin can configure timezone preferences via working settings page
+**Checkpoint**: Admin can configure timezone preferences via working settings page, and reminder forms are fully dark mode compatible
 
 **Implementation Details**:
 
@@ -774,6 +775,82 @@ Settings Page → New Reminder Button → /admin/reminders/new
 - **Form Handling**: Native HTML forms with POST handler
 
 **Phase 16 Status**: ✅ **COMPLETE** - Settings page fully functional with timezone preferences
+
+---
+
+## Phase 17: Dark Mode UI Fixes (T179)
+
+**Goal**: Fix dark mode styling issues in ReminderForm component for better visibility
+
+**Context**: The "Enable Escalation" and "Make this a Recurring Reminder" checkbox labels were too dark on dark backgrounds, making them unreadable. All form inputs within these sections also needed dark mode styling.
+
+### Tasks
+
+- [x] T179 [P] [UI] Fix dark mode styling for ReminderForm escalation and repeat sections in islands/ReminderForm.tsx
+
+**Checkpoint**: All form elements properly styled for both light and dark modes
+
+**Implementation Details**:
+
+1. **Escalation Section** (`islands/ReminderForm.tsx`):
+   - **Container**: Added `dark:border-gray-600` and `dark:bg-gray-800`
+   - **Checkbox Label**: Changed from `text-gray-700` to `text-gray-700 dark:text-gray-300`
+   - **Checkbox Border**: Added `dark:border-gray-600`
+   - **All Input Fields**:
+     - Background: `bg-white dark:bg-gray-700`
+     - Text: `text-gray-900 dark:text-gray-100`
+     - Border: `border-gray-300 dark:border-gray-600`
+   - **All Labels**: `text-gray-700 dark:text-gray-300`
+   - **Help Text**: `text-gray-500 dark:text-gray-400`
+   - **Error Messages**: `text-red-600 dark:text-red-400`
+
+2. **Repeat Section** (`islands/ReminderForm.tsx`):
+   - **Container**: Added `dark:border-gray-600` and `dark:bg-gray-800`
+   - **Checkbox Label**: Changed from `text-gray-700` to `text-gray-700 dark:text-gray-300`
+   - **Checkbox Border**: Added `dark:border-gray-600`
+   - **All Dropdowns and Inputs**: Same dark mode classes as escalation section
+   - **All Labels**: `text-gray-700 dark:text-gray-300`
+   - **Help Text**: `text-gray-500 dark:text-gray-400`
+
+3. **Form Action Buttons**:
+   - **Cancel Button**:
+     - Text: `text-gray-700 dark:text-gray-300`
+     - Background: `bg-white dark:bg-gray-700`
+     - Border: `border-gray-300 dark:border-gray-600`
+     - Hover: `hover:bg-gray-50 dark:hover:bg-gray-600`
+   - **Submit Button**:
+     - Background: `bg-blue-600 dark:bg-blue-700`
+     - Hover: `hover:bg-blue-700 dark:hover:bg-blue-600`
+
+**Dark Mode Classes Applied**:
+- **Containers**: `dark:bg-gray-800`, `dark:border-gray-600`
+- **Labels**: `dark:text-gray-300`
+- **Inputs**: `dark:bg-gray-700`, `dark:text-gray-100`, `dark:border-gray-600`
+- **Help Text**: `dark:text-gray-400`
+- **Error Text**: `dark:text-red-400`
+- **Buttons**: `dark:bg-gray-700`, `dark:hover:bg-gray-600`
+
+**User Experience**:
+
+Before Fix:
+- Checkbox labels invisible on dark background (black text on dark gray)
+- Input fields had white backgrounds in dark mode (jarring contrast)
+- Help text difficult to read in dark mode
+
+After Fix:
+- All text properly contrasted for readability in both modes
+- Input fields blend naturally with dark theme
+- Consistent styling with rest of application (dashboard, settings)
+- Smooth visual transition when toggling dark/light mode
+
+**Benefits**:
+- ✅ **Full dark mode support** - All form elements readable in dark mode
+- ✅ **Consistent styling** - Matches dashboard and settings page dark mode
+- ✅ **Better accessibility** - Proper contrast ratios for text visibility
+- ✅ **Professional appearance** - No jarring white boxes in dark mode
+- ✅ **Complete coverage** - All labels, inputs, buttons, and help text styled
+
+**Phase 17 Status**: ✅ **COMPLETE** - ReminderForm fully dark mode compatible
 
 ---
 
