@@ -7,6 +7,7 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { ReminderService, CreateReminderOptions } from "../../../discord-bot/lib/reminder/service.ts";
 import { ReminderRepository } from "../../../discord-bot/lib/reminder/repository.ts";
+import { Reminder, ReminderStatus } from "../../../discord-bot/types/reminder.ts";
 
 // Initialize services (in a real app, this would be dependency injected)
 let reminderService: ReminderService;
@@ -20,7 +21,8 @@ async function initializeServices() {
       reminderService = new ReminderService(repository);
     } catch (error) {
       // If KV is not available, create a mock service for development
-      console.warn("Deno KV not available, using mock service:", error.message);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.warn("Deno KV not available, using mock service:", errorMessage);
       reminderService = createMockReminderService();
     }
   }
@@ -29,41 +31,53 @@ async function initializeServices() {
 
 // Mock service for development when KV is not available
 function createMockReminderService(): ReminderService {
-  const mockReminders: any[] = [];
+  const mockReminders: Reminder[] = [];
   
   return {
-    async createReminder(options: CreateReminderOptions) {
-      const reminder = {
+    createReminder(options: CreateReminderOptions) {
+      const reminder: Reminder = {
         id: `mock-${Date.now()}`,
         content: options.content,
         targetUserId: options.targetUserId,
         scheduledTime: options.scheduledTime,
-        status: 'pending',
+        timezone: options.timezone || 'Europe/Berlin',
+        createdBy: options.createdBy || 'admin',
+        status: 'pending' as ReminderStatus,
         createdAt: new Date(),
         updatedAt: new Date(),
         deliveryAttempts: 0,
         responses: [],
-        escalationRules: options.escalationRules || [],
         testExecutions: []
       };
+      
+      if (options.escalation) {
+        reminder.escalation = {
+          id: crypto.randomUUID(),
+          secondaryUserId: options.escalation.secondaryUserId,
+          timeoutMinutes: options.escalation.timeoutMinutes,
+          triggerConditions: [],
+          createdAt: new Date(),
+          isActive: true,
+        };
+      }
       mockReminders.push(reminder);
-      return { success: true, data: reminder };
+      return Promise.resolve({ success: true, data: reminder });
     },
     
-    async getAllReminders(offset: number = 0, limit: number = 20) {
+    getAllReminders(offset: number = 0, limit: number = 20) {
       const slice = mockReminders.slice(offset, offset + limit);
-      return { success: true, data: slice };
+      return Promise.resolve({ success: true, data: slice });
     },
     
-    async getRemindersByStatus(status: string, limit: number = 20) {
+    getRemindersByStatus(status: string, limit: number = 20) {
       const filtered = mockReminders.filter(r => r.status === status).slice(0, limit);
-      return { success: true, data: filtered };
+      return Promise.resolve({ success: true, data: filtered });
     }
-  } as any;
+  } as Partial<ReminderService> as ReminderService;
 }
 
 // GET /api/reminders - List reminders
-export async function handler(req: Request, ctx: HandlerContext) {
+export async function handler(req: Request, _ctx: HandlerContext) {
   const url = new URL(req.url);
   
   if (req.method === "GET") {
@@ -81,7 +95,7 @@ async function handleGetReminders(url: URL) {
     
     // Parse query parameters
     const status = url.searchParams.get("status");
-    const userId = url.searchParams.get("userId");
+    const _userId = url.searchParams.get("userId");
     const limit = parseInt(url.searchParams.get("limit") || "20");
     const offset = parseInt(url.searchParams.get("offset") || "0");
 
@@ -89,7 +103,7 @@ async function handleGetReminders(url: URL) {
     
     if (status && status !== "all") {
       // Filter by status
-      result = await service.getRemindersByStatus(status as any, limit);
+      result = await service.getRemindersByStatus(status as ReminderStatus, limit);
     } else {
       // Get all reminders with pagination
       result = await service.getAllReminders(offset, limit);
@@ -186,11 +200,15 @@ async function handleCreateReminder(req: Request) {
       );
     }
 
-    // Build create options
+    // Import timezone utilities at the top
+    const { parseLocalDateTimeInTimezone } = await import("../../../discord-bot/lib/utils/timezone.ts");
+    
+    // Build create options with proper timezone conversion
     const createOptions: CreateReminderOptions = {
       content: body.content,
       targetUserId: body.targetUserId,
-      scheduledTime: new Date(body.scheduledTime),
+      // TIMEZONE BUG FIX: Convert datetime-local input to proper UTC time
+      scheduledTime: parseLocalDateTimeInTimezone(body.scheduledTime, body.timezone || 'Europe/Berlin'),
       timezone: body.timezone, // Pass timezone from form
       createdBy: body.createdBy || "admin", // TODO: Get from session
     };

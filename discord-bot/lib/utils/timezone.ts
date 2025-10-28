@@ -149,6 +149,83 @@ export function parseLocalDateTime(
 }
 
 /**
+ * TIMEZONE BUG FIX: Converts a datetime-local input to proper UTC Date object
+ * Interprets the datetime string as being in the specified timezone
+ * 
+ * @param dateTimeString - datetime-local string like "2025-10-28T15:30"
+ * @param timezone - IANA timezone like "Europe/Berlin"
+ * @returns Date object with correct UTC time
+ */
+export function parseLocalDateTimeInTimezone(
+  dateTimeString: string,
+  timezone: string = DEFAULT_TIMEZONE
+): Date {
+  const safeTimezone = getSafeTimezone(timezone);
+  
+  try {
+    // Simple and reliable approach:
+    // 1. Create a reference date to determine the timezone offset
+    // 2. Parse the input as UTC, then adjust by the offset
+    
+    // Ensure we have a valid ISO format (add seconds if missing)
+    let isoString = dateTimeString;
+    if (!isoString.includes(':')) {
+      // Invalid format, try to parse as-is
+      return new Date(dateTimeString);
+    }
+    
+    // Add seconds if not present: "2025-10-28T15:30" -> "2025-10-28T15:30:00"
+    if (!/T\d{2}:\d{2}:\d{2}/.test(isoString)) {
+      isoString += ':00';
+    }
+    
+    // Parse as UTC by appending 'Z'
+    const utcDate = new Date(isoString + 'Z');
+    
+    if (isNaN(utcDate.getTime())) {
+      // Invalid date, fallback
+      return new Date(dateTimeString);
+    }
+    
+    // Get the timezone offset for this specific date/time
+    // This handles DST automatically
+    const tempDate = new Date(isoString); // Parse without Z to get local interpretation
+    const utcTime = tempDate.getTime() + (tempDate.getTimezoneOffset() * 60 * 1000);
+    const targetDate = new Date(utcTime);
+    
+    // Now get what the offset would be in the target timezone
+    const offsetInTarget = getTimezoneOffsetMinutes(targetDate, safeTimezone);
+    
+    // Adjust the UTC date by the difference between local offset and target offset
+    const localOffset = tempDate.getTimezoneOffset();
+    const adjustment = (localOffset - offsetInTarget) * 60 * 1000;
+    
+    return new Date(utcDate.getTime() + adjustment);
+    
+  } catch (error) {
+    console.error('Error parsing datetime in timezone:', error);
+    console.error('Input:', dateTimeString, 'Timezone:', timezone);
+    
+    // Fallback: parse as-is (may be incorrect but won't crash)
+    return new Date(dateTimeString);
+  }
+}
+
+/**
+ * Helper function to get timezone offset in minutes for a specific date
+ */
+function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
+  // Get time in UTC and in target timezone
+  const utcTime = date.getTime();
+  
+  // Create a date in the target timezone
+  const localTime = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+  const offsetMs = utcTime - localTime.getTime();
+  
+  return Math.round(offsetMs / (60 * 1000));
+}
+
+/**
  * Gets current date/time (always UTC internally)
  */
 export function getNowInTimezone(_timezone: string = DEFAULT_TIMEZONE): Date {

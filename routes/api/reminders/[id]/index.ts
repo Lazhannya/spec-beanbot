@@ -136,8 +136,11 @@ export const handler: Handlers = {
         );
       }
 
-      // Validate scheduled time is in the future
-      const scheduledTime = new Date(updateData.scheduledTime);
+      // Import timezone utilities and apply proper timezone conversion
+      const { parseLocalDateTimeInTimezone } = await import("../../../../discord-bot/lib/utils/timezone.ts");
+      
+      // TIMEZONE BUG FIX: Convert datetime-local input to proper UTC time
+      const scheduledTime = parseLocalDateTimeInTimezone(updateData.scheduledTime, updateData.timezone || 'Europe/Berlin');
       const now = new Date();
       if (scheduledTime <= now) {
         return new Response(
