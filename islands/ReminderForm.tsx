@@ -5,7 +5,8 @@
 
 import { useState } from "preact/hooks";
 import { JSX } from "preact";
-import { DEFAULT_TIMEZONE, getTimezonesByRegion } from "../discord-bot/lib/utils/timezone.ts";
+import { DEFAULT_TIMEZONE, isValidTimezone } from "../discord-bot/lib/utils/timezone.ts";
+import TimezoneSelector from "../components/TimezoneSelector.tsx";
 
 interface ReminderFormProps {
   onSubmit?: (data: ReminderFormData) => void;
@@ -91,6 +92,13 @@ export default function ReminderForm({
       }
     }
 
+    // Timezone validation
+    if (!formData.timezone) {
+      newErrors.timezone = "Timezone is required";
+    } else if (!isValidTimezone(formData.timezone)) {
+      newErrors.timezone = "Invalid timezone selected";
+    }
+
     // Escalation validation
     if (formData.enableEscalation) {
       if (!formData.escalationUserId.trim()) {
@@ -173,6 +181,26 @@ export default function ReminderForm({
         ...prev,
         [field]: undefined
       }));
+    }
+
+    // Additional validation for timezone changes
+    if (field === 'timezone' && typeof value === 'string') {
+      // Log timezone changes for debugging
+      if (formData.timezone !== value) {
+        console.log('[TIMEZONE] User changed timezone', {
+          from: formData.timezone,
+          to: value,
+          scheduledTime: formData.scheduledTime
+        });
+      }
+      
+      if (!isValidTimezone(value)) {
+        console.warn('[TIMEZONE] Invalid timezone selected', { timezone: value });
+        setErrors(prev => ({
+          ...prev,
+          timezone: "Invalid timezone selected"
+        }));
+      }
     }
   };
 
@@ -262,32 +290,14 @@ export default function ReminderForm({
         </div>
 
         {/* Timezone */}
-        <div>
-          <label htmlFor="timezone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Timezone *
-          </label>
-          <select
-            id="timezone"
-            name="timezone"
-            value={formData.timezone}
-            onChange={(e) => handleInputChange('timezone', (e.target as HTMLSelectElement).value)}
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            disabled={isLoading}
-          >
-            {Object.entries(getTimezonesByRegion()).map(([region, timezones]) => (
-              <optgroup key={region} label={region}>
-                {timezones.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Timezone for the scheduled time (default: Europe/Berlin)
-          </p>
-        </div>
+        <TimezoneSelector
+          value={formData.timezone}
+          onChange={(timezone) => handleInputChange('timezone', timezone)}
+          disabled={isLoading}
+          label="Timezone"
+          showLabel
+          className="w-full"
+        />
 
         {/* Escalation Settings */}
         <div class="border border-gray-200 dark:border-gray-600 rounded-md p-4 bg-white dark:bg-gray-800">

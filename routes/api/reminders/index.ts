@@ -130,6 +130,19 @@ async function handleGetReminders(url: URL) {
       content: reminder.content,
       targetUserId: reminder.targetUserId,
       scheduledTime: reminder.scheduledTime.toISOString(),
+      timezone: reminder.timezone,
+      userDisplayTime: reminder.userDisplayTime,
+      utcScheduledTime: reminder.utcScheduledTime?.toISOString(),
+      timezoneAwareScheduledTime: reminder.scheduledTime.toLocaleString('en-US', {
+        timeZone: reminder.timezone || 'Europe/Berlin',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short',
+      }),
       createdAt: reminder.createdAt.toISOString(),
       updatedAt: reminder.updatedAt.toISOString(),
       status: reminder.status,
@@ -141,12 +154,32 @@ async function handleGetReminders(url: URL) {
         timeoutMinutes: reminder.escalation.timeoutMinutes,
         isActive: reminder.escalation.isActive,
         createdAt: reminder.escalation.createdAt.toISOString(),
+        timezoneAwareCreatedAt: reminder.escalation.createdAt.toLocaleString('en-US', {
+          timeZone: reminder.timezone || 'Europe/Berlin',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short',
+        }),
       } : undefined,
       responses: reminder.responses.map(response => ({
         id: response.id,
         userId: response.userId,
         responseType: response.responseType,
         timestamp: response.timestamp.toISOString(),
+        timezoneAwareTimestamp: response.timestamp.toLocaleString('en-US', {
+          timeZone: reminder.timezone || 'Europe/Berlin',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short',
+        }),
         messageId: response.messageId,
       })),
       testExecutions: reminder.testExecutions.map(execution => ({
@@ -154,6 +187,16 @@ async function handleGetReminders(url: URL) {
         testType: execution.testType,
         executedBy: execution.executedBy,
         executedAt: execution.executedAt.toISOString(),
+        timezoneAwareExecutedAt: execution.executedAt.toLocaleString('en-US', {
+          timeZone: reminder.timezone || 'Europe/Berlin',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short',
+        }),
         result: execution.result,
         preservedSchedule: execution.preservedSchedule,
         errorMessage: execution.errorMessage,
@@ -189,6 +232,9 @@ async function handleCreateReminder(req: Request) {
   try {
     const service = await initializeServices();
     
+    // Import timezone utilities at the top
+    const { parseLocalDateTimeInTimezone, isValidTimezone } = await import("../../../discord-bot/lib/utils/timezone.ts");
+    
     // Parse request body
     const body = await req.json();
     
@@ -205,18 +251,51 @@ async function handleCreateReminder(req: Request) {
       );
     }
 
-    // Import timezone utilities at the top
-    const { parseLocalDateTimeInTimezone } = await import("../../../discord-bot/lib/utils/timezone.ts");
+    // Validate timezone if provided
+    if (body.timezone && !isValidTimezone(body.timezone)) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid timezone provided. Please select a valid timezone." 
+        }), 
+        { 
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+    
+    // Import logger for timezone operations
+    const { logger } = await import("../../../discord-bot/lib/utils/logger.ts");
+    
+    logger.info("Creating reminder with timezone conversion", {
+      operation: "reminder_create_with_timezone",
+      context: {
+        timezone: body.timezone || 'Europe/Berlin',
+        originalDateTime: body.scheduledTime,
+        targetUserId: body.targetUserId
+      }
+    });
     
     // Build create options with proper timezone conversion
+    const scheduledTime = parseLocalDateTimeInTimezone(body.scheduledTime, body.timezone || 'Europe/Berlin');
     const createOptions: CreateReminderOptions = {
       content: body.content,
       targetUserId: body.targetUserId,
       // TIMEZONE BUG FIX: Convert datetime-local input to proper UTC time
-      scheduledTime: parseLocalDateTimeInTimezone(body.scheduledTime, body.timezone || 'Europe/Berlin'),
+      scheduledTime: scheduledTime,
       timezone: body.timezone, // Pass timezone from form
       createdBy: body.createdBy || "admin", // TODO: Get from session
     };
+
+    logger.info("Timezone conversion completed for reminder creation", {
+      operation: "reminder_create_timezone_converted",
+      context: {
+        originalDateTime: body.scheduledTime,
+        timezone: body.timezone || 'Europe/Berlin',
+        convertedUTC: scheduledTime.toISOString(),
+        targetUserId: body.targetUserId
+      }
+    });
 
     // Add escalation if provided
     if (body.enableEscalation && body.escalationUserId && body.escalationTimeoutMinutes) {

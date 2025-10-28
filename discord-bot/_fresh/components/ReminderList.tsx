@@ -3,7 +3,7 @@
  * Displays a list of reminders with filtering, sorting, and status indicators
  */
 
-import { JSX } from "preact";
+import { getTimezoneFriendlyName, DEFAULT_TIMEZONE } from "../../lib/utils/timezone.ts";
 
 // Type definitions
 interface Reminder {
@@ -11,6 +11,7 @@ interface Reminder {
   content: string;
   targetUserId: string;
   scheduledTime: string; // ISO string
+  timezone?: string; // IANA timezone
   createdAt: string;
   status: string;
   deliveryAttempts: number;
@@ -63,11 +64,27 @@ export default function ReminderList({
     }
   };
 
-  // Format date for display
-  const formatDate = (dateString: string): string => {
+  // Format date for display with timezone awareness
+  const formatDate = (dateString: string, timezone?: string): string => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleString();
+      const targetTimezone = timezone || DEFAULT_TIMEZONE;
+      
+      // Format date in the specified timezone
+      const formattedDate = new Intl.DateTimeFormat('en-US', {
+        timeZone: targetTimezone,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(date);
+      
+      // Add timezone friendly name for clarity
+      const timezoneName = getTimezoneFriendlyName(targetTimezone);
+      return `${formattedDate} (${timezoneName})`;
     } catch {
       return dateString;
     }
@@ -133,6 +150,7 @@ export default function ReminderList({
             {/* Refresh Button */}
             {onRefresh && (
               <button
+                type="button"
                 onClick={onRefresh}
                 disabled={loading}
                 class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
@@ -182,7 +200,7 @@ export default function ReminderList({
                         <span class="font-medium">Target:</span> {reminder.targetUserId}
                       </div>
                       <div>
-                        <span class="font-medium">Scheduled:</span> {formatDate(reminder.scheduledTime)}
+                        <span class="font-medium">Scheduled:</span> {formatDate(reminder.scheduledTime, reminder.timezone)}
                       </div>
                       <div>
                         <span class="font-medium">Created:</span> {formatDate(reminder.createdAt)}
@@ -204,7 +222,7 @@ export default function ReminderList({
                     {latestResponse && (
                       <div class="mt-2 text-xs text-gray-500">
                         <span class="font-medium">Latest Response:</span> {formatStatus(latestResponse.action)} 
-                        by {latestResponse.userId} at {formatDate(latestResponse.timestamp)}
+                        by {latestResponse.userId} at {formatDate(latestResponse.timestamp, reminder.timezone)}
                       </div>
                     )}
                   </div>
@@ -213,6 +231,7 @@ export default function ReminderList({
                   <div class="ml-4 flex flex-col space-y-1">
                     {onEdit && reminder.status === "pending" && (
                       <button
+                        type="button"
                         onClick={() => onEdit(reminder.id)}
                         class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-500"
                       >
@@ -222,6 +241,7 @@ export default function ReminderList({
                     
                     {onTest && (
                       <button
+                        type="button"
                         onClick={() => onTest(reminder.id)}
                         class="px-2 py-1 text-xs font-medium text-green-600 hover:text-green-500"
                       >
@@ -231,6 +251,7 @@ export default function ReminderList({
                     
                     {onDelete && reminder.status === "pending" && (
                       <button
+                        type="button"
                         onClick={() => onDelete(reminder.id)}
                         class="px-2 py-1 text-xs font-medium text-red-600 hover:text-red-500"
                       >

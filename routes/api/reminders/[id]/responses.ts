@@ -36,13 +36,30 @@ export const handler: Handlers = {
         );
       }
 
+      // Transform responses to include timezone-aware timestamps
+      const transformedResponses = (reminder.responses || []).map(response => ({
+        ...response,
+        timestamp: response.timestamp.toISOString(),
+        timezoneAwareTimestamp: response.timestamp.toLocaleString('en-US', {
+          timeZone: reminder.timezone || 'Europe/Berlin',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short',
+        }),
+      }));
+
       // Return response history
       return new Response(
         JSON.stringify({
           success: true,
           reminderId: id,
-          responses: reminder.responses || [],
-          totalResponses: reminder.responses?.length || 0
+          timezone: reminder.timezone,
+          responses: transformedResponses,
+          totalResponses: transformedResponses.length
         }),
         { 
           status: 200, 

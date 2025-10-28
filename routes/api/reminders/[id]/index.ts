@@ -20,7 +20,8 @@ async function getReminderService(): Promise<ReminderService> {
     try {
       const kv = await Deno.openKv();
       const repository = new ReminderRepository(kv);
-      reminderService = new ReminderService(repository);
+      const { createReminderServiceWithRepository } = await import("../../../../discord-bot/lib/utils/service-factory.ts");
+      reminderService = createReminderServiceWithRepository(repository, kv);
     } catch (error) {
       console.error("Failed to initialize Deno KV:", error);
       throw new Error("Unable to initialize reminder service");
@@ -55,8 +56,73 @@ export const handler: Handlers = {
         );
       }
 
+      // Transform reminder to include timezone-aware timestamps
+      const reminder = result.data;
+      const responseData = {
+        ...reminder,
+        scheduledTime: reminder.scheduledTime.toISOString(),
+        timezone: reminder.timezone,
+        userDisplayTime: reminder.userDisplayTime,
+        utcScheduledTime: reminder.utcScheduledTime?.toISOString(),
+        timezoneAwareScheduledTime: reminder.scheduledTime.toLocaleString('en-US', {
+          timeZone: reminder.timezone || 'Europe/Berlin',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short',
+        }),
+        createdAt: reminder.createdAt.toISOString(),
+        updatedAt: reminder.updatedAt.toISOString(),
+        lastDeliveryAttempt: reminder.lastDeliveryAttempt?.toISOString(),
+        escalation: reminder.escalation ? {
+          ...reminder.escalation,
+          createdAt: reminder.escalation.createdAt.toISOString(),
+          timezoneAwareCreatedAt: reminder.escalation.createdAt.toLocaleString('en-US', {
+            timeZone: reminder.timezone || 'Europe/Berlin',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZoneName: 'short',
+          }),
+        } : undefined,
+        responses: reminder.responses.map(response => ({
+          ...response,
+          timestamp: response.timestamp.toISOString(),
+          timezoneAwareTimestamp: response.timestamp.toLocaleString('en-US', {
+            timeZone: reminder.timezone || 'Europe/Berlin',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZoneName: 'short',
+          }),
+        })),
+        testExecutions: reminder.testExecutions.map(execution => ({
+          ...execution,
+          executedAt: execution.executedAt.toISOString(),
+          timezoneAwareExecutedAt: execution.executedAt.toLocaleString('en-US', {
+            timeZone: reminder.timezone || 'Europe/Berlin',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZoneName: 'short',
+          }),
+        })),
+      };
+
       return new Response(
-        JSON.stringify(result.data),
+        JSON.stringify(responseData),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     } catch (error) {
@@ -119,6 +185,9 @@ export const handler: Handlers = {
         );
       }
 
+      // Import timezone utilities and apply proper timezone conversion
+      const { parseLocalDateTimeInTimezone, isValidTimezone } = await import("../../../../discord-bot/lib/utils/timezone.ts");
+      
       // Validate content length
       if (updateData.content.length > 2000) {
         return new Response(
@@ -136,11 +205,40 @@ export const handler: Handlers = {
         );
       }
 
-      // Import timezone utilities and apply proper timezone conversion
-      const { parseLocalDateTimeInTimezone } = await import("../../../../discord-bot/lib/utils/timezone.ts");
+      // Validate timezone if provided
+      if (updateData.timezone && !isValidTimezone(updateData.timezone)) {
+        return new Response(
+          JSON.stringify({ error: "Invalid timezone provided. Please select a valid timezone." }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
       
+      // Import logger for timezone operations
+      const { logger } = await import("../../../../discord-bot/lib/utils/logger.ts");
+      
+      logger.info("Updating reminder with timezone conversion", {
+        operation: "reminder_update_with_timezone",
+        context: {
+          reminderId: id,
+          timezone: updateData.timezone || 'Europe/Berlin',
+          originalDateTime: updateData.scheduledTime,
+          targetUserId: updateData.targetUserId
+        }
+      });
+
       // TIMEZONE BUG FIX: Convert datetime-local input to proper UTC time
       const scheduledTime = parseLocalDateTimeInTimezone(updateData.scheduledTime, updateData.timezone || 'Europe/Berlin');
+      
+      logger.info("Timezone conversion completed for reminder update", {
+        operation: "reminder_update_timezone_converted",
+        context: {
+          reminderId: id,
+          originalDateTime: updateData.scheduledTime,
+          timezone: updateData.timezone || 'Europe/Berlin',
+          convertedUTC: scheduledTime.toISOString()
+        }
+      });
+      
       const now = new Date();
       if (scheduledTime <= now) {
         return new Response(

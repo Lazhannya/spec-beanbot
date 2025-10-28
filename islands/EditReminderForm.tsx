@@ -5,7 +5,8 @@
 
 import { useState } from "preact/hooks";
 import type { Reminder } from "../discord-bot/types/reminder.ts";
-import { DEFAULT_TIMEZONE, getTimezonesByRegion } from "../discord-bot/lib/utils/timezone.ts";
+import { DEFAULT_TIMEZONE, isValidTimezone } from "../discord-bot/lib/utils/timezone.ts";
+import TimezoneSelector from "../components/TimezoneSelector.tsx";
 
 interface EditReminderFormProps {
   reminder: Reminder;
@@ -104,6 +105,13 @@ export default function EditReminderForm({
       }
     }
 
+    // Timezone validation
+    if (!formData.timezone) {
+      newErrors.timezone = "Timezone is required";
+    } else if (!isValidTimezone(formData.timezone)) {
+      newErrors.timezone = "Invalid timezone selected";
+    }
+
     if (formData.enableEscalation) {
       if (!formData.escalationUserId.trim()) {
         newErrors.escalationUserId = "Escalation user ID required";
@@ -144,7 +152,30 @@ export default function EditReminderForm({
   };
 
   const handleChange = (field: keyof EditReminderFormData, value: string | number | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Handle timezone change with time conversion
+      if (field === 'timezone' && typeof value === 'string' && prev.scheduledTime) {
+        try {
+          // Parse the current datetime-local value as if it's in the previous timezone
+          const currentTime = new Date(prev.scheduledTime);
+          
+          // Create a date in the previous timezone
+          const utcTime = new Date(currentTime.toLocaleString('en-US', { timeZone: 'UTC' }));
+          
+          // Convert to new timezone
+          const convertedTime = convertUtcToLocalTimeString(utcTime, value);
+          newData.scheduledTime = convertedTime;
+        } catch (error) {
+          console.warn('Failed to convert timezone:', error);
+          // Keep the original time if conversion fails
+        }
+      }
+      
+      return newData;
+    });
+    
     // Clear error when user types
     if (errors[field]) {
       setErrors(prev => {
@@ -152,6 +183,27 @@ export default function EditReminderForm({
         delete newErrors[field];
         return newErrors;
       });
+    }
+
+    // Additional validation for timezone changes
+    if (field === 'timezone' && typeof value === 'string') {
+      // Log timezone changes for debugging
+      if (formData.timezone !== value) {
+        console.log('[TIMEZONE] User changed timezone in edit form', {
+          from: formData.timezone,
+          to: value,
+          scheduledTime: formData.scheduledTime,
+          originalTime: formData.scheduledTime
+        });
+      }
+      
+      if (!isValidTimezone(value)) {
+        console.warn('[TIMEZONE] Invalid timezone selected in edit form', { timezone: value });
+        setErrors(prev => ({
+          ...prev,
+          timezone: "Invalid timezone selected"
+        }));
+      }
     }
   };
 
@@ -225,29 +277,16 @@ export default function EditReminderForm({
 
       {/* Timezone */}
       <div>
-        <label htmlFor="timezone" class="block text-sm font-medium text-gray-700 mb-2">
-          Timezone *
-        </label>
-        <select
-          id="timezone"
-          name="timezone"
+        <TimezoneSelector
           value={formData.timezone}
-          onChange={(e) => handleChange("timezone", (e.target as HTMLSelectElement).value)}
-          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(timezone) => handleChange("timezone", timezone)}
           disabled={isLoading}
-        >
-          {Object.entries(getTimezonesByRegion()).map(([region, timezones]) => (
-            <optgroup key={region} label={region}>
-              {timezones.map((tz) => (
-                <option key={tz} value={tz}>
-                  {tz}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-        <p class="mt-1 text-sm text-gray-500">
-          Timezone for the scheduled time (default: Europe/Berlin)
+          label="Timezone"
+          showLabel
+          className="w-full"
+        />
+        <p class="mt-1 text-sm text-blue-600">
+          💡 Changing timezone will automatically convert the scheduled time to maintain the same moment in time.
         </p>
       </div>
 

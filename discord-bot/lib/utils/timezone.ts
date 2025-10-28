@@ -1,7 +1,19 @@
 /**
  * Timezone Utility Functions
  * Provides timezone conversion and validation with Europe/Berlin as default
+ * 
+ * LOGGING IMPLEMENTATION (T026):
+ * - parseLocalDateTimeInTimezone: Logs conversion attempts, success/failure, and detailed conversion data
+ * - isValidTimezone: Logs validation attempts and results for invalid timezones
+ * - API endpoints: Log timezone operations during reminder creation/updates
+ * - Form components: Log user timezone selections and changes
+ * - TimezoneSelector: Logs timezone dropdown selections
+ * 
+ * All timezone operations are logged with operation-specific context for debugging
+ * and audit purposes. Logs include input values, conversion results, and error details.
  */
+
+import { logger } from "./logger.ts";
 
 /**
  * Default timezone for the application
@@ -52,8 +64,23 @@ export function isValidTimezone(timezone: string): boolean {
   try {
     // Test if the timezone is valid by attempting to format with it
     new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+    
+    logger.debug("Timezone validation successful", {
+      operation: "timezone_validation",
+      context: { timezone: timezone, valid: true }
+    });
+    
     return true;
-  } catch {
+  } catch (error) {
+    logger.warn("Invalid timezone detected", {
+      operation: "timezone_validation",
+      context: { 
+        timezone: timezone, 
+        valid: false,
+        error: error instanceof Error ? error.message : String(error)
+      }
+    });
+    
     return false;
   }
 }
@@ -162,6 +189,15 @@ export function parseLocalDateTimeInTimezone(
 ): Date {
   const safeTimezone = getSafeTimezone(timezone);
   
+  logger.debug("Converting local datetime to timezone-aware UTC", {
+    operation: "timezone_parse_datetime",
+    context: {
+      input: dateTimeString,
+      timezone: timezone,
+      safeTimezone: safeTimezone
+    }
+  });
+  
   try {
     // Simple and reliable approach:
     // 1. Create a reference date to determine the timezone offset
@@ -200,11 +236,32 @@ export function parseLocalDateTimeInTimezone(
     const localOffset = tempDate.getTimezoneOffset();
     const adjustment = (localOffset - offsetInTarget) * 60 * 1000;
     
-    return new Date(utcDate.getTime() + adjustment);
+    const result = new Date(utcDate.getTime() + adjustment);
+    
+    logger.debug("Timezone conversion completed successfully", {
+      operation: "timezone_parse_datetime",
+      context: {
+        input: dateTimeString,
+        timezone: timezone,
+        safeTimezone: safeTimezone,
+        result: result.toISOString(),
+        offsetInTarget: offsetInTarget,
+        localOffset: localOffset,
+        adjustment: adjustment
+      }
+    });
+    
+    return result;
     
   } catch (error) {
-    console.error('Error parsing datetime in timezone:', error);
-    console.error('Input:', dateTimeString, 'Timezone:', timezone);
+    logger.error("Timezone conversion failed", {
+      operation: "timezone_parse_datetime",
+      context: {
+        input: dateTimeString,
+        timezone: timezone,
+        error: error instanceof Error ? error.message : String(error)
+      }
+    });
     
     // Fallback: parse as-is (may be incorrect but won't crash)
     return new Date(dateTimeString);

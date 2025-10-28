@@ -33,7 +33,18 @@ export function TimezoneSelector({
 
   const handleChange = (event: Event) => {
     const target = event.target as HTMLSelectElement;
-    onChange(target.value);
+    const newTimezone = target.value;
+    
+    // Log timezone selection for debugging
+    if (value !== newTimezone) {
+      console.log('[TIMEZONE_SELECTOR] Timezone changed', {
+        from: value,
+        to: newTimezone,
+        friendlyName: getTimezoneFriendlyName(newTimezone)
+      });
+    }
+    
+    onChange(newTimezone);
   };
 
   return (
