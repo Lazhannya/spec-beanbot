@@ -66,7 +66,10 @@ async function initializeCronServices() {
  */
 async function checkDueReminders(): Promise<void> {
   try {
+    console.log("[CRON-DEBUG] Starting due reminders check...");
+    
     if (!reminderService) {
+      console.log("[CRON-DEBUG] Reminder service not initialized, initializing...");
       await initializeCronServices();
       if (!reminderService) {
         console.error("[CRON] Reminder service not available, skipping due reminders check");
@@ -74,6 +77,7 @@ async function checkDueReminders(): Promise<void> {
       }
     }
 
+    console.log("[CRON-DEBUG] Calling getDueReminders()...");
     const result = await reminderService.getDueReminders();
     if (!result.success) {
       console.error("[CRON] Failed to get due reminders:", result.error);
@@ -81,8 +85,15 @@ async function checkDueReminders(): Promise<void> {
     }
 
     const dueReminders = result.data;
+    console.log(`[CRON-DEBUG] Query returned ${dueReminders.length} due reminders`);
+    
     if (dueReminders.length > 0) {
-      console.log(`[CRON] Found ${dueReminders.length} due reminders`);
+      console.log(`[CRON] Found ${dueReminders.length} due reminders to process:`);
+      dueReminders.forEach((reminder, i) => {
+        console.log(`[CRON-DEBUG] Reminder ${i + 1}: ID=${reminder.id}, scheduled=${new Date(reminder.scheduledTime).toISOString()}, status=${reminder.status}`);
+      });
+    } else {
+      console.log("[CRON-DEBUG] No due reminders found. Current time:", new Date().toISOString());
     }
 
     // Process each due reminder
@@ -91,6 +102,7 @@ async function checkDueReminders(): Promise<void> {
     }
   } catch (error) {
     console.error("[CRON] Error checking due reminders:", error);
+    console.error("[CRON] Error details:", error instanceof Error ? error.stack : error);
   }
 }
 
@@ -266,24 +278,28 @@ console.log("[CRON-REGISTER] Registering Deno.cron jobs at top-level module scop
 // Cron format: minute hour day month weekday
 // "* * * * *" = every minute
 Deno.cron("Check due reminders", "* * * * *", async () => {
-  // Skip execution during build or development
-  if (Deno.args.includes("build") || !Deno.env.get("DENO_DEPLOYMENT_ID")) {
-    return; // Exit immediately, don't execute cron logic
+  // Skip execution only during build process
+  if (Deno.args.includes("build")) {
+    console.log("[CRON] Skipping cron execution during build");
+    return;
   }
   
   console.log("[CRON] ⏰ Checking for due reminders...");
+  console.log("[CRON] Current time:", new Date().toISOString());
   await checkDueReminders();
 });
 
 // Check for timeout escalations every 2 minutes
 // "*/2 * * * *" = every 2 minutes
 Deno.cron("Check timeout escalations", "*/2 * * * *", async () => {
-  // Skip execution during build or development
-  if (Deno.args.includes("build") || !Deno.env.get("DENO_DEPLOYMENT_ID")) {
-    return; // Exit immediately, don't execute cron logic
+  // Skip execution only during build process
+  if (Deno.args.includes("build")) {
+    console.log("[CRON] Skipping escalation check during build");
+    return;
   }
   
   console.log("[CRON] ⏰ Checking for timeout escalations...");
+  console.log("[CRON] Current time:", new Date().toISOString());
   await checkTimeoutEscalations();
 });
 
