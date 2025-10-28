@@ -1132,6 +1132,43 @@ const colors: Record<string, string> = {
 - ✅ Reminders delivered without site access
 - ✅ No broken functionality from refactoring
 
+### 🚨 **BUILD TIMEOUT FIX** (T196-T199 - October 28, 2025)
+
+**Problem**: After fixing the configuration, builds were timing out because cron jobs were executing during the build process:
+```
+[CRON] ⏰ Checking for due reminders...
+[CRON] ⏰ Checking for timeout escalations...
+Build cancelled
+```
+
+**Root Cause**: Importing `cron-jobs.ts` in both `dev.ts` and `main.ts` caused cron jobs to execute immediately during build, causing infinite execution and build timeouts.
+
+**Build Separation Fix Implementation**:
+
+- [x] T196 [P] [BUILD] Create separate build.ts entry point without cron job imports
+- [x] T197 [P] [BUILD] Remove cron-jobs.ts import from dev.ts to prevent development execution
+- [x] T198 [P] [BUILD] Update deno.json build task to use build.ts instead of dev.ts build
+- [x] T199 [BUILD] Maintain cron-jobs.ts import in main.ts for production deployment
+
+**Build Architecture Solution**:
+
+```
+Development: dev.ts → Fresh development server (no cron jobs)
+Building: build.ts → Fresh build process (no cron jobs) 
+Production: main.ts → Fresh server + cron jobs (Deno Deploy only)
+```
+
+**File Structure**:
+1. **`dev.ts`**: Development server without cron imports
+2. **`build.ts`**: Build-specific entry point without cron imports  
+3. **`main.ts`**: Production server with cron imports for Deno Deploy
+
+**Benefits**:
+- ✅ **Fast Builds**: No cron execution during build process
+- ✅ **Clean Development**: No cron jobs running locally during development
+- ✅ **Production Crons**: Cron jobs still properly registered on Deno Deploy
+- ✅ **Separate Concerns**: Build, development, and production environments isolated
+
 **Phase 19 Status**: ✅ **COMPLETE** - Critical cron functionality now working correctly
 
 ### 🔧 **CONFIGURATION FIX** (T192-T195 - October 28, 2025)

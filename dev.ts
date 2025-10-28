@@ -26,8 +26,8 @@ try {
   console.log("No .env file found, using environment variables from platform");
 }
 
-// Initialize the Deno.cron reminder scheduler for automatic delivery
-// Import cron jobs defined at top-level module scope for Deno Deploy
-import "./cron-jobs.ts";
+// Note: Cron jobs are NOT imported in development mode
+// They are only imported in production main.ts to avoid build timeouts
+// The cron jobs will be registered automatically when deployed to Deno Deploy
 
 await dev(import.meta.url, "./main.ts", config);
