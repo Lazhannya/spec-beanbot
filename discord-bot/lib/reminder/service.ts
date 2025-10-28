@@ -845,6 +845,21 @@ export class ReminderService {
         };
       }
 
+      // RECURRING REMINDER FIX: Schedule next occurrence if this is a recurring reminder
+      if (reminder.repeatRule && reminder.repeatRule.isActive) {
+        console.log(`[RECURRING] Acknowledged reminder ${reminderId} is recurring, scheduling next occurrence`);
+        const nextOccurrenceResult = await this.scheduleNextRepeatOccurrence(reminderId);
+        
+        if (nextOccurrenceResult.success && nextOccurrenceResult.data) {
+          console.log(`[RECURRING] Successfully scheduled next occurrence: ${nextOccurrenceResult.data.id} at ${nextOccurrenceResult.data.scheduledTime}`);
+        } else if (nextOccurrenceResult.success && !nextOccurrenceResult.data) {
+          console.log(`[RECURRING] Recurring reminder ${reminderId} has reached its end condition`);
+        } else if (!nextOccurrenceResult.success) {
+          console.error(`[RECURRING] Failed to schedule next occurrence for ${reminderId}:`, nextOccurrenceResult.error);
+          // Don't fail the acknowledgment if recurring scheduling fails
+        }
+      }
+
       return { success: true, data: undefined };
     } catch (error) {
       return {
@@ -907,6 +922,22 @@ export class ReminderService {
           success: false,
           error: new Error("Failed to update reminder")
         };
+      }
+
+      // RECURRING REMINDER FIX: Schedule next occurrence if this is a recurring reminder
+      // Only schedule if reminder wasn't escalated (i.e., no escalation or escalation not triggered)
+      if (reminder.repeatRule && reminder.repeatRule.isActive && newStatus === ReminderStatus.DECLINED) {
+        console.log(`[RECURRING] Declined reminder ${reminderId} is recurring and not escalated, scheduling next occurrence`);
+        const nextOccurrenceResult = await this.scheduleNextRepeatOccurrence(reminderId);
+        
+        if (nextOccurrenceResult.success && nextOccurrenceResult.data) {
+          console.log(`[RECURRING] Successfully scheduled next occurrence: ${nextOccurrenceResult.data.id} at ${nextOccurrenceResult.data.scheduledTime}`);
+        } else if (nextOccurrenceResult.success && !nextOccurrenceResult.data) {
+          console.log(`[RECURRING] Recurring reminder ${reminderId} has reached its end condition`);
+        } else if (!nextOccurrenceResult.success) {
+          console.error(`[RECURRING] Failed to schedule next occurrence for ${reminderId}:`, nextOccurrenceResult.error);
+          // Don't fail the decline if recurring scheduling fails
+        }
       }
 
       return { success: true, data: undefined };
