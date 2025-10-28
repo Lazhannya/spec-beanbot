@@ -1,13 +1,17 @@
 {
   "lock": false,
   "tasks": {
-    "dev": "deno run -A --unstable-cron --unstable-kv --watch=static/,routes/,components/,islands/,middleware/ dev.ts",
-    "start": "deno run -A --unstable-cron --unstable-kv --watch=static/,routes/,components/,islands/,middleware/ dev.ts",
+    "dev": "deno run -A --unstable-cron --unstable-kv --watch=static/,routes/,components/,islands/,middleware/,discord-bot/ dev.ts",
+    "start": "deno run -A --unstable-cron --unstable-kv --watch=static/,routes/,components/,islands/,middleware/,discord-bot/ dev.ts",
     "build": "deno run -A --unstable-cron --unstable-kv dev.ts build",
     "preview": "deno run -A --unstable-cron --unstable-kv main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
     "check-env": "deno run -A check-env.ts",
-    "test-deploy": "deno run -A --unstable-cron --unstable-kv test-deployment.ts"
+    "test-deploy": "deno run -A --unstable-cron --unstable-kv test-deployment.ts",
+    "test": "deno test -A --unstable-cron --unstable-kv",
+    "test:scheduler": "deno test -A --unstable-cron --unstable-kv tests/scheduler/",
+    "lint": "deno lint",
+    "fmt": "deno fmt"
   },
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": ["**/_fresh/*"],

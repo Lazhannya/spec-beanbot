@@ -4,11 +4,16 @@ export interface Reminder {
   id: string;                    // UUID for unique identification
   content: string;               // Message content to send
   targetUserId: string;          // Discord user ID (primary recipient)
-  scheduledTime: Date;           // When to deliver the reminder
+  scheduledTime: Date;           // When to deliver the reminder (stored as UTC)
   timezone: string;              // IANA timezone (default: Europe/Berlin)
   createdAt: Date;              // Reminder creation timestamp
   updatedAt: Date;              // Last modification timestamp
   status: ReminderStatus;        // Current delivery/response status
+  
+  // Enhanced timezone support for accurate scheduling
+  scheduledTimezone: string;     // IANA timezone used when scheduling (for delivery accuracy)
+  userDisplayTime: string;       // Original time string as entered by user (for display purposes)
+  utcScheduledTime: Date;        // Explicit UTC time for delivery processing
   
   // Escalation configuration
   escalation?: EscalationRule;   // Optional escalation settings

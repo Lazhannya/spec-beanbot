@@ -6,7 +6,7 @@
 import { PageProps } from "$fresh/server.ts";
 import ReminderForm, { ReminderFormData } from "../../../islands/ReminderForm.tsx";
 
-export default function NewReminderPage({ url }: PageProps) {
+export default function NewReminderPage({ url: _url }: PageProps) {
   
   // Handle form submission
   const handleSubmit = async (data: ReminderFormData) => {
@@ -20,6 +20,7 @@ export default function NewReminderPage({ url }: PageProps) {
           content: data.content,
           targetUserId: data.targetUserId,
           scheduledTime: data.scheduledTime,
+          timezone: data.timezone, // Include timezone from form
           enableEscalation: data.enableEscalation,
           escalationUserId: data.escalationUserId,
           escalationTimeoutMinutes: data.escalationTimeoutMinutes,
@@ -29,7 +30,7 @@ export default function NewReminderPage({ url }: PageProps) {
 
       if (response.ok) {
         // Redirect to dashboard on success
-        window.location.href = '/';
+        globalThis.location.href = '/';
       } else {
         const error = await response.json();
         alert(`Error creating reminder: ${error.error}`);

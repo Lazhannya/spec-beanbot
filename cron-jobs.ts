@@ -11,13 +11,16 @@ import { ReminderRepository } from "./discord-bot/lib/reminder/repository.ts";
 import { ReminderService } from "./discord-bot/lib/reminder/service.ts";
 import { DiscordDeliveryService } from "./discord-bot/lib/discord/delivery.ts";
 import { EscalationProcessor } from "./discord-bot/lib/reminder/escalation.ts";
-import { Reminder } from "./discord-bot/types/reminder.ts";
+import { Reminder, ReminderStatus } from "./discord-bot/types/reminder.ts";
+import { DeliveryQueue } from "./discord-bot/lib/scheduler/queue.ts";
+import { logger } from "./discord-bot/lib/utils/logger.ts";
 
 // Initialize services for cron job execution
 // These are initialized once when the module is loaded
 let reminderService: ReminderService | null = null;
 let deliveryService: DiscordDeliveryService | null = null;
 let escalationProcessor: EscalationProcessor | null = null;
+let deliveryQueue: DeliveryQueue | null = null;
 
 /**
  * Initialize services for cron job execution
@@ -50,7 +53,8 @@ async function initializeCronServices() {
     }
 
     const repository = new ReminderRepository(kv);
-    reminderService = new ReminderService(repository);
+    deliveryQueue = new DeliveryQueue(kv);
+    reminderService = new ReminderService(repository, deliveryQueue);
     escalationProcessor = new EscalationProcessor(deliveryService);
     console.log("[CRON-INIT] ✅ Reminder service initialized");
     
@@ -303,7 +307,184 @@ Deno.cron("Check timeout escalations", "*/2 * * * *", async () => {
   await checkTimeoutEscalations();
 });
 
+// Enhanced delivery queue processing - runs every 30 seconds for more accurate delivery
+// "*/30 * * * * *" format not supported, using every minute
+Deno.cron("Enhanced delivery queue", "* * * * *", async () => {
+  // Skip execution only during build process
+  if (Deno.args.includes("build")) {
+    console.log("[CRON] Skipping enhanced delivery queue during build");
+    return;
+  }
+  
+  console.log("[CRON] ⏰ Processing enhanced delivery queue...");
+  await processDeliveryQueue();
+});
+
+/**
+ * Process the enhanced delivery queue with timezone-aware scheduling
+ */
+async function processDeliveryQueue(): Promise<void> {
+  try {
+    if (!deliveryQueue || !deliveryService) {
+      await initializeCronServices();
+      if (!deliveryQueue || !deliveryService) {
+        console.error("[CRON] Enhanced delivery services not available, skipping queue processing");
+        return;
+      }
+    }
+
+    // Get reminders due for delivery
+    const dueResult = await deliveryQueue.getDueReminders();
+    if (!dueResult.success) {
+      logger.error("Failed to get due reminders from queue", { 
+        operation: "queue_processing", 
+        error: {
+          name: dueResult.error.name,
+          message: dueResult.error.message,
+          ...(dueResult.error.stack && { stack: dueResult.error.stack })
+        }
+      });
+      return;
+    }
+
+    const dueItems = dueResult.data;
+    if (dueItems.length === 0) {
+      logger.debug("No reminders due for delivery", { operation: "queue_processing" });
+      return;
+    }
+
+    logger.info(`Processing ${dueItems.length} due reminders from queue`, { 
+      operation: "queue_processing",
+      context: { count: dueItems.length }
+    });
+
+    // Process each due reminder
+    for (const item of dueItems) {
+      try {
+        logger.info("Processing queue item", {
+          operation: "queue_item_processing",
+          reminderId: item.reminderId,
+          context: { 
+            attempt: item.attempt + 1,
+            maxAttempts: item.maxAttempts,
+            scheduledUtc: item.scheduledUtc.toISOString()
+          }
+        });
+
+        // Create a proper reminder object for the delivery service
+        const tempReminder: Reminder = {
+          id: item.reminderId,
+          targetUserId: item.userId,
+          content: item.messageContent,
+          status: ReminderStatus.PENDING,
+          scheduledTime: item.scheduledUtc,
+          timezone: item.scheduledTimezone,
+          scheduledTimezone: item.scheduledTimezone,
+          userDisplayTime: item.userDisplayTime,
+          utcScheduledTime: item.scheduledUtc,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+          createdBy: "system",
+          deliveryAttempts: item.attempt,
+          responses: [],
+          testExecutions: []
+        };
+
+        // Attempt delivery through Discord
+        const deliveryResult = await deliveryService.sendReminder(tempReminder);
+
+        if (deliveryResult.success) {
+          // Mark as delivered in the queue
+          const markResult = await deliveryQueue.markDelivered(item.id);
+          if (markResult.success) {
+            logger.info("Successfully delivered reminder from queue", {
+              operation: "queue_delivery_success",
+              reminderId: item.reminderId,
+              userId: item.userId
+            });
+          } else {
+            logger.error("Failed to mark reminder as delivered in queue", {
+              operation: "queue_mark_delivered_error",
+              reminderId: item.reminderId,
+              error: {
+                name: markResult.error.name,
+                message: markResult.error.message,
+                ...(markResult.error.stack && { stack: markResult.error.stack })
+              }
+            });
+          }
+        } else {
+          // Mark as failed and schedule retry if possible
+          const errorMessage = deliveryResult.error || "Unknown delivery error";
+          const failResult = await deliveryQueue.markFailed(item.id, errorMessage);
+          if (failResult.success) {
+            const { willRetry, nextRetry } = failResult.data;
+            if (willRetry && nextRetry) {
+              logger.warn("Delivery failed, retry scheduled", {
+                operation: "queue_delivery_retry",
+                reminderId: item.reminderId,
+                context: { 
+                  nextRetry: nextRetry.toISOString(),
+                  attempt: item.attempt + 1
+                }
+              });
+            } else {
+              logger.error("Delivery permanently failed", {
+                operation: "queue_delivery_permanent_failure",
+                reminderId: item.reminderId,
+                context: { finalAttempt: item.attempt + 1 }
+              });
+            }
+          } else {
+            logger.error("Failed to mark delivery as failed in queue", {
+              operation: "queue_mark_failed_error",
+              reminderId: item.reminderId,
+              error: {
+                name: failResult.error.name,
+                message: failResult.error.message,
+                ...(failResult.error.stack && { stack: failResult.error.stack })
+              }
+            });
+          }
+        }
+      } catch (error) {
+        const errorObj = error instanceof Error ? error : new Error(String(error));
+        logger.error("Error processing queue item", {
+          operation: "queue_item_error",
+          reminderId: item.reminderId,
+          error: {
+            name: errorObj.name,
+            message: errorObj.message,
+            ...(errorObj.stack && { stack: errorObj.stack })
+          }
+        });
+      }
+    }
+
+    // Log queue statistics periodically
+    const statsResult = await deliveryQueue.getQueueStats();
+    if (statsResult.success) {
+      logger.info("Delivery queue statistics", {
+        operation: "queue_stats",
+        context: { ...statsResult.data }
+      });
+    }
+
+  } catch (error) {
+    const errorObj = error instanceof Error ? error : new Error(String(error));
+    logger.error("Error in delivery queue processing", {
+      operation: "queue_processing_error",
+      error: {
+        name: errorObj.name,
+        message: errorObj.message,
+        ...(errorObj.stack && { stack: errorObj.stack })
+      }
+    });
+  }
+}
+
 console.log("[CRON-REGISTER] ✅ Deno.cron jobs registered successfully!");
 console.log("[CRON-REGISTER]    - Due reminders: Every minute (* * * * *)");
 console.log("[CRON-REGISTER]    - Timeout escalations: Every 2 minutes (*/2 * * * *)");
+console.log("[CRON-REGISTER]    - Enhanced delivery queue: Every minute (* * * * *)");
 console.log("[CRON-REGISTER] 🚀 These will run automatically on Deno Deploy without user traffic");

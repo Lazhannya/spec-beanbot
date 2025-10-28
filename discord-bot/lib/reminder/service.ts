@@ -6,6 +6,9 @@
 import { Reminder, ReminderStatus, ResponseLog, ResponseType, TestExecution, TestType, RepeatFrequency, RepeatEndCondition, EscalationTrigger, TestResult } from "../../types/reminder.ts";
 import { ReminderRepository } from "./repository.ts";
 import { getSafeTimezone } from "../utils/timezone.ts";
+import { DeliveryQueue } from "../scheduler/queue.ts";
+import { calculateDeliveryTime, formatUTCForUser, isValidTimezone } from "../scheduler/timezone.ts";
+import { logger } from "../utils/logger.ts";
 
 /**
  * Result type for operations that can fail
@@ -47,9 +50,11 @@ export interface CreateReminderOptions {
  */
 export class ReminderService {
   private repository: ReminderRepository;
+  private deliveryQueue: DeliveryQueue;
 
-  constructor(repository: ReminderRepository) {
+  constructor(repository: ReminderRepository, deliveryQueue: DeliveryQueue) {
     this.repository = repository;
+    this.deliveryQueue = deliveryQueue;
   }
 
   /**
@@ -67,13 +72,39 @@ export class ReminderService {
       const id = crypto.randomUUID();
       const now = new Date();
 
-      // Create reminder object
+      // Validate and calculate timezone-aware scheduling
+      const timezone = getSafeTimezone(options.timezone);
+      if (!isValidTimezone(timezone)) {
+        return {
+          success: false,
+          error: new Error(`Invalid timezone: ${timezone}`)
+        };
+      }
+
+      // Calculate delivery time with timezone awareness
+      const userInputTime = options.scheduledTime.toISOString().slice(0, 16); // Convert to datetime-local format
+      const deliveryCalculation = calculateDeliveryTime(userInputTime, timezone);
+      
+      if (!deliveryCalculation.isValidTime) {
+        return {
+          success: false,
+          error: new Error(`Invalid delivery time: ${deliveryCalculation.errors?.join(", ") || "Unknown error"}`)
+        };
+      }
+
+      // Format for user display
+      const userDisplayTime = formatUTCForUser(deliveryCalculation.utcDeliveryTime, timezone, "display");
+
+      // Create reminder object with enhanced timezone fields
       const reminder: Reminder = {
         id,
         content: options.content,
         targetUserId: options.targetUserId,
         scheduledTime: options.scheduledTime,
-        timezone: getSafeTimezone(options.timezone),
+        timezone: timezone,
+        scheduledTimezone: timezone,
+        userDisplayTime: userDisplayTime,
+        utcScheduledTime: deliveryCalculation.utcDeliveryTime,
         createdAt: now,
         updatedAt: now,
         status: ReminderStatus.PENDING,
@@ -126,6 +157,43 @@ export class ReminderService {
           success: false,
           error: new Error("Failed to save reminder to database")
         };
+      }
+
+      // Schedule delivery in the enhanced delivery queue
+      const scheduleResult = await this.deliveryQueue.scheduleReminder(
+        reminder.id,
+        reminder.targetUserId,
+        reminder.utcScheduledTime,
+        reminder.scheduledTimezone,
+        reminder.userDisplayTime,
+        reminder.content
+      );
+
+      if (!scheduleResult.success) {
+        logger.error("Failed to schedule reminder in delivery queue", {
+          operation: "create_reminder",
+          reminderId: reminder.id,
+          error: {
+            name: scheduleResult.error.name,
+            message: scheduleResult.error.message
+          }
+        });
+
+        // Note: We don't fail the reminder creation if queue scheduling fails
+        // The existing cron job system will still pick it up via getDueReminders
+        logger.warn("Reminder created but not queued in enhanced delivery system, falling back to legacy system", {
+          operation: "create_reminder",
+          reminderId: reminder.id
+        });
+      } else {
+        logger.info("Reminder scheduled in enhanced delivery queue", {
+          operation: "create_reminder",
+          reminderId: reminder.id,
+          context: {
+            queueItemId: scheduleResult.data,
+            scheduledTime: reminder.utcScheduledTime.toISOString()
+          }
+        });
       }
 
       return {
@@ -252,6 +320,26 @@ export class ReminderService {
         };
       }
 
+      // Also cancel in the delivery queue
+      const cancelResult = await this.deliveryQueue.cancelReminder(id);
+      if (!cancelResult.success) {
+        logger.warn("Failed to cancel reminder in delivery queue", {
+          operation: "cancel_reminder",
+          reminderId: id,
+          error: {
+            name: cancelResult.error.name,
+            message: cancelResult.error.message
+          }
+        });
+        // Note: We don't fail the cancellation if queue cancel fails
+        // The reminder status has already been updated
+      } else {
+        logger.info("Reminder cancelled in delivery queue", {
+          operation: "cancel_reminder",
+          reminderId: id
+        });
+      }
+
       return {
         success: true,
         data: undefined
@@ -292,6 +380,26 @@ export class ReminderService {
           success: false,
           error: new Error("Failed to delete reminder")
         };
+      }
+
+      // Also cancel/remove from the delivery queue
+      const cancelResult = await this.deliveryQueue.cancelReminder(id);
+      if (!cancelResult.success) {
+        logger.warn("Failed to cancel reminder in delivery queue during deletion", {
+          operation: "delete_reminder",
+          reminderId: id,
+          error: {
+            name: cancelResult.error.name,
+            message: cancelResult.error.message
+          }
+        });
+        // Note: We don't fail the deletion if queue cancel fails
+        // The reminder has already been deleted from the repository
+      } else {
+        logger.info("Reminder removed from delivery queue during deletion", {
+          operation: "delete_reminder",
+          reminderId: id
+        });
       }
 
       return {
@@ -744,11 +852,27 @@ export class ReminderService {
         repeatRule.interval
       );
 
+      // Calculate timezone-aware delivery time for next occurrence
+      const nextUserTime = nextTime.toISOString().slice(0, 16);
+      const nextDeliveryCalculation = calculateDeliveryTime(nextUserTime, reminder.scheduledTimezone);
+      
+      if (!nextDeliveryCalculation.isValidTime) {
+        return {
+          success: false,
+          error: new Error(`Invalid next delivery time: ${nextDeliveryCalculation.errors?.join(", ") || "Unknown error"}`)
+        };
+      }
+
+      const nextUserDisplayTime = formatUTCForUser(nextDeliveryCalculation.utcDeliveryTime, reminder.scheduledTimezone, "display");
+
       // Create new reminder for next occurrence
       const nextReminder: Reminder = {
         ...reminder,
         id: crypto.randomUUID(),
         scheduledTime: nextTime,
+        scheduledTimezone: reminder.scheduledTimezone,
+        userDisplayTime: nextUserDisplayTime,
+        utcScheduledTime: nextDeliveryCalculation.utcDeliveryTime,
         createdAt: new Date(),
         updatedAt: new Date(),
         status: ReminderStatus.PENDING,
@@ -769,6 +893,36 @@ export class ReminderService {
           success: false,
           error: new Error("Failed to create next repeat reminder")
         };
+      }
+
+      // Schedule next occurrence in the delivery queue
+      const scheduleResult = await this.deliveryQueue.scheduleReminder(
+        nextReminder.id,
+        nextReminder.targetUserId,
+        nextReminder.utcScheduledTime,
+        nextReminder.scheduledTimezone,
+        nextReminder.userDisplayTime,
+        nextReminder.content
+      );
+
+      if (!scheduleResult.success) {
+        logger.error("Failed to schedule next repeat occurrence in delivery queue", {
+          operation: "schedule_next_repeat",
+          reminderId: nextReminder.id,
+          error: {
+            name: scheduleResult.error.name,
+            message: scheduleResult.error.message
+          }
+        });
+      } else {
+        logger.info("Next repeat occurrence scheduled in delivery queue", {
+          operation: "schedule_next_repeat",
+          reminderId: nextReminder.id,
+          context: {
+            queueItemId: scheduleResult.data,
+            scheduledTime: nextReminder.utcScheduledTime.toISOString()
+          }
+        });
       }
 
       return {

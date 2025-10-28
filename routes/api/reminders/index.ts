@@ -18,7 +18,8 @@ async function initializeServices() {
       // Try to open KV store - may not be available in all environments
       const kv = await Deno.openKv();
       const repository = new ReminderRepository(kv);
-      reminderService = new ReminderService(repository);
+      const { createReminderServiceWithRepository } = await import("../../../discord-bot/lib/utils/service-factory.ts");
+      reminderService = createReminderServiceWithRepository(repository, kv);
     } catch (error) {
       // If KV is not available, create a mock service for development
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -35,12 +36,16 @@ function createMockReminderService(): ReminderService {
   
   return {
     createReminder(options: CreateReminderOptions) {
+      const timezone = options.timezone || 'Europe/Berlin';
       const reminder: Reminder = {
         id: `mock-${Date.now()}`,
         content: options.content,
         targetUserId: options.targetUserId,
         scheduledTime: options.scheduledTime,
-        timezone: options.timezone || 'Europe/Berlin',
+        timezone: timezone,
+        scheduledTimezone: timezone,
+        userDisplayTime: options.scheduledTime.toLocaleString(),
+        utcScheduledTime: options.scheduledTime,
         createdBy: options.createdBy || 'admin',
         status: 'pending' as ReminderStatus,
         createdAt: new Date(),
