@@ -35,6 +35,7 @@ import config from "./fresh.config.ts";
 
 // Import cron jobs defined at top-level module scope for Deno Deploy
 // This MUST be imported to register the cron jobs with Deno Deploy
+// The cron-jobs.ts file handles execution conditionally
 import "./cron-jobs.ts";
 
 await start(manifest, config);

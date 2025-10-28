@@ -266,6 +266,11 @@ console.log("[CRON-REGISTER] Registering Deno.cron jobs at top-level module scop
 // Cron format: minute hour day month weekday
 // "* * * * *" = every minute
 Deno.cron("Check due reminders", "* * * * *", async () => {
+  // Skip execution during build or development
+  if (Deno.args.includes("build") || !Deno.env.get("DENO_DEPLOYMENT_ID")) {
+    return; // Exit immediately, don't execute cron logic
+  }
+  
   console.log("[CRON] ⏰ Checking for due reminders...");
   await checkDueReminders();
 });
@@ -273,6 +278,11 @@ Deno.cron("Check due reminders", "* * * * *", async () => {
 // Check for timeout escalations every 2 minutes
 // "*/2 * * * *" = every 2 minutes
 Deno.cron("Check timeout escalations", "*/2 * * * *", async () => {
+  // Skip execution during build or development
+  if (Deno.args.includes("build") || !Deno.env.get("DENO_DEPLOYMENT_ID")) {
+    return; // Exit immediately, don't execute cron logic
+  }
+  
   console.log("[CRON] ⏰ Checking for timeout escalations...");
   await checkTimeoutEscalations();
 });
