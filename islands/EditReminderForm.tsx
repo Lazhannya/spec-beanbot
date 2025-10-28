@@ -38,11 +38,30 @@ export default function EditReminderForm({
   onCancel,
   isLoading = false,
 }: EditReminderFormProps) {
+  // Convert stored UTC time back to local timezone for datetime-local input
+  const convertUtcToLocalTimeString = (utcDate: Date, timezone: string) => {
+    // Format the UTC date in the target timezone
+    const localDateTime = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(utcDate);
+    
+    // sv-SE format is "YYYY-MM-DD HH:mm" which we need to convert to "YYYY-MM-DDTHH:mm"
+    return localDateTime.replace(' ', 'T');
+  };
+
   // Initialize form data from reminder
   const [formData, setFormData] = useState<EditReminderFormData>({
     content: reminder.content,
     targetUserId: reminder.targetUserId,
-    scheduledTime: new Date(reminder.scheduledTime).toISOString().slice(0, 16),
+    scheduledTime: convertUtcToLocalTimeString(
+      new Date(reminder.scheduledTime), 
+      reminder.timezone || DEFAULT_TIMEZONE
+    ),
     timezone: reminder.timezone || DEFAULT_TIMEZONE,
     enableRepeat: !!reminder.repeatRule,
     repeatFrequency: reminder.repeatRule?.frequency || "weekly",
