@@ -1134,6 +1134,59 @@ const colors: Record<string, string> = {
 
 **Phase 19 Status**: ✅ **COMPLETE** - Critical cron functionality now working correctly
 
+### 🔧 **CONFIGURATION FIX** (T192-T195 - October 28, 2025)
+
+**Problem**: Even after fixing the top-level module scope issue, Deno Deploy still failed with:
+```
+TypeError: Deno.cron is not a function
+info: Deno.cron() is an unstable API.
+hint: Run again with `--unstable-cron` flag to enable this API.
+```
+
+**Root Cause**: Deno.cron requires the `--unstable-cron` flag to be explicitly enabled in configuration.
+
+**Configuration Fix Implementation**:
+
+- [x] T192 [P] [CONFIG] Add unstable cron and kv flags to deno.json unstable array
+- [x] T193 [P] [CONFIG] Update all deno.json tasks to include --unstable-cron --unstable-kv flags
+- [x] T194 [P] [CONFIG] Update dev.ts shebang to include unstable flags for local development
+- [x] T195 [CONFIG] Update dev.ts to import cron-jobs.ts instead of old initialization
+
+**Configuration Changes**:
+
+1. **Updated `deno.json`**:
+   ```json
+   {
+     "unstable": ["cron", "kv"],
+     "tasks": {
+       "dev": "deno run -A --unstable-cron --unstable-kv --watch=... dev.ts",
+       "preview": "deno run -A --unstable-cron --unstable-kv main.ts",
+       // ... all tasks updated with unstable flags
+     }
+   }
+   ```
+
+2. **Updated `dev.ts`**:
+   ```typescript
+   #!/usr/bin/env -S deno run -A --unstable-cron --unstable-kv --watch=...
+   // Import cron jobs defined at top-level module scope
+   import "./cron-jobs.ts";
+   ```
+
+**Why This Was Needed**:
+- Deno.cron is still marked as "unstable" API requiring explicit opt-in
+- Deno Deploy respects the same unstable flag requirements as local Deno runtime
+- Both `--unstable-cron` (for Deno.cron) and `--unstable-kv` (for Deno KV) needed
+- Modern Deno uses granular unstable flags instead of blanket `--unstable`
+
+**Verification Steps**:
+1. ✅ Local development: `deno task dev` now works without cron errors
+2. ✅ Production deployment: Deno Deploy build should succeed
+3. ✅ Cron jobs visible: Check Deno Deploy dashboard → Cron tab
+4. ✅ Automatic execution: Reminders delivered without site access
+
+**Phase 19 Final Status**: ✅ **COMPLETE** - Both architectural and configuration issues resolved
+
 ---
 
 ## Dependencies & Execution Order

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run -A --watch=static/,routes/,components/,islands/,middleware/
+#!/usr/bin/env -S deno run -A --unstable-cron --unstable-kv --watch=static/,routes/,components/,islands/,middleware/
 
 import dev from "$fresh/dev.ts";
 import config from "./fresh.config.ts";
@@ -27,7 +27,7 @@ try {
 }
 
 // Initialize the Deno.cron reminder scheduler for automatic delivery
-import { initializeCronScheduler } from "./init-cron-scheduler.ts";
-await initializeCronScheduler();
+// Import cron jobs defined at top-level module scope for Deno Deploy
+import "./cron-jobs.ts";
 
 await dev(import.meta.url, "./main.ts", config);

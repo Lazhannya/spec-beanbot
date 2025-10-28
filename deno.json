@@ -1,13 +1,13 @@
 {
   "lock": false,
   "tasks": {
-    "dev": "deno run -A --watch=static/,routes/,components/,islands/,middleware/ dev.ts",
-    "start": "deno run -A --watch=static/,routes/,components/,islands/,middleware/ dev.ts",
-    "build": "deno run -A dev.ts build",
-    "preview": "deno run -A main.ts",
+    "dev": "deno run -A --unstable-cron --unstable-kv --watch=static/,routes/,components/,islands/,middleware/ dev.ts",
+    "start": "deno run -A --unstable-cron --unstable-kv --watch=static/,routes/,components/,islands/,middleware/ dev.ts",
+    "build": "deno run -A --unstable-cron --unstable-kv dev.ts build",
+    "preview": "deno run -A --unstable-cron --unstable-kv main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
     "check-env": "deno run -A check-env.ts",
-    "test-deploy": "deno run -A test-deployment.ts"
+    "test-deploy": "deno run -A --unstable-cron --unstable-kv test-deployment.ts"
   },
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": ["**/_fresh/*"],
@@ -34,5 +34,6 @@
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true
   },
+  "unstable": ["cron", "kv"],
   "nodeModulesDir": "none"
 }
